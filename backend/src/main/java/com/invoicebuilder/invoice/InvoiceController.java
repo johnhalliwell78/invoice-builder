@@ -12,7 +12,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -94,5 +97,26 @@ public class InvoiceController {
     @Operation(summary = "Cancel invoice")
     public ApiResponse<InvoiceResponse> cancel(@PathVariable UUID id) {
         return ApiResponse.of(InvoiceResponse.from(invoiceService.cancel(id)));
+    }
+
+    @GetMapping("/{id}/pdf")
+    @Operation(summary = "Download invoice PDF (attachment)")
+    public ResponseEntity<byte[]> downloadPdf(@PathVariable UUID id) {
+        return pdfResponse(id, ContentDisposition.attachment());
+    }
+
+    @GetMapping("/{id}/preview")
+    @Operation(summary = "Preview invoice PDF inline")
+    public ResponseEntity<byte[]> previewPdf(@PathVariable UUID id) {
+        return pdfResponse(id, ContentDisposition.inline());
+    }
+
+    private ResponseEntity<byte[]> pdfResponse(UUID id, ContentDisposition.Builder disposition) {
+        byte[] pdf = invoiceService.renderPdf(id);
+        String filename = invoiceService.suggestedFilename(id);
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .header(HttpHeaders.CONTENT_DISPOSITION, disposition.filename(filename).build().toString())
+                .body(pdf);
     }
 }

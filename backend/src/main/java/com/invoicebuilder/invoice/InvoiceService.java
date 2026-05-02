@@ -3,9 +3,12 @@ package com.invoicebuilder.invoice;
 import com.invoicebuilder.auth.UserPrincipal;
 import com.invoicebuilder.common.exception.AppException;
 import com.invoicebuilder.common.exception.ErrorCode;
+import com.invoicebuilder.customer.Customer;
 import com.invoicebuilder.customer.CustomerRepository;
 import com.invoicebuilder.invoice.dto.InvoiceRequest;
 import com.invoicebuilder.invoice.dto.LineItemRequest;
+import com.invoicebuilder.pdf.InvoicePdfGenerator;
+import com.invoicebuilder.pdf.PdfStorage;
 import com.invoicebuilder.tenant.Tenant;
 import com.invoicebuilder.tenant.TenantContext;
 import com.invoicebuilder.tenant.TenantRepository;
@@ -34,6 +37,8 @@ public class InvoiceService {
     private final TenantRepository tenantRepository;
     private final InvoiceNumberGenerator numberGenerator;
     private final InvoiceCalculator calculator;
+    private final InvoicePdfGenerator pdfGenerator;
+    private final PdfStorage pdfStorage;
     private final Clock clock;
 
     public InvoiceService(InvoiceRepository invoiceRepository,
@@ -41,13 +46,40 @@ public class InvoiceService {
                           TenantRepository tenantRepository,
                           InvoiceNumberGenerator numberGenerator,
                           InvoiceCalculator calculator,
+                          InvoicePdfGenerator pdfGenerator,
+                          PdfStorage pdfStorage,
                           Clock clock) {
         this.invoiceRepository = invoiceRepository;
         this.customerRepository = customerRepository;
         this.tenantRepository = tenantRepository;
         this.numberGenerator = numberGenerator;
         this.calculator = calculator;
+        this.pdfGenerator = pdfGenerator;
+        this.pdfStorage = pdfStorage;
         this.clock = clock;
+    }
+
+    /**
+     * Renders the invoice PDF and persists it to storage. Always regenerates
+     * since DRAFT invoices may have changed; storage doubles as an artifact
+     * cache for downstream features (audit trail, email attachment).
+     */
+    @Transactional(readOnly = true)
+    public byte[] renderPdf(UUID id) {
+        Invoice invoice = load(id);
+        Tenant tenant = tenantRepository.findById(invoice.getTenantId())
+                .orElseThrow(() -> new AppException(ErrorCode.TENANT_NOT_FOUND, "Tenant not found"));
+        Customer customer = customerRepository.findById(invoice.getCustomerId())
+                .orElseThrow(() -> new AppException(ErrorCode.CUSTOMER_NOT_FOUND, "Customer not found"));
+        byte[] pdf = pdfGenerator.render(invoice, tenant, customer);
+        pdfStorage.save(invoice.getTenantId(), invoice.getId(), pdf);
+        return pdf;
+    }
+
+    public String suggestedFilename(UUID id) {
+        return invoiceRepository.findByIdAndTenantId(id, TenantContext.require())
+                .map(i -> "invoice-" + i.getInvoiceNumber() + ".pdf")
+                .orElse("invoice.pdf");
     }
 
     @Transactional(readOnly = true)
