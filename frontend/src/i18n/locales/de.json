@@ -1,0 +1,59 @@
+{
+  "app": {
+    "name": "Invoice Builder",
+    "tagline": "Moderne Rechnungserstellung für KMU"
+  },
+  "nav": {
+    "dashboard": "Übersicht",
+    "invoices": "Rechnungen",
+    "customers": "Kunden",
+    "settings": "Einstellungen",
+    "logout": "Abmelden"
+  },
+  "auth": {
+    "login": {
+      "title": "Bei Ihrem Konto anmelden",
+      "subtitle": "Willkommen zurück. Bitte geben Sie Ihre Zugangsdaten ein.",
+      "email": "E-Mail",
+      "password": "Passwort",
+      "submit": "Anmelden",
+      "submitting": "Anmelden…",
+      "noAccount": "Noch kein Konto?",
+      "register": "Jetzt erstellen",
+      "or": "oder weiter mit",
+      "googleButton": "Mit Google fortfahren",
+      "githubButton": "Mit GitHub fortfahren"
+    },
+    "register": {
+      "title": "Workspace einrichten",
+      "subtitle": "In weniger als einer Minute startklar.",
+      "fullName": "Vollständiger Name",
+      "email": "Geschäftliche E-Mail",
+      "password": "Passwort",
+      "tenantName": "Firmenname",
+      "submit": "Konto erstellen",
+      "submitting": "Konto wird erstellt…",
+      "haveAccount": "Sie haben bereits ein Konto?",
+      "login": "Anmelden",
+      "passwordHint": "Mindestens 8 Zeichen, davon 1 Großbuchstabe und 1 Ziffer."
+    },
+    "errors": {
+      "INVALID_CREDENTIALS": "E-Mail oder Passwort ungültig.",
+      "EMAIL_ALREADY_EXISTS": "Diese E-Mail ist bereits registriert.",
+      "VALIDATION_FAILED": "Bitte korrigieren Sie die markierten Felder.",
+      "REFRESH_TOKEN_INVALID": "Sitzung abgelaufen. Bitte erneut anmelden.",
+      "default": "Etwas ist schiefgelaufen. Bitte erneut versuchen."
+    }
+  },
+  "dashboard": {
+    "title": "Übersicht",
+    "welcome": "Willkommen, {{name}}",
+    "greeting": "Sie sind als {{role}} bei {{tenant}} angemeldet."
+  },
+  "common": {
+    "loading": "Wird geladen…",
+    "cancel": "Abbrechen",
+    "save": "Speichern",
+    "retry": "Erneut versuchen"
+  }
+}

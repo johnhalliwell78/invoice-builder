@@ -1,0 +1,59 @@
+{
+  "app": {
+    "name": "Invoice Builder",
+    "tagline": "Facturation moderne pour les PME"
+  },
+  "nav": {
+    "dashboard": "Tableau de bord",
+    "invoices": "Factures",
+    "customers": "Clients",
+    "settings": "Paramètres",
+    "logout": "Se déconnecter"
+  },
+  "auth": {
+    "login": {
+      "title": "Connexion à votre compte",
+      "subtitle": "Heureux de vous revoir. Saisissez vos identifiants.",
+      "email": "E-mail",
+      "password": "Mot de passe",
+      "submit": "Se connecter",
+      "submitting": "Connexion…",
+      "noAccount": "Pas encore de compte ?",
+      "register": "Créer un compte",
+      "or": "ou continuer avec",
+      "googleButton": "Continuer avec Google",
+      "githubButton": "Continuer avec GitHub"
+    },
+    "register": {
+      "title": "Créer votre espace de travail",
+      "subtitle": "Opérationnel en moins d'une minute.",
+      "fullName": "Nom complet",
+      "email": "E-mail professionnel",
+      "password": "Mot de passe",
+      "tenantName": "Nom de l'entreprise",
+      "submit": "Créer le compte",
+      "submitting": "Création du compte…",
+      "haveAccount": "Vous avez déjà un compte ?",
+      "login": "Se connecter",
+      "passwordHint": "Au moins 8 caractères, dont 1 majuscule et 1 chiffre."
+    },
+    "errors": {
+      "INVALID_CREDENTIALS": "E-mail ou mot de passe invalide.",
+      "EMAIL_ALREADY_EXISTS": "Cet e-mail est déjà utilisé.",
+      "VALIDATION_FAILED": "Veuillez corriger les champs en surbrillance.",
+      "REFRESH_TOKEN_INVALID": "Session expirée. Veuillez vous reconnecter.",
+      "default": "Une erreur s'est produite. Veuillez réessayer."
+    }
+  },
+  "dashboard": {
+    "title": "Tableau de bord",
+    "welcome": "Bonjour, {{name}}",
+    "greeting": "Connecté en tant que {{role}} chez {{tenant}}."
+  },
+  "common": {
+    "loading": "Chargement…",
+    "cancel": "Annuler",
+    "save": "Enregistrer",
+    "retry": "Réessayer"
+  }
+}

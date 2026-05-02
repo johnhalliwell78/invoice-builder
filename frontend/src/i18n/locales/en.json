@@ -1,0 +1,59 @@
+{
+  "app": {
+    "name": "Invoice Builder",
+    "tagline": "Modern invoicing for small and medium businesses"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "invoices": "Invoices",
+    "customers": "Customers",
+    "settings": "Settings",
+    "logout": "Sign out"
+  },
+  "auth": {
+    "login": {
+      "title": "Sign in to your account",
+      "subtitle": "Welcome back. Enter your credentials below.",
+      "email": "Email",
+      "password": "Password",
+      "submit": "Sign in",
+      "submitting": "Signing in…",
+      "noAccount": "No account yet?",
+      "register": "Create one",
+      "or": "or continue with",
+      "googleButton": "Continue with Google",
+      "githubButton": "Continue with GitHub"
+    },
+    "register": {
+      "title": "Create your workspace",
+      "subtitle": "Get up and running in less than a minute.",
+      "fullName": "Full name",
+      "email": "Work email",
+      "password": "Password",
+      "tenantName": "Business name",
+      "submit": "Create account",
+      "submitting": "Creating account…",
+      "haveAccount": "Already have an account?",
+      "login": "Sign in",
+      "passwordHint": "At least 8 characters, including 1 uppercase letter and 1 number."
+    },
+    "errors": {
+      "INVALID_CREDENTIALS": "Invalid email or password.",
+      "EMAIL_ALREADY_EXISTS": "That email is already registered.",
+      "VALIDATION_FAILED": "Please correct the highlighted fields.",
+      "REFRESH_TOKEN_INVALID": "Your session has expired. Please sign in again.",
+      "default": "Something went wrong. Please try again."
+    }
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Welcome, {{name}}",
+    "greeting": "You're signed in as {{role}} at {{tenant}}."
+  },
+  "common": {
+    "loading": "Loading…",
+    "cancel": "Cancel",
+    "save": "Save",
+    "retry": "Retry"
+  }
+}

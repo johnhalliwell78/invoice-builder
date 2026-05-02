@@ -1,0 +1,78 @@
+import { createBrowserRouter, Navigate } from 'react-router-dom';
+import { lazy, Suspense } from 'react';
+
+import { ProtectedRoute } from '@/components/ProtectedRoute';
+import { AnonymousRoute } from '@/components/AnonymousRoute';
+import { AppShell } from '@/components/layout/AppShell';
+
+const LoginPage = lazy(() => import('@/features/auth/LoginPage'));
+const RegisterPage = lazy(() => import('@/features/auth/RegisterPage'));
+const OAuth2CallbackPage = lazy(() => import('@/features/auth/OAuth2CallbackPage'));
+const DashboardPage = lazy(() => import('@/features/dashboard/DashboardPage'));
+
+const Fallback = () => (
+  <div className="flex min-h-screen items-center justify-center text-muted-foreground">Loading…</div>
+);
+
+export const router = createBrowserRouter([
+  {
+    element: <AnonymousRoute />,
+    children: [
+      {
+        path: '/login',
+        element: (
+          <Suspense fallback={<Fallback />}>
+            <LoginPage />
+          </Suspense>
+        ),
+      },
+      {
+        path: '/register',
+        element: (
+          <Suspense fallback={<Fallback />}>
+            <RegisterPage />
+          </Suspense>
+        ),
+      },
+    ],
+  },
+  {
+    path: '/auth/oauth2/callback',
+    element: (
+      <Suspense fallback={<Fallback />}>
+        <OAuth2CallbackPage />
+      </Suspense>
+    ),
+  },
+  {
+    element: <ProtectedRoute />,
+    children: [
+      {
+        element: <AppShell />,
+        children: [
+          {
+            index: true,
+            element: (
+              <Suspense fallback={<Fallback />}>
+                <DashboardPage />
+              </Suspense>
+            ),
+          },
+          { path: 'invoices', element: <Placeholder name="Invoices" /> },
+          { path: 'customers', element: <Placeholder name="Customers" /> },
+          { path: 'settings', element: <Placeholder name="Settings" /> },
+        ],
+      },
+    ],
+  },
+  { path: '*', element: <Navigate to="/" replace /> },
+]);
+
+function Placeholder({ name }: { name: string }) {
+  return (
+    <div className="space-y-2">
+      <h1 className="text-3xl font-semibold tracking-tight">{name}</h1>
+      <p className="text-muted-foreground">Coming in Phase 2.</p>
+    </div>
+  );
+}
