@@ -87,6 +87,87 @@
       "country": "Country"
     }
   },
+  "invoices": {
+    "title": "Invoices",
+    "subtitle": "Drafts, sent, and paid — all in one place.",
+    "create": "New invoice",
+    "createTitle": "New invoice",
+    "editTitle": "Edit draft invoice",
+    "saveDraft": "Save draft",
+    "empty": "No invoices yet — create your first one.",
+    "deleted": "Invoice deleted.",
+    "created": "Invoice created.",
+    "updated": "Invoice updated.",
+    "sent": "Invoice sent.",
+    "markedPaid": "Invoice marked as paid.",
+    "cancelled": "Invoice cancelled.",
+    "deleteConfirm": "Delete invoice {{number}}? This can't be undone.",
+    "addLineItem": "Add line item",
+    "status": {
+      "DRAFT": "Draft",
+      "SENT": "Sent",
+      "VIEWED": "Viewed",
+      "PAID": "Paid",
+      "OVERDUE": "Overdue",
+      "CANCELLED": "Cancelled"
+    },
+    "filters": {
+      "status": "Status",
+      "customer": "Customer",
+      "from": "Issued from",
+      "to": "Issued to",
+      "allStatuses": "All statuses",
+      "allCustomers": "All customers"
+    },
+    "columns": {
+      "number": "Number",
+      "customer": "Customer",
+      "status": "Status",
+      "issued": "Issued",
+      "due": "Due",
+      "total": "Total"
+    },
+    "section": {
+      "metadata": "Invoice details",
+      "lineItems": "Line items",
+      "notesAndTerms": "Notes & terms"
+    },
+    "fields": {
+      "customer": "Customer",
+      "customerPlaceholder": "Select a customer",
+      "customerRequired": "Pick a customer",
+      "currency": "Currency",
+      "issueDate": "Issue date",
+      "dueDate": "Due date",
+      "discountAmount": "Invoice discount",
+      "description": "Description",
+      "descriptionPlaceholder": "What was delivered",
+      "qty": "Qty",
+      "unitPrice": "Unit price",
+      "taxPct": "Tax %",
+      "discPct": "Disc %",
+      "notes": "Notes",
+      "terms": "Payment terms"
+    },
+    "totals": {
+      "subtotal": "Subtotal",
+      "tax": "Tax",
+      "discount": "Discount",
+      "total": "Total",
+      "amountPaid": "Paid",
+      "amount": "Amount"
+    },
+    "actions": {
+      "send": "Send",
+      "markPaid": "Mark paid",
+      "cancel": "Cancel"
+    },
+    "timeline": {
+      "sent": "Sent on",
+      "viewed": "Viewed on",
+      "paid": "Paid on"
+    }
+  },
   "common": {
     "loading": "Loading…",
     "cancel": "Cancel",

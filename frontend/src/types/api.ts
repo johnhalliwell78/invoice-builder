@@ -65,3 +65,53 @@ export interface PageResponse<T> {
   first: boolean;
   last: boolean;
 }
+
+export type InvoiceStatus = 'DRAFT' | 'SENT' | 'VIEWED' | 'PAID' | 'OVERDUE' | 'CANCELLED';
+
+export interface LineItem {
+  id?: string;
+  description: string;
+  quantity: string;
+  unitPrice: string;
+  taxRate: string;
+  discountPercent: string;
+  amount?: string;
+  sortOrder?: number;
+}
+
+export interface InvoiceListItem {
+  id: string;
+  customerId: string;
+  invoiceNumber: string;
+  status: InvoiceStatus;
+  currency: string;
+  total: string;
+  amountPaid: string;
+  issueDate: string;
+  dueDate: string;
+}
+
+export interface Invoice {
+  id: string;
+  customerId: string;
+  invoiceNumber: string;
+  status: InvoiceStatus;
+  currency: string;
+  subtotal: string;
+  taxTotal: string;
+  discountAmount: string;
+  total: string;
+  amountPaid: string;
+  issueDate: string;
+  dueDate: string;
+  notes: string | null;
+  terms: string | null;
+  template: string;
+  publicToken: string | null;
+  sentAt: string | null;
+  viewedAt: string | null;
+  paidAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  lineItems: LineItem[];
+}

@@ -87,6 +87,87 @@
       "country": "Land"
     }
   },
+  "invoices": {
+    "title": "Rechnungen",
+    "subtitle": "Entwürfe, versendet und bezahlt — alles an einem Ort.",
+    "create": "Neue Rechnung",
+    "createTitle": "Neue Rechnung",
+    "editTitle": "Entwurf bearbeiten",
+    "saveDraft": "Entwurf speichern",
+    "empty": "Noch keine Rechnungen — erstellen Sie Ihre erste.",
+    "deleted": "Rechnung gelöscht.",
+    "created": "Rechnung angelegt.",
+    "updated": "Rechnung aktualisiert.",
+    "sent": "Rechnung versendet.",
+    "markedPaid": "Rechnung als bezahlt markiert.",
+    "cancelled": "Rechnung storniert.",
+    "deleteConfirm": "Rechnung {{number}} löschen? Nicht rückgängig zu machen.",
+    "addLineItem": "Position hinzufügen",
+    "status": {
+      "DRAFT": "Entwurf",
+      "SENT": "Versendet",
+      "VIEWED": "Angesehen",
+      "PAID": "Bezahlt",
+      "OVERDUE": "Überfällig",
+      "CANCELLED": "Storniert"
+    },
+    "filters": {
+      "status": "Status",
+      "customer": "Kunde",
+      "from": "Ausgestellt ab",
+      "to": "Ausgestellt bis",
+      "allStatuses": "Alle Status",
+      "allCustomers": "Alle Kunden"
+    },
+    "columns": {
+      "number": "Nummer",
+      "customer": "Kunde",
+      "status": "Status",
+      "issued": "Ausgestellt",
+      "due": "Fällig",
+      "total": "Summe"
+    },
+    "section": {
+      "metadata": "Rechnungsdetails",
+      "lineItems": "Positionen",
+      "notesAndTerms": "Notizen & Bedingungen"
+    },
+    "fields": {
+      "customer": "Kunde",
+      "customerPlaceholder": "Kunden auswählen",
+      "customerRequired": "Bitte einen Kunden wählen",
+      "currency": "Währung",
+      "issueDate": "Ausstellungsdatum",
+      "dueDate": "Fälligkeitsdatum",
+      "discountAmount": "Rechnungsrabatt",
+      "description": "Beschreibung",
+      "descriptionPlaceholder": "Was wurde geleistet",
+      "qty": "Menge",
+      "unitPrice": "Einzelpreis",
+      "taxPct": "MwSt. %",
+      "discPct": "Rabatt %",
+      "notes": "Notizen",
+      "terms": "Zahlungsbedingungen"
+    },
+    "totals": {
+      "subtotal": "Zwischensumme",
+      "tax": "MwSt.",
+      "discount": "Rabatt",
+      "total": "Gesamtsumme",
+      "amountPaid": "Bezahlt",
+      "amount": "Betrag"
+    },
+    "actions": {
+      "send": "Senden",
+      "markPaid": "Als bezahlt markieren",
+      "cancel": "Stornieren"
+    },
+    "timeline": {
+      "sent": "Versendet am",
+      "viewed": "Angesehen am",
+      "paid": "Bezahlt am"
+    }
+  },
   "common": {
     "loading": "Wird geladen…",
     "cancel": "Abbrechen",

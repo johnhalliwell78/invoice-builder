@@ -87,6 +87,87 @@
       "country": "Pays"
     }
   },
+  "invoices": {
+    "title": "Factures",
+    "subtitle": "Brouillons, envoyées et payées — tout au même endroit.",
+    "create": "Nouvelle facture",
+    "createTitle": "Nouvelle facture",
+    "editTitle": "Modifier le brouillon",
+    "saveDraft": "Enregistrer le brouillon",
+    "empty": "Aucune facture pour l'instant — créez la première.",
+    "deleted": "Facture supprimée.",
+    "created": "Facture créée.",
+    "updated": "Facture mise à jour.",
+    "sent": "Facture envoyée.",
+    "markedPaid": "Facture marquée comme payée.",
+    "cancelled": "Facture annulée.",
+    "deleteConfirm": "Supprimer la facture {{number}} ? Action irréversible.",
+    "addLineItem": "Ajouter une ligne",
+    "status": {
+      "DRAFT": "Brouillon",
+      "SENT": "Envoyée",
+      "VIEWED": "Consultée",
+      "PAID": "Payée",
+      "OVERDUE": "En retard",
+      "CANCELLED": "Annulée"
+    },
+    "filters": {
+      "status": "Statut",
+      "customer": "Client",
+      "from": "Émise à partir du",
+      "to": "Émise jusqu'au",
+      "allStatuses": "Tous les statuts",
+      "allCustomers": "Tous les clients"
+    },
+    "columns": {
+      "number": "Numéro",
+      "customer": "Client",
+      "status": "Statut",
+      "issued": "Émise",
+      "due": "Échéance",
+      "total": "Total"
+    },
+    "section": {
+      "metadata": "Détails de la facture",
+      "lineItems": "Lignes",
+      "notesAndTerms": "Notes & conditions"
+    },
+    "fields": {
+      "customer": "Client",
+      "customerPlaceholder": "Sélectionner un client",
+      "customerRequired": "Choisissez un client",
+      "currency": "Devise",
+      "issueDate": "Date d'émission",
+      "dueDate": "Date d'échéance",
+      "discountAmount": "Remise sur la facture",
+      "description": "Description",
+      "descriptionPlaceholder": "Ce qui a été livré",
+      "qty": "Qté",
+      "unitPrice": "Prix unitaire",
+      "taxPct": "TVA %",
+      "discPct": "Remise %",
+      "notes": "Notes",
+      "terms": "Conditions de paiement"
+    },
+    "totals": {
+      "subtotal": "Sous-total",
+      "tax": "TVA",
+      "discount": "Remise",
+      "total": "Total",
+      "amountPaid": "Payé",
+      "amount": "Montant"
+    },
+    "actions": {
+      "send": "Envoyer",
+      "markPaid": "Marquer comme payée",
+      "cancel": "Annuler"
+    },
+    "timeline": {
+      "sent": "Envoyée le",
+      "viewed": "Consultée le",
+      "paid": "Payée le"
+    }
+  },
   "common": {
     "loading": "Chargement…",
     "cancel": "Annuler",

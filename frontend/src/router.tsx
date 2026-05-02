@@ -11,6 +11,9 @@ const OAuth2CallbackPage = lazy(() => import('@/features/auth/OAuth2CallbackPage
 const DashboardPage = lazy(() => import('@/features/dashboard/DashboardPage'));
 const CustomerListPage = lazy(() => import('@/features/customers/CustomerListPage'));
 const CustomerFormPage = lazy(() => import('@/features/customers/CustomerFormPage'));
+const InvoiceListPage = lazy(() => import('@/features/invoices/InvoiceListPage'));
+const InvoiceFormPage = lazy(() => import('@/features/invoices/InvoiceFormPage'));
+const InvoiceDetailPage = lazy(() => import('@/features/invoices/InvoiceDetailPage'));
 
 const Fallback = () => (
   <div className="flex min-h-screen items-center justify-center text-muted-foreground">Loading…</div>
@@ -60,7 +63,38 @@ export const router = createBrowserRouter([
               </Suspense>
             ),
           },
-          { path: 'invoices', element: <Placeholder name="Invoices" /> },
+          {
+            path: 'invoices',
+            element: (
+              <Suspense fallback={<Fallback />}>
+                <InvoiceListPage />
+              </Suspense>
+            ),
+          },
+          {
+            path: 'invoices/new',
+            element: (
+              <Suspense fallback={<Fallback />}>
+                <InvoiceFormPage />
+              </Suspense>
+            ),
+          },
+          {
+            path: 'invoices/:id',
+            element: (
+              <Suspense fallback={<Fallback />}>
+                <InvoiceDetailPage />
+              </Suspense>
+            ),
+          },
+          {
+            path: 'invoices/:id/edit',
+            element: (
+              <Suspense fallback={<Fallback />}>
+                <InvoiceFormPage />
+              </Suspense>
+            ),
+          },
           {
             path: 'customers',
             element: (
