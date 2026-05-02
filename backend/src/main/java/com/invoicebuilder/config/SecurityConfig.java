@@ -2,6 +2,10 @@ package com.invoicebuilder.config;
 
 import com.invoicebuilder.auth.jwt.JwtAuthenticationEntryPoint;
 import com.invoicebuilder.auth.jwt.JwtAuthenticationFilter;
+import com.invoicebuilder.auth.oauth2.CustomOAuth2UserService;
+import com.invoicebuilder.auth.oauth2.OAuth2AuthenticationFailureHandler;
+import com.invoicebuilder.auth.oauth2.OAuth2AuthenticationSuccessHandler;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -13,6 +17,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -31,6 +36,8 @@ public class SecurityConfig {
             "/api/v1/auth/refresh",
             "/api/v1/auth/logout",
             "/api/v1/auth/oauth2/**",
+            "/oauth2/**",
+            "/login/oauth2/**",
             "/api/v1/public/**",
             "/actuator/health",
             "/actuator/health/**",
@@ -75,7 +82,11 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http,
                                            JwtAuthenticationFilter jwtFilter,
                                            JwtAuthenticationEntryPoint entryPoint,
-                                           CorsConfigurationSource corsConfigurationSource) throws Exception {
+                                           CorsConfigurationSource corsConfigurationSource,
+                                           ObjectProvider<ClientRegistrationRepository> clientRegistrations,
+                                           CustomOAuth2UserService oauth2UserService,
+                                           OAuth2AuthenticationSuccessHandler oauth2SuccessHandler,
+                                           OAuth2AuthenticationFailureHandler oauth2FailureHandler) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
                 .cors(c -> c.configurationSource(corsConfigurationSource))
@@ -87,6 +98,16 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+
+        // Only enable OAuth2 login when at least one client registration is configured.
+        if (clientRegistrations.getIfAvailable() != null) {
+            http.oauth2Login(oauth -> oauth
+                    .authorizationEndpoint(a -> a.baseUri("/api/v1/auth/oauth2/authorization"))
+                    .redirectionEndpoint(r -> r.baseUri("/api/v1/auth/oauth2/callback/*"))
+                    .userInfoEndpoint(u -> u.userService(oauth2UserService))
+                    .successHandler(oauth2SuccessHandler)
+                    .failureHandler(oauth2FailureHandler));
+        }
         return http.build();
     }
 }
