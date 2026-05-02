@@ -50,10 +50,56 @@
     "welcome": "Welcome, {{name}}",
     "greeting": "You're signed in as {{role}} at {{tenant}}."
   },
+  "customers": {
+    "title": "Customers",
+    "subtitle": "People and businesses you invoice.",
+    "create": "New customer",
+    "createTitle": "New customer",
+    "editTitle": "Edit customer",
+    "searchPlaceholder": "Search by name, email, or company…",
+    "empty": "No customers yet — create your first one to get started.",
+    "noMatches": "No customers match your search.",
+    "deleted": "Customer deleted.",
+    "created": "Customer created.",
+    "updated": "Customer updated.",
+    "deleteConfirm": "Delete \"{{name}}\"? This can't be undone from the UI.",
+    "columns": {
+      "name": "Name",
+      "company": "Company",
+      "email": "Email",
+      "phone": "Phone"
+    },
+    "section": {
+      "contact": "Contact",
+      "address": "Billing address",
+      "notes": "Internal notes"
+    },
+    "fields": {
+      "name": "Name",
+      "company": "Company",
+      "email": "Email",
+      "phone": "Phone",
+      "taxId": "Tax ID",
+      "street": "Street",
+      "city": "City",
+      "state": "State / Province",
+      "zip": "Postal code",
+      "country": "Country"
+    }
+  },
   "common": {
     "loading": "Loading…",
     "cancel": "Cancel",
     "save": "Save",
+    "saving": "Saving…",
+    "back": "Back",
+    "edit": "Edit",
+    "delete": "Delete",
+    "actions": "Actions",
+    "previous": "Previous",
+    "next": "Next",
+    "pageOf": "Page {{current}} of {{total}}",
+    "loadFailed": "Could not load data. Try again.",
     "retry": "Retry"
   }
 }

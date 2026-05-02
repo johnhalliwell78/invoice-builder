@@ -9,6 +9,8 @@ const LoginPage = lazy(() => import('@/features/auth/LoginPage'));
 const RegisterPage = lazy(() => import('@/features/auth/RegisterPage'));
 const OAuth2CallbackPage = lazy(() => import('@/features/auth/OAuth2CallbackPage'));
 const DashboardPage = lazy(() => import('@/features/dashboard/DashboardPage'));
+const CustomerListPage = lazy(() => import('@/features/customers/CustomerListPage'));
+const CustomerFormPage = lazy(() => import('@/features/customers/CustomerFormPage'));
 
 const Fallback = () => (
   <div className="flex min-h-screen items-center justify-center text-muted-foreground">Loading…</div>
@@ -59,7 +61,30 @@ export const router = createBrowserRouter([
             ),
           },
           { path: 'invoices', element: <Placeholder name="Invoices" /> },
-          { path: 'customers', element: <Placeholder name="Customers" /> },
+          {
+            path: 'customers',
+            element: (
+              <Suspense fallback={<Fallback />}>
+                <CustomerListPage />
+              </Suspense>
+            ),
+          },
+          {
+            path: 'customers/new',
+            element: (
+              <Suspense fallback={<Fallback />}>
+                <CustomerFormPage />
+              </Suspense>
+            ),
+          },
+          {
+            path: 'customers/:id',
+            element: (
+              <Suspense fallback={<Fallback />}>
+                <CustomerFormPage />
+              </Suspense>
+            ),
+          },
           { path: 'settings', element: <Placeholder name="Settings" /> },
         ],
       },

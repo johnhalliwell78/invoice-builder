@@ -50,10 +50,56 @@
     "welcome": "Willkommen, {{name}}",
     "greeting": "Sie sind als {{role}} bei {{tenant}} angemeldet."
   },
+  "customers": {
+    "title": "Kunden",
+    "subtitle": "Personen und Unternehmen, an die Sie Rechnungen stellen.",
+    "create": "Neuer Kunde",
+    "createTitle": "Neuer Kunde",
+    "editTitle": "Kunde bearbeiten",
+    "searchPlaceholder": "Nach Name, E-Mail oder Firma suchen…",
+    "empty": "Noch keine Kunden — legen Sie Ihren ersten an.",
+    "noMatches": "Keine Kunden für Ihre Suche.",
+    "deleted": "Kunde gelöscht.",
+    "created": "Kunde angelegt.",
+    "updated": "Kunde aktualisiert.",
+    "deleteConfirm": "\"{{name}}\" löschen? Über die Oberfläche nicht wiederherstellbar.",
+    "columns": {
+      "name": "Name",
+      "company": "Firma",
+      "email": "E-Mail",
+      "phone": "Telefon"
+    },
+    "section": {
+      "contact": "Kontakt",
+      "address": "Rechnungsadresse",
+      "notes": "Interne Notizen"
+    },
+    "fields": {
+      "name": "Name",
+      "company": "Firma",
+      "email": "E-Mail",
+      "phone": "Telefon",
+      "taxId": "Steuernummer",
+      "street": "Straße",
+      "city": "Stadt",
+      "state": "Bundesland",
+      "zip": "PLZ",
+      "country": "Land"
+    }
+  },
   "common": {
     "loading": "Wird geladen…",
     "cancel": "Abbrechen",
     "save": "Speichern",
+    "saving": "Wird gespeichert…",
+    "back": "Zurück",
+    "edit": "Bearbeiten",
+    "delete": "Löschen",
+    "actions": "Aktionen",
+    "previous": "Zurück",
+    "next": "Weiter",
+    "pageOf": "Seite {{current}} von {{total}}",
+    "loadFailed": "Daten konnten nicht geladen werden. Bitte erneut versuchen.",
     "retry": "Erneut versuchen"
   }
 }
