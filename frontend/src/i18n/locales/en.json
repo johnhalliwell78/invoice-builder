@@ -147,7 +147,13 @@
       "taxPct": "Tax %",
       "discPct": "Disc %",
       "notes": "Notes",
-      "terms": "Payment terms"
+      "terms": "Payment terms",
+      "recipient": "Recipient email",
+      "recipientHint": "Defaults to the customer's email if blank.",
+      "subject": "Subject",
+      "subjectPlaceholder": "Leave blank for the default subject",
+      "message": "Message",
+      "messagePlaceholder": "Add a personal note to the email…"
     },
     "totals": {
       "subtotal": "Subtotal",
@@ -160,13 +166,22 @@
     "actions": {
       "send": "Send",
       "markPaid": "Mark paid",
-      "cancel": "Cancel"
+      "cancel": "Cancel",
+      "preview": "Preview"
     },
     "timeline": {
       "sent": "Sent on",
       "viewed": "Viewed on",
       "paid": "Paid on"
-    }
+    },
+    "previewTitle": "Preview {{number}}",
+    "previewFailed": "Could not load the preview.",
+    "download": "Download PDF",
+    "sendTitle": "Send {{number}}",
+    "sendSubtitle": "We'll attach the PDF and email the recipient.",
+    "sending": "Sending…",
+    "publicTitle": "Invoice",
+    "publicNotFound": "This invoice link is invalid or has expired."
   },
   "common": {
     "loading": "Loading…",
@@ -179,6 +194,7 @@
     "actions": "Actions",
     "previous": "Previous",
     "next": "Next",
+    "close": "Close",
     "pageOf": "Page {{current}} of {{total}}",
     "loadFailed": "Could not load data. Try again.",
     "retry": "Retry"

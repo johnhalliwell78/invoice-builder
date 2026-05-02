@@ -1,21 +1,23 @@
+import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { isAxiosError } from 'axios';
 import { toast } from 'sonner';
-import { ArrowLeft, Ban, CheckCircle2, Pencil, Send, Trash2 } from 'lucide-react';
+import { ArrowLeft, Ban, CheckCircle2, Eye, Pencil, Send, Trash2 } from 'lucide-react';
 
 import {
   useCancelInvoice,
   useDeleteInvoice,
   useInvoice,
   useMarkPaid,
-  useSendInvoice,
 } from '@/hooks/useInvoices';
 import { useCustomer } from '@/hooks/useCustomers';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PageHeader } from '@/components/PageHeader';
 import { StatusBadge } from './StatusBadge';
+import { InvoicePreviewDialog } from './InvoicePreviewDialog';
+import { SendInvoiceDialog } from './SendInvoiceDialog';
 import { formatCurrency, formatDate } from '@/lib/format';
 import type { ProblemDetail } from '@/types/api';
 
@@ -26,10 +28,11 @@ export default function InvoiceDetailPage() {
   const { data: invoice, isPending, error } = useInvoice(id);
   const customer = useCustomer(invoice?.customerId);
 
-  const send = useSendInvoice();
   const markPaid = useMarkPaid();
   const cancel = useCancelInvoice();
   const del = useDeleteInvoice();
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [sendOpen, setSendOpen] = useState(false);
 
   if (isPending) {
     return <div className="text-muted-foreground">{t('common.loading')}</div>;
@@ -64,6 +67,10 @@ export default function InvoiceDetailPage() {
               <ArrowLeft className="mr-2 h-4 w-4" />
               {t('common.back')}
             </Button>
+            <Button variant="outline" onClick={() => setPreviewOpen(true)}>
+              <Eye className="mr-2 h-4 w-4" />
+              {t('invoices.actions.preview')}
+            </Button>
             {isDraft && (
               <>
                 <Button variant="outline" onClick={() => navigate(`/invoices/${invoice.id}/edit`)}>
@@ -80,7 +87,7 @@ export default function InvoiceDetailPage() {
                   <Trash2 className="mr-2 h-4 w-4 text-destructive" />
                   {t('common.delete')}
                 </Button>
-                <Button onClick={() => void action(send.mutateAsync(invoice.id), 'invoices.sent')}>
+                <Button onClick={() => setSendOpen(true)}>
                   <Send className="mr-2 h-4 w-4" />
                   {t('invoices.actions.send')}
                 </Button>
@@ -203,6 +210,21 @@ export default function InvoiceDetailPage() {
           )}
         </div>
       </div>
+
+      <InvoicePreviewDialog
+        open={previewOpen}
+        onClose={() => setPreviewOpen(false)}
+        invoiceId={invoice.id}
+        invoiceNumber={invoice.invoiceNumber}
+      />
+      <SendInvoiceDialog
+        open={sendOpen}
+        onClose={() => setSendOpen(false)}
+        invoiceId={invoice.id}
+        invoiceNumber={invoice.invoiceNumber}
+        defaultRecipient={customer.data?.email ?? null}
+        onSent={() => void 0}
+      />
     </div>
   );
 }

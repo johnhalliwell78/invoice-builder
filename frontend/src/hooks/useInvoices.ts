@@ -10,6 +10,7 @@ import {
   updateInvoice,
   type InvoiceListParams,
   type InvoicePayload,
+  type SendInvoicePayload,
 } from '@/api/invoices';
 
 const KEY = ['invoices'] as const;
@@ -57,7 +58,8 @@ export function useDeleteInvoice() {
 export function useSendInvoice() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => sendInvoice(id),
+    mutationFn: (args: { id: string; payload?: SendInvoicePayload }) =>
+      sendInvoice(args.id, args.payload),
     onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
   });
 }

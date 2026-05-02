@@ -14,6 +14,7 @@ const CustomerFormPage = lazy(() => import('@/features/customers/CustomerFormPag
 const InvoiceListPage = lazy(() => import('@/features/invoices/InvoiceListPage'));
 const InvoiceFormPage = lazy(() => import('@/features/invoices/InvoiceFormPage'));
 const InvoiceDetailPage = lazy(() => import('@/features/invoices/InvoiceDetailPage'));
+const PublicInvoicePage = lazy(() => import('@/features/public/PublicInvoicePage'));
 
 const Fallback = () => (
   <div className="flex min-h-screen items-center justify-center text-muted-foreground">Loading…</div>
@@ -46,6 +47,14 @@ export const router = createBrowserRouter([
     element: (
       <Suspense fallback={<Fallback />}>
         <OAuth2CallbackPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: '/i/:token',
+    element: (
+      <Suspense fallback={<Fallback />}>
+        <PublicInvoicePage />
       </Suspense>
     ),
   },
