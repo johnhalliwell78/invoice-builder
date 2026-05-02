@@ -1,0 +1,9 @@
+rootProject.name = 'invoice-builder-backend'
+
+// Gradle 8.x auto-discovers gradle/libs.versions.toml as the `libs` catalog.
+dependencyResolutionManagement {
+    repositoriesMode = RepositoriesMode.PREFER_SETTINGS
+    repositories {
+        mavenCentral()
+    }
+}

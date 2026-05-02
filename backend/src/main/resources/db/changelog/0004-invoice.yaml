@@ -1,0 +1,158 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0004-create-invoice
+      author: invoice-builder
+      changes:
+        - createTable:
+            tableName: invoice
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  defaultValueComputed: gen_random_uuid()
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_invoice_tenant
+                    referencedTableName: tenant
+                    referencedColumnNames: id
+              - column:
+                  name: customer_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_invoice_customer
+                    referencedTableName: customer
+                    referencedColumnNames: id
+              - column:
+                  name: invoice_number
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: VARCHAR(20)
+                  defaultValue: DRAFT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: currency
+                  type: VARCHAR(3)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: subtotal
+                  type: NUMERIC(15, 2)
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: tax_total
+                  type: NUMERIC(15, 2)
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: discount_amount
+                  type: NUMERIC(15, 2)
+                  defaultValueNumeric: 0
+              - column:
+                  name: total
+                  type: NUMERIC(15, 2)
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: amount_paid
+                  type: NUMERIC(15, 2)
+                  defaultValueNumeric: 0
+              - column:
+                  name: issue_date
+                  type: DATE
+                  constraints:
+                    nullable: false
+              - column:
+                  name: due_date
+                  type: DATE
+                  constraints:
+                    nullable: false
+              - column:
+                  name: notes
+                  type: TEXT
+              - column:
+                  name: terms
+                  type: TEXT
+              - column:
+                  name: template
+                  type: VARCHAR(50)
+                  defaultValue: classic
+                  constraints:
+                    nullable: false
+              - column:
+                  name: pdf_path
+                  type: VARCHAR(500)
+              - column:
+                  name: public_token
+                  type: VARCHAR(64)
+                  constraints:
+                    unique: true
+                    uniqueConstraintName: uk_invoice_public_token
+              - column:
+                  name: sent_at
+                  type: TIMESTAMP WITH TIME ZONE
+              - column:
+                  name: viewed_at
+                  type: TIMESTAMP WITH TIME ZONE
+              - column:
+                  name: paid_at
+                  type: TIMESTAMP WITH TIME ZONE
+              - column:
+                  name: created_by
+                  type: UUID
+                  constraints:
+                    foreignKeyName: fk_invoice_created_by
+                    referencedTableName: app_user
+                    referencedColumnNames: id
+              - column:
+                  name: created_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  defaultValueComputed: now()
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  defaultValueComputed: now()
+                  constraints:
+                    nullable: false
+        - addUniqueConstraint:
+            tableName: invoice
+            columnNames: tenant_id, invoice_number
+            constraintName: uk_invoice_tenant_number
+        - createIndex:
+            tableName: invoice
+            indexName: idx_invoice_tenant_status
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: status
+        - createIndex:
+            tableName: invoice
+            indexName: idx_invoice_customer
+            columns:
+              - column:
+                  name: customer_id
+        - createIndex:
+            tableName: invoice
+            indexName: idx_invoice_tenant_due_date
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: due_date

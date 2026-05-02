@@ -1,0 +1,62 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0007-create-notification
+      author: invoice-builder
+      changes:
+        - createTable:
+            tableName: notification
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  defaultValueComputed: gen_random_uuid()
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_notification_user
+                    referencedTableName: app_user
+                    referencedColumnNames: id
+              - column:
+                  name: type
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: title
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: message
+                  type: TEXT
+              - column:
+                  name: reference_type
+                  type: VARCHAR(50)
+              - column:
+                  name: reference_id
+                  type: UUID
+              - column:
+                  name: is_read
+                  type: BOOLEAN
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  defaultValueComputed: now()
+                  constraints:
+                    nullable: false
+        - sql:
+            sql: CREATE INDEX idx_notification_user ON notification (user_id, is_read, created_at DESC)
+            stripComments: true

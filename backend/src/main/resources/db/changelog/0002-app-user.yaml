@@ -1,0 +1,95 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0002-create-app-user
+      author: invoice-builder
+      changes:
+        - createTable:
+            tableName: app_user
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  defaultValueComputed: gen_random_uuid()
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_user_tenant
+                    referencedTableName: tenant
+                    referencedColumnNames: id
+              - column:
+                  name: email
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+                    unique: true
+                    uniqueConstraintName: uk_user_email
+              - column:
+                  name: password_hash
+                  type: VARCHAR(255)
+              - column:
+                  name: provider
+                  type: VARCHAR(50)
+                  defaultValue: local
+                  constraints:
+                    nullable: false
+              - column:
+                  name: provider_id
+                  type: VARCHAR(255)
+              - column:
+                  name: full_name
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: avatar_url
+                  type: VARCHAR(500)
+              - column:
+                  name: role
+                  type: VARCHAR(50)
+                  defaultValue: MEMBER
+                  constraints:
+                    nullable: false
+              - column:
+                  name: locale
+                  type: VARCHAR(5)
+                  defaultValue: en
+              - column:
+                  name: is_active
+                  type: BOOLEAN
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+              - column:
+                  name: last_login_at
+                  type: TIMESTAMP WITH TIME ZONE
+              - column:
+                  name: created_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  defaultValueComputed: now()
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  defaultValueComputed: now()
+                  constraints:
+                    nullable: false
+        - createIndex:
+            tableName: app_user
+            indexName: idx_user_tenant
+            columns:
+              - column:
+                  name: tenant_id
+        - createIndex:
+            tableName: app_user
+            indexName: idx_user_provider
+            columns:
+              - column:
+                  name: provider
+              - column:
+                  name: provider_id

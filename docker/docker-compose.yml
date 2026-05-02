@@ -1,0 +1,91 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: invoice-postgres
+    environment:
+      POSTGRES_DB: invoice_builder
+      POSTGRES_USER: invoice
+      POSTGRES_PASSWORD: invoice_secret
+    ports:
+      # Host port 5433 to avoid clash with any other local Postgres on 5432.
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U invoice -d invoice_builder"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: invoice-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  mailpit:
+    # Mailpit: modern Mailhog-compatible SMTP test server with native arm64 support.
+    image: axllent/mailpit:latest
+    container_name: invoice-mailpit
+    ports:
+      - "1025:1025"   # SMTP
+      - "8026:8025"   # Web UI (host 8026 to avoid clash with other local mailhog)
+    environment:
+      MP_MAX_MESSAGES: 5000
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
+
+  backend:
+    profiles: [app]
+    build:
+      context: ../backend
+      dockerfile: ../docker/Dockerfile.backend
+    container_name: invoice-backend
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      DATABASE_URL: jdbc:postgresql://postgres:5432/invoice_builder
+      DATABASE_USER: invoice
+      DATABASE_PASSWORD: invoice_secret
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      MAIL_HOST: mailpit
+      MAIL_PORT: 1025
+      JWT_SECRET: ${JWT_SECRET:-dev-jwt-secret-change-me-in-prod-min-32-chars}
+      CORS_ORIGINS: http://localhost:5173
+      SENDGRID_API_KEY: ${SENDGRID_API_KEY:-}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID:-}
+      GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mailpit:
+        condition: service_started
+
+  frontend:
+    profiles: [app]
+    build:
+      context: ../frontend
+      dockerfile: ../docker/Dockerfile.frontend
+      args:
+        VITE_API_URL: http://localhost:8080
+        VITE_WS_URL: ws://localhost:8080/ws
+    container_name: invoice-frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
+    name: invoice_postgres_data

@@ -1,0 +1,21 @@
+spring:
+  jpa:
+    show-sql: false
+
+logging:
+  level:
+    root: WARN
+    com.invoicebuilder: INFO
+    org.springframework.web: WARN
+    org.springframework.security: WARN
+
+server:
+  error:
+    include-message: never
+    include-binding-errors: never
+    include-stacktrace: never
+
+management:
+  endpoint:
+    health:
+      show-details: never

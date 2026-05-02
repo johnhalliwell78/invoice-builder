@@ -1,0 +1,97 @@
+plugins {
+    id 'java'
+    alias(libs.plugins.spring.boot)
+    alias(libs.plugins.spring.dependency.management)
+    id 'jacoco'
+}
+
+group = 'com.invoicebuilder'
+version = '0.1.0-SNAPSHOT'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+// Repositories are declared in settings.gradle via dependencyResolutionManagement.
+
+dependencies {
+    // Spring Boot starters
+    implementation libs.spring.boot.starter.web
+    implementation libs.spring.boot.starter.data.jpa
+    implementation libs.spring.boot.starter.data.redis
+    implementation libs.spring.boot.starter.security
+    implementation libs.spring.boot.starter.oauth2.client
+    implementation libs.spring.boot.starter.validation
+    implementation libs.spring.boot.starter.websocket
+    implementation libs.spring.boot.starter.mail
+    implementation libs.spring.boot.starter.actuator
+
+    // API docs
+    implementation libs.springdoc.openapi
+
+    // Database
+    runtimeOnly libs.postgresql
+    implementation libs.liquibase.core
+
+    // JWT
+    implementation libs.jjwt.api
+    runtimeOnly libs.jjwt.impl
+    runtimeOnly libs.jjwt.jackson
+
+    // PDF
+    implementation libs.itext.core
+    implementation libs.itext.bouncy.castle
+
+    // Email
+    implementation libs.sendgrid.java
+
+    // Rate limiting
+    implementation libs.bucket4j.core
+    implementation libs.bucket4j.redis
+
+    // QR code
+    implementation libs.zxing.core
+    implementation libs.zxing.javase
+
+    // Tests
+    testImplementation libs.spring.boot.starter.test
+    testImplementation libs.spring.security.test
+    testImplementation libs.testcontainers.postgresql
+    testImplementation libs.testcontainers.junit.jupiter
+    testImplementation libs.rest.assured
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.compilerArgs.addAll([
+        '-parameters',
+        '-Xlint:all',
+        '-Xlint:-processing',
+        '-Xlint:-serial'
+    ])
+    options.encoding = 'UTF-8'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+    finalizedBy jacocoTestReport
+}
+
+jacocoTestReport {
+    dependsOn test
+    reports {
+        xml.required = true
+        html.required = true
+    }
+}
+
+bootJar {
+    archiveFileName = 'invoice-builder.jar'
+}

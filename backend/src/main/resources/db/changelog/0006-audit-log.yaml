@@ -1,0 +1,63 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0006-create-audit-log
+      author: invoice-builder
+      changes:
+        - createTable:
+            tableName: audit_log
+            columns:
+              - column:
+                  name: id
+                  type: BIGSERIAL
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: UUID
+              - column:
+                  name: entity_type
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: entity_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: action
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: changes
+                  type: JSONB
+              - column:
+                  name: ip_address
+                  type: VARCHAR(45)
+              - column:
+                  name: user_agent
+                  type: VARCHAR(500)
+              - column:
+                  name: created_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  defaultValueComputed: now()
+                  constraints:
+                    nullable: false
+        - createIndex:
+            tableName: audit_log
+            indexName: idx_audit_log_entity
+            columns:
+              - column:
+                  name: entity_type
+              - column:
+                  name: entity_id
+        - sql:
+            sql: CREATE INDEX idx_audit_log_tenant ON audit_log (tenant_id, created_at DESC)
+            stripComments: true

@@ -1,0 +1,75 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0003-create-customer
+      author: invoice-builder
+      changes:
+        - createTable:
+            tableName: customer
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  defaultValueComputed: gen_random_uuid()
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_customer_tenant
+                    referencedTableName: tenant
+                    referencedColumnNames: id
+              - column:
+                  name: name
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: email
+                  type: VARCHAR(255)
+              - column:
+                  name: phone
+                  type: VARCHAR(50)
+              - column:
+                  name: company
+                  type: VARCHAR(255)
+              - column:
+                  name: address
+                  type: JSONB
+              - column:
+                  name: tax_id
+                  type: VARCHAR(100)
+              - column:
+                  name: notes
+                  type: TEXT
+              - column:
+                  name: deleted_at
+                  type: TIMESTAMP WITH TIME ZONE
+              - column:
+                  name: created_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  defaultValueComputed: now()
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  defaultValueComputed: now()
+                  constraints:
+                    nullable: false
+        - createIndex:
+            tableName: customer
+            indexName: idx_customer_tenant
+            columns:
+              - column:
+                  name: tenant_id
+        - createIndex:
+            tableName: customer
+            indexName: idx_customer_tenant_name
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: name

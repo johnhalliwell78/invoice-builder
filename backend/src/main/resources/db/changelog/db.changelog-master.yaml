@@ -1,0 +1,21 @@
+databaseChangeLog:
+  - include:
+      file: db/changelog/0000-extensions.yaml
+  - include:
+      file: db/changelog/0001-tenant.yaml
+  - include:
+      file: db/changelog/0002-app-user.yaml
+  - include:
+      file: db/changelog/0003-customer.yaml
+  - include:
+      file: db/changelog/0004-invoice.yaml
+  - include:
+      file: db/changelog/0005-invoice-line-item.yaml
+  - include:
+      file: db/changelog/0006-audit-log.yaml
+  - include:
+      file: db/changelog/0007-notification.yaml
+  - include:
+      file: db/changelog/0008-currency-rate.yaml
+  - include:
+      file: db/changelog/0009-refresh-token.yaml

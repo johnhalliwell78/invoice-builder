@@ -1,0 +1,126 @@
+spring:
+  application:
+    name: invoice-builder
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5433/invoice_builder}
+    username: ${DATABASE_USER:invoice}
+    password: ${DATABASE_PASSWORD:invoice_secret}
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 20000
+      idle-timeout: 300000
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: false
+        jdbc.lob.non_contextual_creation: true
+        jdbc.time_zone: UTC
+
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+    enabled: true
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      timeout: 2s
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+
+  mail:
+    host: ${MAIL_HOST:localhost}
+    port: ${MAIL_PORT:1025}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: ${MAIL_SMTP_AUTH:false}
+          starttls.enable: ${MAIL_SMTP_STARTTLS:false}
+
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+  # OAuth2 client registrations are wired in Turn 3 (auth) — kept off classpath
+  # config here so Spring Boot does not try to validate empty placeholders at boot.
+
+server:
+  port: 8080
+  shutdown: graceful
+  forward-headers-strategy: framework
+  error:
+    include-message: never
+    include-binding-errors: never
+    include-stacktrace: never
+    include-exception: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+      base-path: /actuator
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: when_authorized
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: alpha
+    tags-sorter: alpha
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:change-me-must-be-at-least-32-chars-long-for-hmac-sha256}
+    access-token-expiry: PT15M
+    refresh-token-expiry: P7D
+    issuer: invoice-builder
+  oauth2:
+    success-redirect-uri: ${OAUTH2_SUCCESS_REDIRECT:http://localhost:5173/auth/oauth2/callback}
+    failure-redirect-uri: ${OAUTH2_FAILURE_REDIRECT:http://localhost:5173/login?error=oauth2}
+  sendgrid:
+    api-key: ${SENDGRID_API_KEY:}
+    from-email: ${SENDGRID_FROM_EMAIL:noreply@invoicebuilder.local}
+    from-name: ${SENDGRID_FROM_NAME:Invoice Builder}
+  storage:
+    pdf-path: ${PDF_STORAGE_PATH:./storage/pdfs}
+    logo-path: ${LOGO_STORAGE_PATH:./storage/logos}
+  cors:
+    allowed-origins: ${CORS_ORIGINS:http://localhost:5173}
+  rate-limit:
+    login-attempts: 5
+    login-window: PT15M
+    api-requests-per-minute: 100
+
+logging:
+  level:
+    root: INFO
+    com.invoicebuilder: DEBUG
+    org.springframework.web: INFO
+    org.springframework.security: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%X{correlationId:-}] %logger{36} - %msg%n"

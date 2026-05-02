@@ -1,0 +1,11 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0000-create-pgcrypto-extension
+      author: invoice-builder
+      changes:
+        - sql:
+            sql: CREATE EXTENSION IF NOT EXISTS "pgcrypto"
+            stripComments: true
+      rollback:
+        - sql:
+            sql: DROP EXTENSION IF EXISTS "pgcrypto"

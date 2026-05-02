@@ -1,0 +1,22 @@
+spring:
+  liquibase:
+    enabled: true
+  data:
+    redis:
+      repositories:
+        enabled: false
+  mail:
+    host: localhost
+    port: 1025
+
+app:
+  jwt:
+    secret: test-jwt-secret-key-for-integration-tests-32chars-min
+    access-token-expiry: PT5M
+    refresh-token-expiry: P1D
+  storage:
+    pdf-path: ./build/test-storage/pdfs
+
+logging:
+  level:
+    com.invoicebuilder: DEBUG

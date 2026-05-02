@@ -1,0 +1,70 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0001-create-tenant
+      author: invoice-builder
+      changes:
+        - createTable:
+            tableName: tenant
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  defaultValueComputed: gen_random_uuid()
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: name
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: slug
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+                    unique: true
+                    uniqueConstraintName: uk_tenant_slug
+              - column:
+                  name: default_currency
+                  type: VARCHAR(3)
+                  defaultValue: USD
+                  constraints:
+                    nullable: false
+              - column:
+                  name: default_locale
+                  type: VARCHAR(5)
+                  defaultValue: en
+                  constraints:
+                    nullable: false
+              - column:
+                  name: logo_path
+                  type: VARCHAR(500)
+              - column:
+                  name: address
+                  type: JSONB
+              - column:
+                  name: tax_id
+                  type: VARCHAR(100)
+              - column:
+                  name: invoice_prefix
+                  type: VARCHAR(10)
+                  defaultValue: INV
+              - column:
+                  name: next_invoice_number
+                  type: INTEGER
+                  defaultValueNumeric: 1
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  defaultValueComputed: now()
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  defaultValueComputed: now()
+                  constraints:
+                    nullable: false

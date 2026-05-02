@@ -1,0 +1,44 @@
+# --- OS / Editor ---
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+.claude/
+*.iml
+*.swp
+
+# --- Backend (Gradle / Java) ---
+backend/.gradle/
+backend/build/
+backend/out/
+backend/bin/
+backend/!gradle/wrapper/gradle-wrapper.jar
+backend/!**/src/main/**/build/
+backend/!**/src/test/**/build/
+backend/storage/
+
+# --- Frontend (Node / Vite) ---
+frontend/node_modules/
+frontend/dist/
+frontend/dist-ssr/
+frontend/.vite/
+frontend/coverage/
+frontend/*.local
+
+# --- Env / Secrets ---
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# --- Docker / Runtime ---
+docker/data/
+storage/
+
+# --- Logs ---
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*

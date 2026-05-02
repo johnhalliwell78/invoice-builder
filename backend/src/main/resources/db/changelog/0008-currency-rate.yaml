@@ -1,0 +1,33 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0008-create-currency-rate
+      author: invoice-builder
+      changes:
+        - createTable:
+            tableName: currency_rate
+            columns:
+              - column:
+                  name: base_currency
+                  type: VARCHAR(3)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: target_currency
+                  type: VARCHAR(3)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: rate
+                  type: NUMERIC(12, 6)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: fetched_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  defaultValueComputed: now()
+                  constraints:
+                    nullable: false
+        - addPrimaryKey:
+            tableName: currency_rate
+            columnNames: base_currency, target_currency
+            constraintName: pk_currency_rate
