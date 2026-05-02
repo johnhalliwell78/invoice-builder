@@ -5,13 +5,16 @@ import com.invoicebuilder.common.exception.AppException;
 import com.invoicebuilder.common.exception.ErrorCode;
 import com.invoicebuilder.customer.Customer;
 import com.invoicebuilder.customer.CustomerRepository;
+import com.invoicebuilder.email.EmailService;
 import com.invoicebuilder.invoice.dto.InvoiceRequest;
 import com.invoicebuilder.invoice.dto.LineItemRequest;
+import com.invoicebuilder.invoice.dto.SendInvoiceRequest;
 import com.invoicebuilder.pdf.InvoicePdfGenerator;
 import com.invoicebuilder.pdf.PdfStorage;
 import com.invoicebuilder.tenant.Tenant;
 import com.invoicebuilder.tenant.TenantContext;
 import com.invoicebuilder.tenant.TenantRepository;
+import org.springframework.context.MessageSource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -25,6 +28,7 @@ import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.Base64;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 
 @Service
@@ -39,6 +43,8 @@ public class InvoiceService {
     private final InvoiceCalculator calculator;
     private final InvoicePdfGenerator pdfGenerator;
     private final PdfStorage pdfStorage;
+    private final EmailService emailService;
+    private final MessageSource messages;
     private final Clock clock;
 
     public InvoiceService(InvoiceRepository invoiceRepository,
@@ -48,6 +54,8 @@ public class InvoiceService {
                           InvoiceCalculator calculator,
                           InvoicePdfGenerator pdfGenerator,
                           PdfStorage pdfStorage,
+                          EmailService emailService,
+                          MessageSource messages,
                           Clock clock) {
         this.invoiceRepository = invoiceRepository;
         this.customerRepository = customerRepository;
@@ -56,6 +64,8 @@ public class InvoiceService {
         this.calculator = calculator;
         this.pdfGenerator = pdfGenerator;
         this.pdfStorage = pdfStorage;
+        this.emailService = emailService;
+        this.messages = messages;
         this.clock = clock;
     }
 
@@ -157,7 +167,7 @@ public class InvoiceService {
     }
 
     @Transactional
-    public Invoice send(UUID id) {
+    public Invoice send(UUID id, SendInvoiceRequest request) {
         Invoice invoice = load(id);
         invoice.getStatus().requireTransition(InvoiceStatus.SENT);
         invoice.setStatus(InvoiceStatus.SENT);
@@ -165,7 +175,52 @@ public class InvoiceService {
         if (invoice.getPublicToken() == null) {
             invoice.setPublicToken(generatePublicToken());
         }
+
+        if (request == null || !request.isEmailSkipped()) {
+            sendInvoiceEmail(invoice, request);
+        }
         return invoice;
+    }
+
+    /** Convenience overload for callers that don't pass an email payload. */
+    @Transactional
+    public Invoice send(UUID id) {
+        return send(id, null);
+    }
+
+    private void sendInvoiceEmail(Invoice invoice, SendInvoiceRequest request) {
+        Tenant tenant = tenantRepository.findById(invoice.getTenantId())
+                .orElseThrow(() -> new AppException(ErrorCode.TENANT_NOT_FOUND, "Tenant not found"));
+        Customer customer = customerRepository.findById(invoice.getCustomerId())
+                .orElseThrow(() -> new AppException(ErrorCode.CUSTOMER_NOT_FOUND, "Customer not found"));
+
+        String recipient = request != null && request.recipientEmail() != null
+                ? request.recipientEmail()
+                : customer.getEmail();
+        if (recipient == null || recipient.isBlank()) {
+            // Customer has no email and caller didn't override — silently skip.
+            return;
+        }
+
+        Locale locale = Locale.forLanguageTag(
+                tenant.getDefaultLocale() == null ? "en" : tenant.getDefaultLocale());
+        String subject = request != null && request.subject() != null && !request.subject().isBlank()
+                ? request.subject()
+                : messages.getMessage("email.invoice.subject",
+                        new Object[]{invoice.getInvoiceNumber(), tenant.getName()},
+                        locale);
+        String body = request != null && request.message() != null && !request.message().isBlank()
+                ? request.message()
+                : messages.getMessage("email.invoice.bodyDefault",
+                        new Object[]{invoice.getInvoiceNumber(), invoice.getDueDate(), tenant.getName()},
+                        locale);
+
+        byte[] pdf = pdfGenerator.render(invoice, tenant, customer);
+        pdfStorage.save(invoice.getTenantId(), invoice.getId(), pdf);
+
+        emailService.send(new EmailService.EmailMessage(
+                recipient, customer.getName(), subject, body,
+                "invoice-" + invoice.getInvoiceNumber() + ".pdf", pdf));
     }
 
     @Transactional

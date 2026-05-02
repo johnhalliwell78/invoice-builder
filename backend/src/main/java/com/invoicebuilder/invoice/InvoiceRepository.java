@@ -17,6 +17,8 @@ public interface InvoiceRepository extends JpaRepository<Invoice, UUID> {
 
     Optional<Invoice> findByIdAndTenantId(UUID id, UUID tenantId);
 
+    Optional<Invoice> findByPublicToken(String publicToken);
+
     @Query("""
             select i from Invoice i
             where i.tenantId = :tenantId
