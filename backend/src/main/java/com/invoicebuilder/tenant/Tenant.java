@@ -1,17 +1,18 @@
 package com.invoicebuilder.tenant;
 
+import com.invoicebuilder.common.Address;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.OffsetDateTime;
-import java.util.Map;
 import java.util.UUID;
 
 @Entity
@@ -39,8 +40,8 @@ public class Tenant {
     private String logoPath;
 
     @Column(columnDefinition = "jsonb")
-    @JdbcTypeCode(org.hibernate.type.SqlTypes.JSON)
-    private Map<String, Object> address;
+    @JdbcTypeCode(SqlTypes.JSON)
+    private Address address;
 
     @Column(name = "tax_id", length = 100)
     private String taxId;
@@ -107,11 +108,11 @@ public class Tenant {
         this.logoPath = logoPath;
     }
 
-    public Map<String, Object> getAddress() {
+    public Address getAddress() {
         return address;
     }
 
-    public void setAddress(Map<String, Object> address) {
+    public void setAddress(Address address) {
         this.address = address;
     }
 
