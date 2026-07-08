@@ -2,6 +2,7 @@ package com.invoicebuilder.invoice;
 
 import com.invoicebuilder.common.dto.ApiResponse;
 import com.invoicebuilder.common.dto.PageResponse;
+import com.invoicebuilder.invoice.dto.EmailPreviewResponse;
 import com.invoicebuilder.invoice.dto.InvoiceListItem;
 import com.invoicebuilder.invoice.dto.InvoiceRequest;
 import com.invoicebuilder.invoice.dto.InvoiceResponse;
@@ -111,6 +112,12 @@ public class InvoiceController {
     @Operation(summary = "Preview invoice PDF inline")
     public ResponseEntity<byte[]> previewPdf(@PathVariable UUID id) {
         return pdfResponse(id, ContentDisposition.inline());
+    }
+
+    @GetMapping("/{id}/email-preview")
+    @Operation(summary = "Preview the invoice email content (recipient, subject, body)")
+    public ApiResponse<EmailPreviewResponse> emailPreview(@PathVariable UUID id) {
+        return ApiResponse.of(EmailPreviewResponse.from(invoiceService.previewEmail(id)));
     }
 
     private ResponseEntity<byte[]> pdfResponse(UUID id, ContentDisposition.Builder disposition) {

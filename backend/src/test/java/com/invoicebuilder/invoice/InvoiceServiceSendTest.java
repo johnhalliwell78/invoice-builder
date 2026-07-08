@@ -188,4 +188,31 @@ class InvoiceServiceSendTest {
                 .isInstanceOf(AppException.class);
         verifyNoInteractions(emailService);
     }
+
+    @Test
+    void previewEmailReturnsCustomerRecipientAndLocalizedDefaults() {
+        stubInvoiceLookup();
+        stubParties();
+        stubDefaultMessages();
+
+        InvoiceService.EmailPreview preview = service.previewEmail(INVOICE_ID);
+
+        assertThat(preview.recipientEmail()).isEqualTo("billing@widget.example");
+        assertThat(preview.subject()).isEqualTo("Invoice INV-2026-0001 from Acme GmbH");
+        assertThat(preview.body()).isEqualTo("Hi, please find your invoice attached.");
+        verifyNoInteractions(emailService, pdfGenerator);
+    }
+
+    @Test
+    void previewEmailReturnsNullRecipientWhenCustomerHasNoEmail() {
+        stubInvoiceLookup();
+        stubParties();
+        stubDefaultMessages();
+        customer.setEmail(null);
+
+        InvoiceService.EmailPreview preview = service.previewEmail(INVOICE_ID);
+
+        assertThat(preview.recipientEmail()).isNull();
+        assertThat(preview.subject()).isNotBlank();
+    }
 }

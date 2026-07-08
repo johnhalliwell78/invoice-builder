@@ -180,17 +180,27 @@ public class InvoiceService {
         return invoice;
     }
 
-    private void sendInvoiceEmail(Invoice invoice, SendInvoiceRequest request) {
+    /** Resolved email content — what will actually be sent for this invoice. */
+    public record EmailPreview(String recipientEmail, String subject, String body) {
+    }
+
+    @Transactional(readOnly = true)
+    public EmailPreview previewEmail(UUID id) {
+        Invoice invoice = load(id);
         Tenant tenant = loadTenant(invoice.getTenantId());
         Customer customer = loadCustomer(invoice.getCustomerId());
+        return composeEmail(invoice, tenant, customer, null);
+    }
 
+    /**
+     * Resolves recipient, subject, and body: explicit request values win,
+     * otherwise localized defaults from the tenant's locale bundle.
+     */
+    private EmailPreview composeEmail(Invoice invoice, Tenant tenant, Customer customer,
+                                      SendInvoiceRequest request) {
         String recipient = request != null && request.recipientEmail() != null && !request.recipientEmail().isBlank()
                 ? request.recipientEmail()
                 : customer.getEmail();
-        if (recipient == null || recipient.isBlank()) {
-            // Customer has no email and caller didn't override — silently skip.
-            return;
-        }
 
         Locale locale = Locale.forLanguageTag(
                 tenant.getDefaultLocale() == null ? "en" : tenant.getDefaultLocale());
@@ -204,15 +214,26 @@ public class InvoiceService {
                 : messages.getMessage("email.invoice.bodyDefault",
                         new Object[]{invoice.getInvoiceNumber(), invoice.getDueDate(), tenant.getName()},
                         locale);
+        return new EmailPreview(recipient, subject, body);
+    }
+
+    private void sendInvoiceEmail(Invoice invoice, SendInvoiceRequest request) {
+        Tenant tenant = loadTenant(invoice.getTenantId());
+        Customer customer = loadCustomer(invoice.getCustomerId());
+        EmailPreview content = composeEmail(invoice, tenant, customer, request);
+        if (content.recipientEmail() == null || content.recipientEmail().isBlank()) {
+            // Customer has no email and caller didn't override — silently skip.
+            return;
+        }
 
         byte[] pdf = pdfGenerator.render(invoice, tenant, customer);
         pdfStorage.save(invoice.getTenantId(), invoice.getId(), pdf);
 
         emailService.send(new EmailService.EmailMessage(
-                recipient, customer.getName(),
+                content.recipientEmail(), customer.getName(),
                 request == null ? List.of() : request.ccOrEmpty(),
                 request == null ? List.of() : request.bccOrEmpty(),
-                subject, body,
+                content.subject(), content.body(),
                 "invoice-" + invoice.getInvoiceNumber() + ".pdf", pdf));
     }
 
