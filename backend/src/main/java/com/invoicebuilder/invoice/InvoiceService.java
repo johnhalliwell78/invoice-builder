@@ -77,10 +77,8 @@ public class InvoiceService {
     @Transactional(readOnly = true)
     public byte[] renderPdf(UUID id) {
         Invoice invoice = load(id);
-        Tenant tenant = tenantRepository.findById(invoice.getTenantId())
-                .orElseThrow(() -> new AppException(ErrorCode.TENANT_NOT_FOUND, "Tenant not found"));
-        Customer customer = customerRepository.findById(invoice.getCustomerId())
-                .orElseThrow(() -> new AppException(ErrorCode.CUSTOMER_NOT_FOUND, "Customer not found"));
+        Tenant tenant = loadTenant(invoice.getTenantId());
+        Customer customer = loadCustomer(invoice.getCustomerId());
         byte[] pdf = pdfGenerator.render(invoice, tenant, customer);
         pdfStorage.save(invoice.getTenantId(), invoice.getId(), pdf);
         return pdf;
@@ -182,19 +180,11 @@ public class InvoiceService {
         return invoice;
     }
 
-    /** Convenience overload for callers that don't pass an email payload. */
-    @Transactional
-    public Invoice send(UUID id) {
-        return send(id, null);
-    }
-
     private void sendInvoiceEmail(Invoice invoice, SendInvoiceRequest request) {
-        Tenant tenant = tenantRepository.findById(invoice.getTenantId())
-                .orElseThrow(() -> new AppException(ErrorCode.TENANT_NOT_FOUND, "Tenant not found"));
-        Customer customer = customerRepository.findById(invoice.getCustomerId())
-                .orElseThrow(() -> new AppException(ErrorCode.CUSTOMER_NOT_FOUND, "Customer not found"));
+        Tenant tenant = loadTenant(invoice.getTenantId());
+        Customer customer = loadCustomer(invoice.getCustomerId());
 
-        String recipient = request != null && request.recipientEmail() != null
+        String recipient = request != null && request.recipientEmail() != null && !request.recipientEmail().isBlank()
                 ? request.recipientEmail()
                 : customer.getEmail();
         if (recipient == null || recipient.isBlank()) {
@@ -219,7 +209,10 @@ public class InvoiceService {
         pdfStorage.save(invoice.getTenantId(), invoice.getId(), pdf);
 
         emailService.send(new EmailService.EmailMessage(
-                recipient, customer.getName(), List.of(), List.of(), subject, body,
+                recipient, customer.getName(),
+                request == null ? List.of() : request.ccOrEmpty(),
+                request == null ? List.of() : request.bccOrEmpty(),
+                subject, body,
                 "invoice-" + invoice.getInvoiceNumber() + ".pdf", pdf));
     }
 
@@ -258,6 +251,16 @@ public class InvoiceService {
     private Invoice load(UUID id) {
         return invoiceRepository.findByIdAndTenantId(id, TenantContext.require())
                 .orElseThrow(() -> new AppException(ErrorCode.INVOICE_NOT_FOUND, "Invoice not found"));
+    }
+
+    private Tenant loadTenant(UUID tenantId) {
+        return tenantRepository.findById(tenantId)
+                .orElseThrow(() -> new AppException(ErrorCode.TENANT_NOT_FOUND, "Tenant not found"));
+    }
+
+    private Customer loadCustomer(UUID customerId) {
+        return customerRepository.findById(customerId)
+                .orElseThrow(() -> new AppException(ErrorCode.CUSTOMER_NOT_FOUND, "Customer not found"));
     }
 
     private void verifyCustomer(UUID customerId, UUID tenantId) {

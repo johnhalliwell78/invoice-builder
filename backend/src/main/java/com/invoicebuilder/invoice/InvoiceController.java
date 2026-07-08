@@ -5,6 +5,7 @@ import com.invoicebuilder.common.dto.PageResponse;
 import com.invoicebuilder.invoice.dto.InvoiceListItem;
 import com.invoicebuilder.invoice.dto.InvoiceRequest;
 import com.invoicebuilder.invoice.dto.InvoiceResponse;
+import com.invoicebuilder.invoice.dto.SendInvoiceRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -82,9 +83,10 @@ public class InvoiceController {
     }
 
     @PostMapping("/{id}/send")
-    @Operation(summary = "Send invoice (DRAFT → SENT)")
-    public ApiResponse<InvoiceResponse> send(@PathVariable UUID id) {
-        return ApiResponse.of(InvoiceResponse.from(invoiceService.send(id)));
+    @Operation(summary = "Send invoice (DRAFT → SENT) with optional email overrides")
+    public ApiResponse<InvoiceResponse> send(@PathVariable UUID id,
+                                             @Valid @RequestBody(required = false) SendInvoiceRequest request) {
+        return ApiResponse.of(InvoiceResponse.from(invoiceService.send(id, request)));
     }
 
     @PostMapping("/{id}/mark-paid")
