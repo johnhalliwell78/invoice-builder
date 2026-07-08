@@ -27,8 +27,10 @@ import java.time.Clock;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.Base64;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -235,6 +237,21 @@ public class InvoiceService {
                 request == null ? List.of() : request.bccOrEmpty(),
                 content.subject(), content.body(),
                 "invoice-" + invoice.getInvoiceNumber() + ".pdf", pdf));
+    }
+
+    private static final Set<InvoiceStatus> RESENDABLE =
+            EnumSet.of(InvoiceStatus.SENT, InvoiceStatus.VIEWED, InvoiceStatus.OVERDUE);
+
+    /** Re-delivers the invoice email without touching status, sentAt, or the public token. */
+    @Transactional
+    public Invoice resend(UUID id, SendInvoiceRequest request) {
+        Invoice invoice = load(id);
+        if (!RESENDABLE.contains(invoice.getStatus())) {
+            throw new AppException(ErrorCode.INVALID_STATE_TRANSITION,
+                    "Only sent, viewed, or overdue invoices can be resent");
+        }
+        sendInvoiceEmail(invoice, request);
+        return invoice;
     }
 
     @Transactional

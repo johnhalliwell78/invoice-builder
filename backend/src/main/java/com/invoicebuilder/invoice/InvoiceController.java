@@ -90,6 +90,13 @@ public class InvoiceController {
         return ApiResponse.of(InvoiceResponse.from(invoiceService.send(id, request)));
     }
 
+    @PostMapping("/{id}/resend")
+    @Operation(summary = "Resend the invoice email (status unchanged)")
+    public ApiResponse<InvoiceResponse> resend(@PathVariable UUID id,
+                                               @Valid @RequestBody(required = false) SendInvoiceRequest request) {
+        return ApiResponse.of(InvoiceResponse.from(invoiceService.resend(id, request)));
+    }
+
     @PostMapping("/{id}/mark-paid")
     @Operation(summary = "Mark invoice as paid")
     public ApiResponse<InvoiceResponse> markPaid(@PathVariable UUID id) {

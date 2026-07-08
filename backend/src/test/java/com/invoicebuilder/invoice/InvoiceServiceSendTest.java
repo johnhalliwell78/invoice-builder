@@ -215,4 +215,52 @@ class InvoiceServiceSendTest {
         assertThat(preview.recipientEmail()).isNull();
         assertThat(preview.subject()).isNotBlank();
     }
+
+    @Test
+    void resendDeliversEmailWithoutChangingStatusOrSentAt() {
+        stubInvoiceLookup();
+        stubParties();
+        stubPdf();
+        stubDefaultMessages();
+        invoice.setStatus(InvoiceStatus.VIEWED);
+        invoice.setPublicToken("existing-token");
+        OffsetDateTime originalSentAt = OffsetDateTime.parse("2026-07-01T09:00:00Z");
+        invoice.setSentAt(originalSentAt);
+
+        service.resend(INVOICE_ID, null);
+
+        verify(emailService).send(any(EmailService.EmailMessage.class));
+        assertThat(invoice.getStatus()).isEqualTo(InvoiceStatus.VIEWED);
+        assertThat(invoice.getSentAt()).isEqualTo(originalSentAt);
+        assertThat(invoice.getPublicToken()).isEqualTo("existing-token");
+    }
+
+    @Test
+    void resendAppliesEmailOverrides() {
+        stubInvoiceLookup();
+        stubParties();
+        stubPdf();
+        invoice.setStatus(InvoiceStatus.OVERDUE);
+        SendInvoiceRequest request = new SendInvoiceRequest(
+                "reminder@example.com", null, null, "Reminder", "Please pay.", null);
+
+        service.resend(INVOICE_ID, request);
+
+        ArgumentCaptor<EmailService.EmailMessage> captor =
+                ArgumentCaptor.forClass(EmailService.EmailMessage.class);
+        verify(emailService).send(captor.capture());
+        assertThat(captor.getValue().toEmail()).isEqualTo("reminder@example.com");
+        assertThat(captor.getValue().subject()).isEqualTo("Reminder");
+    }
+
+    @Test
+    void resendRejectsDraftAndTerminalStatuses() {
+        stubInvoiceLookup();
+        for (InvoiceStatus status : List.of(InvoiceStatus.DRAFT, InvoiceStatus.PAID, InvoiceStatus.CANCELLED)) {
+            invoice.setStatus(status);
+            assertThatThrownBy(() -> service.resend(INVOICE_ID, null))
+                    .isInstanceOf(AppException.class);
+        }
+        verifyNoInteractions(emailService);
+    }
 }
