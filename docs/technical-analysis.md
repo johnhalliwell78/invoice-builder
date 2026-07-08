@@ -262,7 +262,7 @@ Storybook, tests.
 
 | # | Debt item | Evidence | Cost of ignoring |
 |---|---|---|---|
-| 1 | `/send` ignores request body | [`InvoiceController.java:86`](../backend/src/main/java/com/invoicebuilder/invoice/InvoiceController.java) vs [`invoices.ts:99`](../frontend/src/api/invoices.ts) | Users' custom recipient/subject/message silently vanish — trust-destroying bug |
+| 1 | `/send` ignores request body | [`InvoiceController.java:86`](../backend/src/main/java/com/invoicebuilder/invoice/InvoiceController.java) vs [`invoices.ts:99`](../frontend/src/api/invoices.ts) | ✅ Resolved 2026-07-08 — `/send` and `/resend` accept the full `SendInvoiceRequest` (see `docs/superpowers/plans/2026-07-08-email-sending.md`) |
 | 2 | Roles modeled, never enforced | `Role` in JWT + `@EnableMethodSecurity`, but zero `@PreAuthorize` anywhere | "Multi-user tenant" is an illusion; MEMBER = OWNER |
 | 3 | OVERDUE sweep never scheduled | `markOverdueForTenant` + `findOverdueIds` exist; no `@Scheduled` in repo | Status/filters/badge for OVERDUE are dead UI |
 | 4 | Unused infra: Redis, bucket4j, WebSocket/STOMP starters (backend); `@stomp/stompjs`, `sockjs-client`, query-devtools (frontend) | grep: zero usages; compose + CI still run Redis | Slower builds, misleading README, `app.rate-limit` config lies |

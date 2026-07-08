@@ -53,8 +53,7 @@ jobs:
         run: pnpm type-check
 
       - name: Test
-        run: pnpm test:run --coverage
-        continue-on-error: true   # no tests yet — flip to false once Phase 7 lands
+        run: pnpm test:run
 
       - name: Build
         run: pnpm build

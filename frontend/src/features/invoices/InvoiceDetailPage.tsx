@@ -33,6 +33,7 @@ export default function InvoiceDetailPage() {
   const del = useDeleteInvoice();
   const [previewOpen, setPreviewOpen] = useState(false);
   const [sendOpen, setSendOpen] = useState(false);
+  const [sendMode, setSendMode] = useState<'send' | 'resend'>('send');
 
   if (isPending) {
     return <div className="text-muted-foreground">{t('common.loading')}</div>;
@@ -54,6 +55,7 @@ export default function InvoiceDetailPage() {
   const isDraft = invoice.status === 'DRAFT';
   const canMarkPaid = ['SENT', 'VIEWED', 'OVERDUE'].includes(invoice.status);
   const canCancel = ['SENT', 'VIEWED', 'OVERDUE'].includes(invoice.status);
+  const canResend = ['SENT', 'VIEWED', 'OVERDUE'].includes(invoice.status);
   const cur = invoice.currency;
 
   return (
@@ -87,7 +89,7 @@ export default function InvoiceDetailPage() {
                   <Trash2 className="mr-2 h-4 w-4 text-destructive" />
                   {t('common.delete')}
                 </Button>
-                <Button onClick={() => setSendOpen(true)}>
+                <Button onClick={() => { setSendMode('send'); setSendOpen(true); }}>
                   <Send className="mr-2 h-4 w-4" />
                   {t('invoices.actions.send')}
                 </Button>
@@ -97,6 +99,15 @@ export default function InvoiceDetailPage() {
               <Button onClick={() => void action(markPaid.mutateAsync(invoice.id), 'invoices.markedPaid')}>
                 <CheckCircle2 className="mr-2 h-4 w-4" />
                 {t('invoices.actions.markPaid')}
+              </Button>
+            )}
+            {canResend && (
+              <Button
+                variant="outline"
+                onClick={() => { setSendMode('resend'); setSendOpen(true); }}
+              >
+                <Send className="mr-2 h-4 w-4" />
+                {t('invoices.actions.resend')}
               </Button>
             )}
             {canCancel && (
@@ -223,7 +234,7 @@ export default function InvoiceDetailPage() {
         invoiceId={invoice.id}
         invoiceNumber={invoice.invoiceNumber}
         defaultRecipient={customer.data?.email ?? null}
-        onSent={() => void 0}
+        mode={sendMode}
       />
     </div>
   );
