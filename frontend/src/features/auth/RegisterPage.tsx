@@ -68,7 +68,7 @@ export default function RegisterPage() {
           <CardDescription>{t('auth.register.subtitle')}</CardDescription>
         </CardHeader>
         <CardContent>
-          <form className="space-y-4" onSubmit={handleSubmit(onSubmit)} noValidate>
+          <form className="space-y-4" onSubmit={(e) => void handleSubmit(onSubmit)(e)} noValidate>
             <div className="space-y-1.5">
               <Label htmlFor="fullName">{t('auth.register.fullName')}</Label>
               <Input

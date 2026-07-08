@@ -63,7 +63,7 @@ export default function LoginPage() {
           <CardDescription>{t('auth.login.subtitle')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <form className="space-y-4" onSubmit={handleSubmit(onSubmit)} noValidate>
+          <form className="space-y-4" onSubmit={(e) => void handleSubmit(onSubmit)(e)} noValidate>
             <div className="space-y-1.5">
               <Label htmlFor="email">{t('auth.login.email')}</Label>
               <Input

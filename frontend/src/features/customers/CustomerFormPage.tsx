@@ -122,7 +122,7 @@ export default function CustomerFormPage() {
         }
       />
 
-      <form onSubmit={handleSubmit(onSubmit)} className="grid max-w-3xl gap-6" noValidate>
+      <form onSubmit={(e) => void handleSubmit(onSubmit)(e)} className="grid max-w-3xl gap-6" noValidate>
         <Card>
           <CardHeader>
             <CardTitle>{t('customers.section.contact')}</CardTitle>

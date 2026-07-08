@@ -158,7 +158,7 @@ export default function InvoiceFormPage() {
         }
       />
 
-      <form onSubmit={handleSubmit(onSubmit)} className="grid max-w-4xl gap-6" noValidate>
+      <form onSubmit={(e) => void handleSubmit(onSubmit)(e)} className="grid max-w-4xl gap-6" noValidate>
         <Card>
           <CardHeader>
             <CardTitle>{t('invoices.section.metadata')}</CardTitle>

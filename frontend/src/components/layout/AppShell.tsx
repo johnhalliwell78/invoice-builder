@@ -74,7 +74,7 @@ export function AppShell() {
               <div className="truncate text-muted-foreground">{user.email}</div>
             </div>
           )}
-          <Button variant="ghost" size="sm" onClick={handleLogout} disabled={signingOut}>
+          <Button variant="ghost" size="sm" onClick={() => void handleLogout()} disabled={signingOut}>
             <LogOut className="mr-2 h-4 w-4" />
             {t('nav.logout')}
           </Button>
