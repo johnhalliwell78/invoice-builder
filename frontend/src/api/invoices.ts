@@ -4,9 +4,17 @@ import type { ApiEnvelope, Invoice, InvoiceListItem, InvoiceStatus, PageResponse
 
 export interface SendInvoicePayload {
   recipientEmail?: string;
+  cc?: string[];
+  bcc?: string[];
   subject?: string;
   message?: string;
   skipEmail?: boolean;
+}
+
+export interface EmailPreview {
+  recipientEmail: string | null;
+  subject: string;
+  body: string;
 }
 
 export interface PublicInvoiceView {
@@ -98,6 +106,16 @@ export async function deleteInvoice(id: string): Promise<void> {
 
 export async function sendInvoice(id: string, payload?: SendInvoicePayload): Promise<Invoice> {
   const res = await api.post<ApiEnvelope<Invoice>>(`/api/v1/invoices/${id}/send`, payload ?? {});
+  return res.data.data;
+}
+
+export async function getEmailPreview(id: string): Promise<EmailPreview> {
+  const res = await api.get<ApiEnvelope<EmailPreview>>(`/api/v1/invoices/${id}/email-preview`);
+  return res.data.data;
+}
+
+export async function resendInvoice(id: string, payload?: SendInvoicePayload): Promise<Invoice> {
+  const res = await api.post<ApiEnvelope<Invoice>>(`/api/v1/invoices/${id}/resend`, payload ?? {});
   return res.data.data;
 }
 

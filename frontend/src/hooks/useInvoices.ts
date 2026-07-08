@@ -3,9 +3,11 @@ import {
   cancelInvoice,
   createInvoice,
   deleteInvoice,
+  getEmailPreview,
   getInvoice,
   listInvoices,
   markPaid,
+  resendInvoice,
   sendInvoice,
   updateInvoice,
   type InvoiceListParams,
@@ -60,6 +62,23 @@ export function useSendInvoice() {
   return useMutation({
     mutationFn: (args: { id: string; payload?: SendInvoicePayload }) =>
       sendInvoice(args.id, args.payload),
+    onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
+  });
+}
+
+export function useEmailPreview(id: string, enabled: boolean) {
+  return useQuery({
+    queryKey: [...KEY, 'email-preview', id],
+    queryFn: () => getEmailPreview(id),
+    enabled,
+  });
+}
+
+export function useResendInvoice() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (args: { id: string; payload?: SendInvoicePayload }) =>
+      resendInvoice(args.id, args.payload),
     onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
   });
 }
