@@ -153,7 +153,12 @@
       "subject": "Subject",
       "subjectPlaceholder": "Leave blank for the default subject",
       "message": "Message",
-      "messagePlaceholder": "Add a personal note to the email…"
+      "messagePlaceholder": "Add a personal note to the email…",
+      "cc": "CC",
+      "bcc": "BCC",
+      "ccBccHint": "Separate multiple addresses with commas.",
+      "invalidEmailList": "One or more email addresses are invalid.",
+      "invalidRecipient": "Enter a valid email address."
     },
     "totals": {
       "subtotal": "Subtotal",
@@ -167,7 +172,8 @@
       "send": "Send",
       "markPaid": "Mark paid",
       "cancel": "Cancel",
-      "preview": "Preview"
+      "preview": "Preview",
+      "resend": "Resend"
     },
     "timeline": {
       "sent": "Sent on",
@@ -180,6 +186,9 @@
     "sendTitle": "Send {{number}}",
     "sendSubtitle": "We'll attach the PDF and email the recipient.",
     "sending": "Sending…",
+    "resent": "Invoice email resent.",
+    "resendTitle": "Resend {{number}}",
+    "resendSubtitle": "Send the invoice email again — the status won't change.",
     "publicTitle": "Invoice",
     "publicNotFound": "This invoice link is invalid or has expired."
   },

@@ -147,7 +147,18 @@
       "taxPct": "MwSt. %",
       "discPct": "Rabatt %",
       "notes": "Notizen",
-      "terms": "Zahlungsbedingungen"
+      "terms": "Zahlungsbedingungen",
+      "recipient": "Empfänger-E-Mail",
+      "recipientHint": "Standardmäßig die E-Mail-Adresse des Kunden, wenn leer.",
+      "subject": "Betreff",
+      "subjectPlaceholder": "Leer lassen für den Standardbetreff",
+      "message": "Nachricht",
+      "messagePlaceholder": "Persönliche Notiz zur E-Mail hinzufügen…",
+      "cc": "CC",
+      "bcc": "BCC",
+      "ccBccHint": "Mehrere Adressen durch Kommas trennen.",
+      "invalidEmailList": "Mindestens eine E-Mail-Adresse ist ungültig.",
+      "invalidRecipient": "Gültige E-Mail-Adresse eingeben."
     },
     "totals": {
       "subtotal": "Zwischensumme",
@@ -160,13 +171,26 @@
     "actions": {
       "send": "Senden",
       "markPaid": "Als bezahlt markieren",
-      "cancel": "Stornieren"
+      "cancel": "Stornieren",
+      "preview": "Vorschau",
+      "resend": "Erneut senden"
     },
     "timeline": {
       "sent": "Versendet am",
       "viewed": "Angesehen am",
       "paid": "Bezahlt am"
-    }
+    },
+    "previewTitle": "Vorschau {{number}}",
+    "previewFailed": "Vorschau konnte nicht geladen werden.",
+    "download": "PDF herunterladen",
+    "sendTitle": "{{number}} senden",
+    "sendSubtitle": "Wir hängen das PDF an und senden die E-Mail an den Empfänger.",
+    "sending": "Wird gesendet…",
+    "resent": "Rechnungs-E-Mail erneut gesendet.",
+    "resendTitle": "{{number}} erneut senden",
+    "resendSubtitle": "Die Rechnungs-E-Mail erneut senden — der Status bleibt unverändert.",
+    "publicTitle": "Rechnung",
+    "publicNotFound": "Dieser Rechnungslink ist ungültig oder abgelaufen."
   },
   "common": {
     "loading": "Wird geladen…",
@@ -181,6 +205,7 @@
     "next": "Weiter",
     "pageOf": "Seite {{current}} von {{total}}",
     "loadFailed": "Daten konnten nicht geladen werden. Bitte erneut versuchen.",
-    "retry": "Erneut versuchen"
+    "retry": "Erneut versuchen",
+    "close": "Schließen"
   }
 }

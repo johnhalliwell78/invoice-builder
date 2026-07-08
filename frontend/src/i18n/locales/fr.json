@@ -147,7 +147,18 @@
       "taxPct": "TVA %",
       "discPct": "Remise %",
       "notes": "Notes",
-      "terms": "Conditions de paiement"
+      "terms": "Conditions de paiement",
+      "recipient": "E-mail du destinataire",
+      "recipientHint": "Par défaut, l'e-mail du client si vide.",
+      "subject": "Objet",
+      "subjectPlaceholder": "Laisser vide pour l'objet par défaut",
+      "message": "Message",
+      "messagePlaceholder": "Ajouter une note personnelle à l'e-mail…",
+      "cc": "CC",
+      "bcc": "Cci",
+      "ccBccHint": "Séparez plusieurs adresses par des virgules.",
+      "invalidEmailList": "Au moins une adresse e-mail n'est pas valide.",
+      "invalidRecipient": "Saisissez une adresse e-mail valide."
     },
     "totals": {
       "subtotal": "Sous-total",
@@ -160,13 +171,26 @@
     "actions": {
       "send": "Envoyer",
       "markPaid": "Marquer comme payée",
-      "cancel": "Annuler"
+      "cancel": "Annuler",
+      "preview": "Aperçu",
+      "resend": "Renvoyer"
     },
     "timeline": {
       "sent": "Envoyée le",
       "viewed": "Consultée le",
       "paid": "Payée le"
-    }
+    },
+    "previewTitle": "Aperçu {{number}}",
+    "previewFailed": "Impossible de charger l'aperçu.",
+    "download": "Télécharger le PDF",
+    "sendTitle": "Envoyer {{number}}",
+    "sendSubtitle": "Nous joignons le PDF et envoyons l'e-mail au destinataire.",
+    "sending": "Envoi…",
+    "resent": "E-mail de facture renvoyé.",
+    "resendTitle": "Renvoyer {{number}}",
+    "resendSubtitle": "Renvoyer l'e-mail de la facture — le statut reste inchangé.",
+    "publicTitle": "Facture",
+    "publicNotFound": "Ce lien de facture est invalide ou a expiré."
   },
   "common": {
     "loading": "Chargement…",
@@ -181,6 +205,7 @@
     "next": "Suivant",
     "pageOf": "Page {{current}} sur {{total}}",
     "loadFailed": "Impossible de charger les données. Réessayez.",
-    "retry": "Réessayer"
+    "retry": "Réessayer",
+    "close": "Fermer"
   }
 }
