@@ -219,7 +219,7 @@ public class InvoiceService {
         pdfStorage.save(invoice.getTenantId(), invoice.getId(), pdf);
 
         emailService.send(new EmailService.EmailMessage(
-                recipient, customer.getName(), subject, body,
+                recipient, customer.getName(), List.of(), List.of(), subject, body,
                 "invoice-" + invoice.getInvoiceNumber() + ".pdf", pdf));
     }
 
