@@ -197,6 +197,45 @@
     "publicTitle": "Invoice",
     "publicNotFound": "This invoice link is invalid or has expired."
   },
+  "settings": {
+    "title": "Settings",
+    "subtitle": "Your company profile, invoicing defaults, and branding.",
+    "saved": "Settings saved.",
+    "section": {
+      "company": "Company",
+      "address": "Address",
+      "branding": "Branding & PDF",
+      "logo": "Logo"
+    },
+    "fields": {
+      "name": "Company name",
+      "currency": "Default currency",
+      "locale": "Default language",
+      "taxId": "Tax ID",
+      "invoicePrefix": "Invoice prefix",
+      "invoicePrefixHint": "Letters, digits, and dashes — up to 10 characters.",
+      "defaultTemplate": "Default PDF template",
+      "street": "Street",
+      "city": "City",
+      "state": "State",
+      "zip": "ZIP",
+      "country": "Country",
+      "brandingColor": "Accent color",
+      "brandingColorHint": "Used for highlights in the PDF templates.",
+      "footerText": "PDF footer",
+      "footerTextHint": "Shown at the bottom of every invoice PDF.",
+      "paymentInfo": "Payment information",
+      "paymentInfoHint": "Bank details shown on the PDF, e.g. IBAN and BIC."
+    },
+    "logo": {
+      "none": "No logo uploaded yet.",
+      "upload": "Upload logo",
+      "remove": "Remove",
+      "hint": "PNG or JPEG, max 2 MB. Shown in the PDF header.",
+      "uploaded": "Logo updated.",
+      "removed": "Logo removed."
+    }
+  },
   "common": {
     "loading": "Loading…",
     "cancel": "Cancel",

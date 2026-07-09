@@ -197,6 +197,45 @@
     "publicTitle": "Rechnung",
     "publicNotFound": "Dieser Rechnungslink ist ungültig oder abgelaufen."
   },
+  "settings": {
+    "title": "Einstellungen",
+    "subtitle": "Firmenprofil, Rechnungsvorgaben und Branding.",
+    "saved": "Einstellungen gespeichert.",
+    "section": {
+      "company": "Unternehmen",
+      "address": "Adresse",
+      "branding": "Branding & PDF",
+      "logo": "Logo"
+    },
+    "fields": {
+      "name": "Firmenname",
+      "currency": "Standardwährung",
+      "locale": "Standardsprache",
+      "taxId": "USt-ID",
+      "invoicePrefix": "Rechnungspräfix",
+      "invoicePrefixHint": "Buchstaben, Ziffern und Bindestriche — bis zu 10 Zeichen.",
+      "defaultTemplate": "Standard-PDF-Vorlage",
+      "street": "Straße",
+      "city": "Stadt",
+      "state": "Bundesland",
+      "zip": "PLZ",
+      "country": "Land",
+      "brandingColor": "Akzentfarbe",
+      "brandingColorHint": "Wird für Hervorhebungen in den PDF-Vorlagen verwendet.",
+      "footerText": "PDF-Fußzeile",
+      "footerTextHint": "Erscheint am Ende jeder Rechnungs-PDF.",
+      "paymentInfo": "Zahlungsinformationen",
+      "paymentInfoHint": "Bankverbindung auf der PDF, z. B. IBAN und BIC."
+    },
+    "logo": {
+      "none": "Noch kein Logo hochgeladen.",
+      "upload": "Logo hochladen",
+      "remove": "Entfernen",
+      "hint": "PNG oder JPEG, max. 2 MB. Erscheint im PDF-Kopf.",
+      "uploaded": "Logo aktualisiert.",
+      "removed": "Logo entfernt."
+    }
+  },
   "common": {
     "loading": "Wird geladen…",
     "cancel": "Abbrechen",

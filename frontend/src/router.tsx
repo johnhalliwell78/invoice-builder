@@ -15,6 +15,7 @@ const InvoiceListPage = lazy(() => import('@/features/invoices/InvoiceListPage')
 const InvoiceFormPage = lazy(() => import('@/features/invoices/InvoiceFormPage'));
 const InvoiceDetailPage = lazy(() => import('@/features/invoices/InvoiceDetailPage'));
 const PublicInvoicePage = lazy(() => import('@/features/public/PublicInvoicePage'));
+const SettingsPage = lazy(() => import('@/features/settings/SettingsPage'));
 
 const Fallback = () => (
   <div className="flex min-h-screen items-center justify-center text-muted-foreground">Loading…</div>
@@ -128,19 +129,17 @@ export const router = createBrowserRouter([
               </Suspense>
             ),
           },
-          { path: 'settings', element: <Placeholder name="Settings" /> },
+          {
+            path: 'settings',
+            element: (
+              <Suspense fallback={<Fallback />}>
+                <SettingsPage />
+              </Suspense>
+            ),
+          },
         ],
       },
     ],
   },
   { path: '*', element: <Navigate to="/" replace /> },
 ]);
-
-function Placeholder({ name }: { name: string }) {
-  return (
-    <div className="space-y-2">
-      <h1 className="text-3xl font-semibold tracking-tight">{name}</h1>
-      <p className="text-muted-foreground">Coming in Phase 2.</p>
-    </div>
-  );
-}

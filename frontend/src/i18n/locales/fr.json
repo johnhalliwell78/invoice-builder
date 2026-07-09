@@ -197,6 +197,45 @@
     "publicTitle": "Facture",
     "publicNotFound": "Ce lien de facture est invalide ou a expiré."
   },
+  "settings": {
+    "title": "Paramètres",
+    "subtitle": "Profil de l'entreprise, valeurs par défaut et branding.",
+    "saved": "Paramètres enregistrés.",
+    "section": {
+      "company": "Entreprise",
+      "address": "Adresse",
+      "branding": "Branding & PDF",
+      "logo": "Logo"
+    },
+    "fields": {
+      "name": "Nom de l'entreprise",
+      "currency": "Devise par défaut",
+      "locale": "Langue par défaut",
+      "taxId": "Numéro fiscal",
+      "invoicePrefix": "Préfixe de facture",
+      "invoicePrefixHint": "Lettres, chiffres et tirets — jusqu'à 10 caractères.",
+      "defaultTemplate": "Modèle PDF par défaut",
+      "street": "Rue",
+      "city": "Ville",
+      "state": "Région",
+      "zip": "Code postal",
+      "country": "Pays",
+      "brandingColor": "Couleur d'accent",
+      "brandingColorHint": "Utilisée pour les accents dans les modèles PDF.",
+      "footerText": "Pied de page PDF",
+      "footerTextHint": "Affiché au bas de chaque facture PDF.",
+      "paymentInfo": "Informations de paiement",
+      "paymentInfoHint": "Coordonnées bancaires affichées sur le PDF, p. ex. IBAN et BIC."
+    },
+    "logo": {
+      "none": "Aucun logo téléversé pour l'instant.",
+      "upload": "Téléverser un logo",
+      "remove": "Supprimer",
+      "hint": "PNG ou JPEG, max 2 Mo. Affiché dans l'en-tête du PDF.",
+      "uploaded": "Logo mis à jour.",
+      "removed": "Logo supprimé."
+    }
+  },
   "common": {
     "loading": "Chargement…",
     "cancel": "Annuler",
