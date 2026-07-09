@@ -158,7 +158,12 @@
       "bcc": "BCC",
       "ccBccHint": "Mehrere Adressen durch Kommas trennen.",
       "invalidEmailList": "Mindestens eine E-Mail-Adresse ist ungültig.",
-      "invalidRecipient": "Gültige E-Mail-Adresse eingeben."
+      "invalidRecipient": "Gültige E-Mail-Adresse eingeben.",
+      "template": "PDF-Vorlage"
+    },
+    "template": {
+      "classic": "Klassisch",
+      "modern": "Modern"
     },
     "totals": {
       "subtotal": "Zwischensumme",

@@ -29,6 +29,7 @@ const numberString = (max?: number) =>
 const schema = z.object({
   customerId: z.string().uuid(),
   currency: z.string().length(3),
+  template: z.enum(['classic', 'modern']),
   issueDate: z.string().min(1),
   dueDate: z.string().min(1),
   discountAmount: z.string().optional(),
@@ -80,6 +81,7 @@ export default function InvoiceFormPage() {
     defaultValues: {
       customerId: '',
       currency: 'USD',
+      template: 'classic',
       issueDate: today,
       dueDate: addDaysIso(today, 30),
       discountAmount: '0.00',
@@ -96,6 +98,7 @@ export default function InvoiceFormPage() {
       reset({
         customerId: existing.customerId,
         currency: existing.currency,
+        template: existing.template === 'modern' ? 'modern' : 'classic',
         issueDate: existing.issueDate,
         dueDate: existing.dueDate,
         discountAmount: existing.discountAmount,
@@ -116,6 +119,7 @@ export default function InvoiceFormPage() {
     const payload: InvoicePayload = {
       customerId: values.customerId,
       currency: values.currency,
+      template: values.template,
       issueDate: values.issueDate,
       dueDate: values.dueDate,
       discountAmount: values.discountAmount,
@@ -197,6 +201,16 @@ export default function InvoiceFormPage() {
             <div className="space-y-1.5">
               <Label>{t('invoices.fields.dueDate')} *</Label>
               <Input type="date" aria-invalid={!!errors.dueDate} {...register('dueDate')} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>{t('invoices.fields.template')}</Label>
+              <select
+                className="h-10 w-full rounded-md border bg-background px-3 text-sm"
+                {...register('template')}
+              >
+                <option value="classic">{t('invoices.template.classic')}</option>
+                <option value="modern">{t('invoices.template.modern')}</option>
+              </select>
             </div>
           </CardContent>
         </Card>

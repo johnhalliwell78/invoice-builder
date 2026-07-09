@@ -227,6 +227,7 @@ export default function InvoiceDetailPage() {
         onClose={() => setPreviewOpen(false)}
         invoiceId={invoice.id}
         invoiceNumber={invoice.invoiceNumber}
+        initialTemplate={invoice.template}
       />
       <SendInvoiceDialog
         open={sendOpen}

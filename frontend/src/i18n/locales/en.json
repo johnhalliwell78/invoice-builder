@@ -158,7 +158,12 @@
       "bcc": "BCC",
       "ccBccHint": "Separate multiple addresses with commas.",
       "invalidEmailList": "One or more email addresses are invalid.",
-      "invalidRecipient": "Enter a valid email address."
+      "invalidRecipient": "Enter a valid email address.",
+      "template": "PDF template"
+    },
+    "template": {
+      "classic": "Classic",
+      "modern": "Modern"
     },
     "totals": {
       "subtotal": "Subtotal",

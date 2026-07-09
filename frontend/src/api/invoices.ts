@@ -119,9 +119,16 @@ export async function resendInvoice(id: string, payload?: SendInvoicePayload): P
   return res.data.data;
 }
 
-/** Fetches the rendered PDF as a Blob via the authenticated axios client. */
-export async function fetchInvoicePdf(id: string, mode: 'preview' | 'pdf' = 'preview'): Promise<Blob> {
-  const res = await api.get(`/api/v1/invoices/${id}/${mode}`, { responseType: 'blob' });
+/** Fetches the rendered PDF as a Blob, optionally with a transient template override. */
+export async function fetchInvoicePdf(
+  id: string,
+  mode: 'preview' | 'pdf' = 'preview',
+  template?: string,
+): Promise<Blob> {
+  const res = await api.get(`/api/v1/invoices/${id}/${mode}`, {
+    responseType: 'blob',
+    params: template ? { template } : undefined,
+  });
   return res.data as Blob;
 }
 
