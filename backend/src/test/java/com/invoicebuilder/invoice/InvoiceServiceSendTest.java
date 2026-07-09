@@ -7,6 +7,7 @@ import com.invoicebuilder.email.EmailService;
 import com.invoicebuilder.invoice.dto.SendInvoiceRequest;
 import com.invoicebuilder.pdf.InvoicePdfGenerator;
 import com.invoicebuilder.pdf.PdfStorage;
+import com.invoicebuilder.tenant.LogoStorage;
 import com.invoicebuilder.tenant.Tenant;
 import com.invoicebuilder.tenant.TenantContext;
 import com.invoicebuilder.tenant.TenantRepository;
@@ -33,6 +34,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -54,6 +57,7 @@ class InvoiceServiceSendTest {
     @Mock private InvoiceCalculator calculator;
     @Mock private InvoicePdfGenerator pdfGenerator;
     @Mock private PdfStorage pdfStorage;
+    @Mock private LogoStorage logoStorage;
     @Mock private EmailService emailService;
     @Mock private MessageSource messages;
 
@@ -65,8 +69,8 @@ class InvoiceServiceSendTest {
     @BeforeEach
     void setUp() {
         service = new InvoiceService(invoiceRepository, customerRepository, tenantRepository,
-                numberGenerator, calculator, pdfGenerator, pdfStorage, emailService, messages,
-                Clock.fixed(NOW, ZoneOffset.UTC));
+                numberGenerator, calculator, pdfGenerator, pdfStorage, logoStorage, emailService,
+                messages, Clock.fixed(NOW, ZoneOffset.UTC));
         TenantContext.set(TENANT_ID);
 
         invoice = new Invoice();
@@ -102,7 +106,8 @@ class InvoiceServiceSendTest {
     }
 
     private void stubPdf() {
-        when(pdfGenerator.render(invoice, tenant, customer)).thenReturn(PDF);
+        when(pdfGenerator.render(eq(invoice), eq(tenant), eq(customer), isNull(), nullable(byte[].class)))
+                .thenReturn(PDF);
     }
 
     private void stubDefaultMessages() {

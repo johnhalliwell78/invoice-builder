@@ -19,6 +19,18 @@ public class TenantService {
     }
 
     @Transactional(readOnly = true)
+    public Tenant loadCurrent() {
+        return load(TenantContext.require());
+    }
+
+    @Transactional
+    public TenantResponse setLogoPath(String logoPath) {
+        Tenant tenant = load(TenantContext.require());
+        tenant.setLogoPath(logoPath);
+        return TenantResponse.from(tenant);
+    }
+
+    @Transactional(readOnly = true)
     public TenantResponse getCurrent() {
         return TenantResponse.from(load(TenantContext.require()));
     }

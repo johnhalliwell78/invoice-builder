@@ -65,17 +65,23 @@ public class InvoicePdfGenerator {
     }
 
     public byte[] render(Invoice invoice, Tenant tenant, Customer customer) {
-        return render(invoice, tenant, customer, null);
+        return render(invoice, tenant, customer, null, null);
+    }
+
+    public byte[] render(Invoice invoice, Tenant tenant, Customer customer, String templateOverride) {
+        return render(invoice, tenant, customer, templateOverride, null);
     }
 
     /**
-     * Renders with an optional template override; {@code null} falls back to
-     * the template stored on the invoice.
+     * Renders with an optional template override ({@code null} falls back to
+     * the template stored on the invoice) and optional logo image bytes.
      */
-    public byte[] render(Invoice invoice, Tenant tenant, Customer customer, String templateOverride) {
+    public byte[] render(Invoice invoice, Tenant tenant, Customer customer,
+                         String templateOverride, byte[] logoBytes) {
         String template = templateOverride != null ? templateOverride : invoice.getTemplate();
         Locale locale = Locale.forLanguageTag(
                 tenant.getDefaultLocale() == null ? "en" : tenant.getDefaultLocale());
+        DeviceRgb accent = parseAccent(tenant.getBrandingColor());
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         PdfWriter writer = new PdfWriter(out);
         PdfDocument pdf = new PdfDocument(writer);
@@ -84,26 +90,48 @@ public class InvoicePdfGenerator {
             doc.setMargins(48, 48, 48, 48);
             boolean modern = "modern".equalsIgnoreCase(template);
             if (modern) {
-                renderModernHeader(doc, invoice, tenant, locale);
+                renderModernHeader(doc, invoice, tenant, locale, accent, logoBytes);
             } else {
-                renderClassicHeader(doc, invoice, tenant, locale);
+                renderClassicHeader(doc, invoice, tenant, locale, logoBytes);
             }
             renderParties(doc, invoice, tenant, customer, locale);
-            renderLineItems(doc, invoice, locale, modern);
-            renderTotals(doc, invoice, locale, modern);
-            renderFooter(doc, invoice, locale);
+            renderLineItems(doc, invoice, locale, modern, accent);
+            renderTotals(doc, invoice, locale, modern, accent);
+            renderFooter(doc, invoice, tenant, locale);
         } finally {
             doc.close();
         }
         return out.toByteArray();
     }
 
+    /** Parses a #RRGGBB branding color; anything malformed falls back to the default accent. */
+    private static DeviceRgb parseAccent(String hex) {
+        if (hex == null || !hex.matches("#[0-9A-Fa-f]{6}")) {
+            return ACCENT;
+        }
+        return new DeviceRgb(
+                Integer.parseInt(hex.substring(1, 3), 16),
+                Integer.parseInt(hex.substring(3, 5), 16),
+                Integer.parseInt(hex.substring(5, 7), 16));
+    }
+
+    private static Image logoImage(byte[] logoBytes) {
+        Image img = new Image(ImageDataFactory.create(logoBytes));
+        img.setMaxHeight(40);
+        img.setMaxWidth(160);
+        return img;
+    }
+
     // ------------------------------------------------------------------ headers
 
-    private void renderClassicHeader(Document doc, Invoice invoice, Tenant tenant, Locale locale) {
+    private void renderClassicHeader(Document doc, Invoice invoice, Tenant tenant, Locale locale,
+                                     byte[] logoBytes) {
         Table header = new Table(UnitValue.createPercentArray(new float[]{60, 40})).useAllAvailableWidth();
-        Cell left = bare()
-                .add(p(tenant.getName(), 18, true))
+        Cell left = bare();
+        if (logoBytes != null && logoBytes.length > 0) {
+            left.add(logoImage(logoBytes));
+        }
+        left.add(p(tenant.getName(), 18, true))
                 .add(formatTenantAddress(tenant));
         Cell right = bare()
                 .add(p(t("pdf.invoice.title", locale).toUpperCase(), 28, true)
@@ -116,15 +144,20 @@ public class InvoicePdfGenerator {
         doc.add(new Paragraph().setFixedLeading(8));
     }
 
-    private void renderModernHeader(Document doc, Invoice invoice, Tenant tenant, Locale locale) {
+    private void renderModernHeader(Document doc, Invoice invoice, Tenant tenant, Locale locale,
+                                    DeviceRgb accent, byte[] logoBytes) {
         Table band = new Table(UnitValue.createPercentArray(new float[]{60, 40})).useAllAvailableWidth();
-        Cell left = bare().setBackgroundColor(ACCENT).setPadding(16)
+        Cell left = bare().setBackgroundColor(accent).setPadding(16)
                 .add(coloredP(t("pdf.invoice.title", locale).toUpperCase(), 24, WHITE, true))
                 .add(new Paragraph(invoice.getInvoiceNumber())
                         .setFontColor(new DeviceRgb(220, 230, 255)));
-        Cell right = bare().setBackgroundColor(ACCENT).setPadding(16)
-                .add(coloredP(tenant.getName(), 16, WHITE, true)
-                        .setTextAlignment(TextAlignment.RIGHT));
+        Cell right = bare().setBackgroundColor(accent).setPadding(16)
+                .setVerticalAlignment(VerticalAlignment.MIDDLE);
+        if (logoBytes != null && logoBytes.length > 0) {
+            right.add(logoImage(logoBytes).setHorizontalAlignment(HorizontalAlignment.RIGHT));
+        }
+        right.add(coloredP(tenant.getName(), 16, WHITE, true)
+                .setTextAlignment(TextAlignment.RIGHT));
         band.addCell(left);
         band.addCell(right);
         doc.add(band);
@@ -159,15 +192,16 @@ public class InvoicePdfGenerator {
 
     // ------------------------------------------------------------------ line items
 
-    private void renderLineItems(Document doc, Invoice invoice, Locale locale, boolean modern) {
+    private void renderLineItems(Document doc, Invoice invoice, Locale locale, boolean modern,
+                                 DeviceRgb accent) {
         Table table = new Table(UnitValue.createPercentArray(new float[]{45, 12, 16, 11, 16}))
                 .useAllAvailableWidth().setMarginTop(24);
 
-        addHeaderCell(table, t("pdf.invoice.description", locale), TextAlignment.LEFT, modern);
-        addHeaderCell(table, t("pdf.invoice.qty", locale), TextAlignment.RIGHT, modern);
-        addHeaderCell(table, t("pdf.invoice.unitPrice", locale), TextAlignment.RIGHT, modern);
-        addHeaderCell(table, t("pdf.invoice.taxRate", locale), TextAlignment.RIGHT, modern);
-        addHeaderCell(table, t("pdf.invoice.amount", locale), TextAlignment.RIGHT, modern);
+        addHeaderCell(table, t("pdf.invoice.description", locale), TextAlignment.LEFT, modern, accent);
+        addHeaderCell(table, t("pdf.invoice.qty", locale), TextAlignment.RIGHT, modern, accent);
+        addHeaderCell(table, t("pdf.invoice.unitPrice", locale), TextAlignment.RIGHT, modern, accent);
+        addHeaderCell(table, t("pdf.invoice.taxRate", locale), TextAlignment.RIGHT, modern, accent);
+        addHeaderCell(table, t("pdf.invoice.amount", locale), TextAlignment.RIGHT, modern, accent);
 
         NumberFormat money = currencyFormat(invoice.getCurrency(), locale);
         int row = 0;
@@ -185,25 +219,26 @@ public class InvoicePdfGenerator {
 
     // ------------------------------------------------------------------ totals
 
-    private void renderTotals(Document doc, Invoice invoice, Locale locale, boolean modern) {
+    private void renderTotals(Document doc, Invoice invoice, Locale locale, boolean modern,
+                              DeviceRgb accent) {
         NumberFormat money = currencyFormat(invoice.getCurrency(), locale);
         Table totals = new Table(UnitValue.createPercentArray(new float[]{60, 40}))
                 .useAllAvailableWidth().setMarginTop(16);
         totals.addCell(bare());
         Table right = new Table(UnitValue.createPercentArray(new float[]{60, 40}));
         right.setHorizontalAlignment(HorizontalAlignment.RIGHT);
-        addTotalRow(right, t("pdf.invoice.subtotal", locale), money.format(invoice.getSubtotal()), false, false);
-        addTotalRow(right, t("pdf.invoice.tax", locale), money.format(invoice.getTaxTotal()), false, false);
+        addTotalRow(right, t("pdf.invoice.subtotal", locale), money.format(invoice.getSubtotal()), false, false, accent);
+        addTotalRow(right, t("pdf.invoice.tax", locale), money.format(invoice.getTaxTotal()), false, false, accent);
         if (invoice.getDiscountAmount().signum() > 0) {
             addTotalRow(right, t("pdf.invoice.discount", locale),
-                    "-" + money.format(invoice.getDiscountAmount()), false, false);
+                    "-" + money.format(invoice.getDiscountAmount()), false, false, accent);
         }
         addTotalRow(right, t("pdf.invoice.total", locale), money.format(invoice.getTotal()),
-                true, modern);
+                true, modern, accent);
         if (invoice.getAmountPaid() != null && invoice.getAmountPaid().signum() > 0) {
             BigDecimal balance = invoice.getTotal().subtract(invoice.getAmountPaid());
-            addTotalRow(right, t("pdf.invoice.amountPaid", locale), money.format(invoice.getAmountPaid()), false, false);
-            addTotalRow(right, t("pdf.invoice.balanceDue", locale), money.format(balance), true, false);
+            addTotalRow(right, t("pdf.invoice.amountPaid", locale), money.format(invoice.getAmountPaid()), false, false, accent);
+            addTotalRow(right, t("pdf.invoice.balanceDue", locale), money.format(balance), true, false, accent);
         }
         totals.addCell(bare().add(right));
         doc.add(totals);
@@ -211,7 +246,7 @@ public class InvoicePdfGenerator {
 
     // ------------------------------------------------------------------ footer
 
-    private void renderFooter(Document doc, Invoice invoice, Locale locale) {
+    private void renderFooter(Document doc, Invoice invoice, Tenant tenant, Locale locale) {
         if (invoice.getNotes() != null && !invoice.getNotes().isBlank()) {
             doc.add(label(t("pdf.invoice.notes", locale).toUpperCase()).setMarginTop(24));
             doc.add(new Paragraph(invoice.getNotes()).setFontColor(MUTED));
@@ -219,6 +254,10 @@ public class InvoicePdfGenerator {
         if (invoice.getTerms() != null && !invoice.getTerms().isBlank()) {
             doc.add(label(t("pdf.invoice.terms", locale).toUpperCase()).setMarginTop(12));
             doc.add(new Paragraph(invoice.getTerms()).setFontColor(MUTED));
+        }
+        if (tenant.getPaymentInfo() != null && !tenant.getPaymentInfo().isBlank()) {
+            doc.add(label(t("pdf.invoice.paymentInfo", locale).toUpperCase()).setMarginTop(12));
+            doc.add(new Paragraph(tenant.getPaymentInfo()).setFontSize(10));
         }
 
         if (invoice.getPublicToken() != null) {
@@ -236,8 +275,13 @@ public class InvoicePdfGenerator {
                 doc.add(footer);
             }
         }
+        if (tenant.getFooterText() != null && !tenant.getFooterText().isBlank()) {
+            doc.add(new Paragraph(tenant.getFooterText())
+                    .setFontColor(MUTED).setFontSize(9).setMarginTop(16)
+                    .setTextAlignment(TextAlignment.CENTER));
+        }
         Paragraph thanks = new Paragraph(t("pdf.invoice.thankYou", locale))
-                .setFontColor(MUTED).setMarginTop(16).setTextAlignment(TextAlignment.CENTER);
+                .setFontColor(MUTED).setMarginTop(8).setTextAlignment(TextAlignment.CENTER);
         thanks.setProperty(Property.ITALIC_SIMULATION, Boolean.TRUE);
         doc.add(thanks);
     }
@@ -287,14 +331,15 @@ public class InvoicePdfGenerator {
         return p(text, 8, true).setFontColor(MUTED);
     }
 
-    private static void addHeaderCell(Table table, String text, TextAlignment align, boolean modern) {
-        DeviceRgb borderColor = modern ? ACCENT : BORDER_COLOR;
+    private static void addHeaderCell(Table table, String text, TextAlignment align, boolean modern,
+                                      DeviceRgb accent) {
+        DeviceRgb borderColor = modern ? accent : BORDER_COLOR;
         Cell cell = new Cell()
                 .setBorder(Border.NO_BORDER)
                 .setBorderBottom(new SolidBorder(borderColor, 1))
                 .setPadding(8)
                 .add(p(text, 9, true).setTextAlignment(align)
-                        .setFontColor(modern ? ACCENT : MUTED));
+                        .setFontColor(modern ? accent : MUTED));
         table.addHeaderCell(cell);
     }
 
@@ -308,22 +353,23 @@ public class InvoicePdfGenerator {
         table.addCell(cell);
     }
 
-    private static void addTotalRow(Table table, String label, String value, boolean emphasized, boolean accentBg) {
+    private static void addTotalRow(Table table, String label, String value, boolean emphasized,
+                                    boolean accentBg, DeviceRgb accent) {
         Paragraph labelP = p(label, emphasized ? 11 : 10, true);
         Paragraph valueP = p(value, emphasized ? 13 : 10, true).setTextAlignment(TextAlignment.RIGHT);
         if (accentBg) {
             labelP.setFontColor(WHITE);
             valueP.setFontColor(WHITE);
         } else if (emphasized) {
-            labelP.setFontColor(ACCENT);
+            labelP.setFontColor(accent);
         } else {
             labelP.setFontColor(MUTED);
         }
         Cell labelCell = new Cell().setBorder(Border.NO_BORDER).setPadding(6).add(labelP);
         Cell valueCell = new Cell().setBorder(Border.NO_BORDER).setPadding(6).add(valueP);
         if (accentBg) {
-            labelCell.setBackgroundColor(ACCENT);
-            valueCell.setBackgroundColor(ACCENT);
+            labelCell.setBackgroundColor(accent);
+            valueCell.setBackgroundColor(accent);
         }
         table.addCell(labelCell);
         table.addCell(valueCell);

@@ -8,6 +8,7 @@ import com.invoicebuilder.invoice.dto.InvoiceRequest;
 import com.invoicebuilder.invoice.dto.LineItemRequest;
 import com.invoicebuilder.pdf.InvoicePdfGenerator;
 import com.invoicebuilder.pdf.PdfStorage;
+import com.invoicebuilder.tenant.LogoStorage;
 import com.invoicebuilder.tenant.Tenant;
 import com.invoicebuilder.tenant.TenantContext;
 import com.invoicebuilder.tenant.TenantRepository;
@@ -33,6 +34,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -50,6 +52,7 @@ class InvoiceServiceTemplateTest {
     @Mock private InvoiceNumberGenerator numberGenerator;
     @Mock private InvoicePdfGenerator pdfGenerator;
     @Mock private PdfStorage pdfStorage;
+    @Mock private LogoStorage logoStorage;
     @Mock private EmailService emailService;
     @Mock private MessageSource messages;
 
@@ -61,8 +64,8 @@ class InvoiceServiceTemplateTest {
     @BeforeEach
     void setUp() {
         service = new InvoiceService(invoiceRepository, customerRepository, tenantRepository,
-                numberGenerator, new InvoiceCalculator(), pdfGenerator, pdfStorage, emailService,
-                messages, Clock.fixed(Instant.parse("2026-07-09T12:00:00Z"), ZoneOffset.UTC));
+                numberGenerator, new InvoiceCalculator(), pdfGenerator, pdfStorage, logoStorage,
+                emailService, messages, Clock.fixed(Instant.parse("2026-07-09T12:00:00Z"), ZoneOffset.UTC));
         TenantContext.set(TENANT_ID);
 
         tenant = new Tenant();
@@ -123,26 +126,26 @@ class InvoiceServiceTemplateTest {
     void renderPdfHonorsTemplateOverrideWithoutMutatingInvoice() {
         when(invoiceRepository.findByIdAndTenantId(INVOICE_ID, TENANT_ID)).thenReturn(Optional.of(invoice));
         when(customerRepository.findById(CUSTOMER_ID)).thenReturn(Optional.of(customer));
-        when(pdfGenerator.render(eq(invoice), eq(tenant), eq(customer), eq("modern")))
+        when(pdfGenerator.render(eq(invoice), eq(tenant), eq(customer), eq("modern"), nullable(byte[].class)))
                 .thenReturn(new byte[]{1});
 
         byte[] pdf = service.renderPdf(INVOICE_ID, "modern");
 
         assertThat(pdf).isNotEmpty();
         assertThat(invoice.getTemplate()).isEqualTo("classic");
-        verify(pdfGenerator).render(invoice, tenant, customer, "modern");
+        verify(pdfGenerator).render(eq(invoice), eq(tenant), eq(customer), eq("modern"), nullable(byte[].class));
     }
 
     @Test
     void renderPdfWithoutOverrideUsesStoredTemplate() {
         when(invoiceRepository.findByIdAndTenantId(INVOICE_ID, TENANT_ID)).thenReturn(Optional.of(invoice));
         when(customerRepository.findById(CUSTOMER_ID)).thenReturn(Optional.of(customer));
-        when(pdfGenerator.render(eq(invoice), eq(tenant), eq(customer), isNull()))
+        when(pdfGenerator.render(eq(invoice), eq(tenant), eq(customer), isNull(), nullable(byte[].class)))
                 .thenReturn(new byte[]{1});
 
         service.renderPdf(INVOICE_ID, null);
 
-        verify(pdfGenerator).render(invoice, tenant, customer, null);
+        verify(pdfGenerator).render(eq(invoice), eq(tenant), eq(customer), isNull(), nullable(byte[].class));
     }
 
     @Test

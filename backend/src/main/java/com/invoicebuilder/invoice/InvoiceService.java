@@ -11,6 +11,7 @@ import com.invoicebuilder.invoice.dto.LineItemRequest;
 import com.invoicebuilder.invoice.dto.SendInvoiceRequest;
 import com.invoicebuilder.pdf.InvoicePdfGenerator;
 import com.invoicebuilder.pdf.PdfStorage;
+import com.invoicebuilder.tenant.LogoStorage;
 import com.invoicebuilder.tenant.Tenant;
 import com.invoicebuilder.tenant.TenantContext;
 import com.invoicebuilder.tenant.TenantRepository;
@@ -45,6 +46,7 @@ public class InvoiceService {
     private final InvoiceCalculator calculator;
     private final InvoicePdfGenerator pdfGenerator;
     private final PdfStorage pdfStorage;
+    private final LogoStorage logoStorage;
     private final EmailService emailService;
     private final MessageSource messages;
     private final Clock clock;
@@ -56,6 +58,7 @@ public class InvoiceService {
                           InvoiceCalculator calculator,
                           InvoicePdfGenerator pdfGenerator,
                           PdfStorage pdfStorage,
+                          LogoStorage logoStorage,
                           EmailService emailService,
                           MessageSource messages,
                           Clock clock) {
@@ -66,6 +69,7 @@ public class InvoiceService {
         this.calculator = calculator;
         this.pdfGenerator = pdfGenerator;
         this.pdfStorage = pdfStorage;
+        this.logoStorage = logoStorage;
         this.emailService = emailService;
         this.messages = messages;
         this.clock = clock;
@@ -92,7 +96,8 @@ public class InvoiceService {
                 ? null : requireKnownTemplate(templateOverride.trim());
         Tenant tenant = loadTenant(invoice.getTenantId());
         Customer customer = loadCustomer(invoice.getCustomerId());
-        byte[] pdf = pdfGenerator.render(invoice, tenant, customer, override);
+        byte[] pdf = pdfGenerator.render(invoice, tenant, customer, override,
+                logoStorage.loadOrNull(tenant));
         if (override == null) {
             pdfStorage.save(invoice.getTenantId(), invoice.getId(), pdf);
         }
@@ -242,7 +247,8 @@ public class InvoiceService {
             return;
         }
 
-        byte[] pdf = pdfGenerator.render(invoice, tenant, customer);
+        byte[] pdf = pdfGenerator.render(invoice, tenant, customer, null,
+                logoStorage.loadOrNull(tenant));
         pdfStorage.save(invoice.getTenantId(), invoice.getId(), pdf);
 
         emailService.send(new EmailService.EmailMessage(
