@@ -78,11 +78,24 @@ public class InvoiceService {
      */
     @Transactional(readOnly = true)
     public byte[] renderPdf(UUID id) {
+        return renderPdf(id, null);
+    }
+
+    /**
+     * Renders with an optional template override (transient — the stored
+     * template and the cached artifact are only written for canonical renders).
+     */
+    @Transactional(readOnly = true)
+    public byte[] renderPdf(UUID id, String templateOverride) {
         Invoice invoice = load(id);
+        String override = templateOverride == null || templateOverride.isBlank()
+                ? null : requireKnownTemplate(templateOverride.trim());
         Tenant tenant = loadTenant(invoice.getTenantId());
         Customer customer = loadCustomer(invoice.getCustomerId());
-        byte[] pdf = pdfGenerator.render(invoice, tenant, customer);
-        pdfStorage.save(invoice.getTenantId(), invoice.getId(), pdf);
+        byte[] pdf = pdfGenerator.render(invoice, tenant, customer, override);
+        if (override == null) {
+            pdfStorage.save(invoice.getTenantId(), invoice.getId(), pdf);
+        }
         return pdf;
     }
 
@@ -110,19 +123,19 @@ public class InvoiceService {
     public Invoice create(InvoiceRequest request) {
         UUID tenantId = TenantContext.require();
         verifyCustomer(request.customerId(), tenantId);
+        Tenant tenant = loadTenant(tenantId);
 
         Invoice invoice = new Invoice();
         invoice.setTenantId(tenantId);
         invoice.setCustomerId(request.customerId());
         invoice.setStatus(InvoiceStatus.DRAFT);
         invoice.setInvoiceNumber(numberGenerator.reserveNext(tenantId));
-        invoice.setCurrency(resolveCurrency(request.currency(), tenantId));
+        invoice.setCurrency(resolveCurrency(request.currency(), tenant));
         invoice.setIssueDate(request.issueDate());
         invoice.setDueDate(request.dueDate());
         invoice.setNotes(request.notes());
         invoice.setTerms(request.terms());
-        invoice.setTemplate(request.template() == null || request.template().isBlank()
-                ? "classic" : request.template().trim());
+        invoice.setTemplate(resolveTemplate(request.template(), tenant));
         invoice.setCreatedBy(currentUserId());
 
         applyLineItems(invoice, request.lineItems());
@@ -139,15 +152,16 @@ public class InvoiceService {
                     "Only DRAFT invoices can be edited");
         }
         verifyCustomer(request.customerId(), invoice.getTenantId());
+        Tenant tenant = loadTenant(invoice.getTenantId());
 
         invoice.setCustomerId(request.customerId());
-        invoice.setCurrency(resolveCurrency(request.currency(), invoice.getTenantId()));
+        invoice.setCurrency(resolveCurrency(request.currency(), tenant));
         invoice.setIssueDate(request.issueDate());
         invoice.setDueDate(request.dueDate());
         invoice.setNotes(request.notes());
         invoice.setTerms(request.terms());
         if (request.template() != null && !request.template().isBlank()) {
-            invoice.setTemplate(request.template().trim());
+            invoice.setTemplate(requireKnownTemplate(request.template().trim()));
         }
 
         invoice.clearLineItems();
@@ -307,11 +321,27 @@ public class InvoiceService {
                         "Customer not found in this tenant"));
     }
 
-    private String resolveCurrency(String requested, UUID tenantId) {
+    private static String resolveCurrency(String requested, Tenant tenant) {
         if (requested != null && !requested.isBlank()) {
             return requested.toUpperCase();
         }
-        return tenantRepository.findById(tenantId).map(Tenant::getDefaultCurrency).orElse("USD");
+        return tenant.getDefaultCurrency() == null ? "USD" : tenant.getDefaultCurrency();
+    }
+
+    /** Valid explicit template wins; blank falls back to the tenant default. */
+    private static String resolveTemplate(String requested, Tenant tenant) {
+        if (requested == null || requested.isBlank()) {
+            String def = tenant.getDefaultTemplate();
+            return def == null || def.isBlank() ? "classic" : def;
+        }
+        return requireKnownTemplate(requested.trim());
+    }
+
+    private static String requireKnownTemplate(String template) {
+        if (!InvoicePdfGenerator.TEMPLATES.contains(template)) {
+            throw new AppException(ErrorCode.VALIDATION_FAILED, "Unknown template: " + template);
+        }
+        return template;
     }
 
     private void applyLineItems(Invoice invoice, List<LineItemRequest> requests) {

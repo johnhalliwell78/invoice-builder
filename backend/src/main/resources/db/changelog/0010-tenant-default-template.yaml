@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0010-tenant-default-template
+      author: invoice-builder
+      changes:
+        - addColumn:
+            tableName: tenant
+            columns:
+              - column:
+                  name: default_template
+                  type: VARCHAR(50)
+                  defaultValue: classic
+                  constraints:
+                    nullable: false

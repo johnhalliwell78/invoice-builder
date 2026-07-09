@@ -110,15 +110,17 @@ public class InvoiceController {
     }
 
     @GetMapping("/{id}/pdf")
-    @Operation(summary = "Download invoice PDF (attachment)")
-    public ResponseEntity<byte[]> downloadPdf(@PathVariable UUID id) {
-        return pdfResponse(id, ContentDisposition.attachment());
+    @Operation(summary = "Download invoice PDF (attachment), optionally with a template override")
+    public ResponseEntity<byte[]> downloadPdf(@PathVariable UUID id,
+                                              @RequestParam(required = false) String template) {
+        return pdfResponse(id, ContentDisposition.attachment(), template);
     }
 
     @GetMapping("/{id}/preview")
-    @Operation(summary = "Preview invoice PDF inline")
-    public ResponseEntity<byte[]> previewPdf(@PathVariable UUID id) {
-        return pdfResponse(id, ContentDisposition.inline());
+    @Operation(summary = "Preview invoice PDF inline, optionally with a template override")
+    public ResponseEntity<byte[]> previewPdf(@PathVariable UUID id,
+                                             @RequestParam(required = false) String template) {
+        return pdfResponse(id, ContentDisposition.inline(), template);
     }
 
     @GetMapping("/{id}/email-preview")
@@ -127,8 +129,9 @@ public class InvoiceController {
         return ApiResponse.of(EmailPreviewResponse.from(invoiceService.previewEmail(id)));
     }
 
-    private ResponseEntity<byte[]> pdfResponse(UUID id, ContentDisposition.Builder disposition) {
-        byte[] pdf = invoiceService.renderPdf(id);
+    private ResponseEntity<byte[]> pdfResponse(UUID id, ContentDisposition.Builder disposition,
+                                               String templateOverride) {
+        byte[] pdf = invoiceService.renderPdf(id, templateOverride);
         String filename = invoiceService.suggestedFilename(id);
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_PDF)

@@ -39,6 +39,9 @@ public class TenantService {
         if (request.invoicePrefix() != null) {
             tenant.setInvoicePrefix(request.invoicePrefix().trim());
         }
+        if (request.defaultTemplate() != null) {
+            tenant.setDefaultTemplate(request.defaultTemplate());
+        }
         if (request.address() != null) {
             tenant.setAddress(request.address());
         }

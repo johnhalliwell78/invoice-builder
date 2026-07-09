@@ -49,6 +49,9 @@ public class Tenant {
     @Column(name = "invoice_prefix", length = 10)
     private String invoicePrefix = "INV";
 
+    @Column(name = "default_template", nullable = false, length = 50)
+    private String defaultTemplate = "classic";
+
     @Column(name = "next_invoice_number", nullable = false)
     private int nextInvoiceNumber = 1;
 
@@ -130,6 +133,14 @@ public class Tenant {
 
     public void setInvoicePrefix(String invoicePrefix) {
         this.invoicePrefix = invoicePrefix;
+    }
+
+    public String getDefaultTemplate() {
+        return defaultTemplate;
+    }
+
+    public void setDefaultTemplate(String defaultTemplate) {
+        this.defaultTemplate = defaultTemplate;
     }
 
     public int getNextInvoiceNumber() {

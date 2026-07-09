@@ -16,6 +16,7 @@ public record TenantResponse(
         Address address,
         String taxId,
         String invoicePrefix,
+        String defaultTemplate,
         int nextInvoiceNumber,
         OffsetDateTime createdAt
 ) {
@@ -31,6 +32,7 @@ public record TenantResponse(
                 tenant.getAddress(),
                 tenant.getTaxId(),
                 tenant.getInvoicePrefix(),
+                tenant.getDefaultTemplate(),
                 tenant.getNextInvoiceNumber(),
                 tenant.getCreatedAt()
         );

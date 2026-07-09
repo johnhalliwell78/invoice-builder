@@ -17,6 +17,9 @@ public record TenantUpdateRequest(
         @Pattern(regexp = "^[A-Za-z0-9-]{1,10}$", message = "Prefix may only contain letters, digits, and dashes")
         String invoicePrefix,
 
+        @Pattern(regexp = "^(classic|modern)$", message = "Unknown template")
+        String defaultTemplate,
+
         Address address
 ) {
 }

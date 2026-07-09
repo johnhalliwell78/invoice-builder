@@ -19,3 +19,5 @@ databaseChangeLog:
       file: db/changelog/0008-currency-rate.yaml
   - include:
       file: db/changelog/0009-refresh-token.yaml
+  - include:
+      file: db/changelog/0010-tenant-default-template.yaml

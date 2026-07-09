@@ -47,6 +47,9 @@ import java.util.Locale;
 @Service
 public class InvoicePdfGenerator {
 
+    /** The visual templates this generator can render. Single source of truth. */
+    public static final java.util.Set<String> TEMPLATES = java.util.Set.of("classic", "modern");
+
     private static final DeviceRgb ACCENT = new DeviceRgb(37, 99, 235);   // Tailwind blue-600
     private static final DeviceRgb MUTED = new DeviceRgb(115, 115, 115);
     private static final DeviceRgb LIGHT_BG = new DeviceRgb(245, 245, 247);
@@ -62,6 +65,15 @@ public class InvoicePdfGenerator {
     }
 
     public byte[] render(Invoice invoice, Tenant tenant, Customer customer) {
+        return render(invoice, tenant, customer, null);
+    }
+
+    /**
+     * Renders with an optional template override; {@code null} falls back to
+     * the template stored on the invoice.
+     */
+    public byte[] render(Invoice invoice, Tenant tenant, Customer customer, String templateOverride) {
+        String template = templateOverride != null ? templateOverride : invoice.getTemplate();
         Locale locale = Locale.forLanguageTag(
                 tenant.getDefaultLocale() == null ? "en" : tenant.getDefaultLocale());
         ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -70,7 +82,7 @@ public class InvoicePdfGenerator {
         Document doc = new Document(pdf, PageSize.A4);
         try {
             doc.setMargins(48, 48, 48, 48);
-            boolean modern = "modern".equalsIgnoreCase(invoice.getTemplate());
+            boolean modern = "modern".equalsIgnoreCase(template);
             if (modern) {
                 renderModernHeader(doc, invoice, tenant, locale);
             } else {
