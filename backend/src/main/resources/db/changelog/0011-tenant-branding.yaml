@@ -1,0 +1,17 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0011-tenant-branding
+      author: invoice-builder
+      changes:
+        - addColumn:
+            tableName: tenant
+            columns:
+              - column:
+                  name: footer_text
+                  type: TEXT
+              - column:
+                  name: payment_info
+                  type: TEXT
+              - column:
+                  name: branding_color
+                  type: VARCHAR(7)

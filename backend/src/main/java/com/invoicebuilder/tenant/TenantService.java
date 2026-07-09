@@ -45,6 +45,15 @@ public class TenantService {
         if (request.address() != null) {
             tenant.setAddress(request.address());
         }
+        if (request.footerText() != null) {
+            tenant.setFooterText(request.footerText().isBlank() ? null : request.footerText().trim());
+        }
+        if (request.paymentInfo() != null) {
+            tenant.setPaymentInfo(request.paymentInfo().isBlank() ? null : request.paymentInfo().trim());
+        }
+        if (request.brandingColor() != null) {
+            tenant.setBrandingColor(request.brandingColor().toUpperCase());
+        }
         return TenantResponse.from(tenant);
     }
 

@@ -17,6 +17,9 @@ public record TenantResponse(
         String taxId,
         String invoicePrefix,
         String defaultTemplate,
+        String footerText,
+        String paymentInfo,
+        String brandingColor,
         int nextInvoiceNumber,
         OffsetDateTime createdAt
 ) {
@@ -33,6 +36,9 @@ public record TenantResponse(
                 tenant.getTaxId(),
                 tenant.getInvoicePrefix(),
                 tenant.getDefaultTemplate(),
+                tenant.getFooterText(),
+                tenant.getPaymentInfo(),
+                tenant.getBrandingColor(),
                 tenant.getNextInvoiceNumber(),
                 tenant.getCreatedAt()
         );

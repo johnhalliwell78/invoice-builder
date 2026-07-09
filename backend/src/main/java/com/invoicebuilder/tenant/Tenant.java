@@ -52,6 +52,15 @@ public class Tenant {
     @Column(name = "default_template", nullable = false, length = 50)
     private String defaultTemplate = "classic";
 
+    @Column(name = "footer_text", columnDefinition = "TEXT")
+    private String footerText;
+
+    @Column(name = "payment_info", columnDefinition = "TEXT")
+    private String paymentInfo;
+
+    @Column(name = "branding_color", length = 7)
+    private String brandingColor;
+
     @Column(name = "next_invoice_number", nullable = false)
     private int nextInvoiceNumber = 1;
 
@@ -141,6 +150,30 @@ public class Tenant {
 
     public void setDefaultTemplate(String defaultTemplate) {
         this.defaultTemplate = defaultTemplate;
+    }
+
+    public String getFooterText() {
+        return footerText;
+    }
+
+    public void setFooterText(String footerText) {
+        this.footerText = footerText;
+    }
+
+    public String getPaymentInfo() {
+        return paymentInfo;
+    }
+
+    public void setPaymentInfo(String paymentInfo) {
+        this.paymentInfo = paymentInfo;
+    }
+
+    public String getBrandingColor() {
+        return brandingColor;
+    }
+
+    public void setBrandingColor(String brandingColor) {
+        this.brandingColor = brandingColor;
     }
 
     public int getNextInvoiceNumber() {

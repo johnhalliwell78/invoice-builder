@@ -20,6 +20,13 @@ public record TenantUpdateRequest(
         @Pattern(regexp = "^(classic|modern)$", message = "Unknown template")
         String defaultTemplate,
 
-        Address address
+        Address address,
+
+        @Size(max = 2000) String footerText,
+
+        @Size(max = 2000) String paymentInfo,
+
+        @Pattern(regexp = "^#[0-9A-Fa-f]{6}$", message = "Color must be a #RRGGBB hex value")
+        String brandingColor
 ) {
 }
