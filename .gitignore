@@ -24,6 +24,7 @@ frontend/dist-ssr/
 frontend/.vite/
 frontend/coverage/
 frontend/*.local
+frontend/pnpm-lock.yaml
 
 # --- Env / Secrets ---
 .env

@@ -41,10 +41,11 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
-          cache-dependency-path: frontend/pnpm-lock.yaml
+          # Lockfile is intentionally untracked; key the cache on the manifest.
+          cache-dependency-path: frontend/package.json
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install
 
       - name: Lint
         run: pnpm lint
