@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -27,4 +28,14 @@ public interface CustomerRepository extends JpaRepository<Customer, UUID> {
     Page<Customer> search(@Param("tenantId") UUID tenantId,
                           @Param("q") String query,
                           Pageable pageable);
+
+    @Query(value = """
+            select to_char(c.created_at, 'YYYY-MM') as month, count(*)
+            from customer c
+            where c.tenant_id = :tenantId and c.created_at >= :since and c.deleted_at is null
+            group by 1
+            order by 1
+            """, nativeQuery = true)
+    List<Object[]> newCustomersByMonth(@Param("tenantId") UUID tenantId,
+                                       @Param("since") java.time.OffsetDateTime since);
 }

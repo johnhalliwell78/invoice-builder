@@ -8,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -42,4 +43,44 @@ public interface InvoiceRepository extends JpaRepository<Invoice, UUID> {
     @Query("select distinct i.tenantId from Invoice i where i.status in :statuses and i.dueDate < :today")
     List<UUID> findTenantIdsWithOverdueCandidates(@Param("statuses") List<InvoiceStatus> statuses,
                                                   @Param("today") LocalDate today);
+
+    // ---------- dashboard aggregates ----------
+
+    @Query("""
+            select i.currency, i.status, sum(i.total) from Invoice i
+            where i.tenantId = :tenantId and i.status in :statuses
+            group by i.currency, i.status
+            """)
+    List<Object[]> sumOpenByCurrencyAndStatus(@Param("tenantId") UUID tenantId,
+                                              @Param("statuses") List<InvoiceStatus> statuses);
+
+    @Query("""
+            select i.currency, sum(i.total) from Invoice i
+            where i.tenantId = :tenantId and i.status = com.invoicebuilder.invoice.InvoiceStatus.PAID
+              and i.paidAt >= :since
+            group by i.currency
+            """)
+    List<Object[]> sumPaidSinceByCurrency(@Param("tenantId") UUID tenantId,
+                                          @Param("since") OffsetDateTime since);
+
+    @Query("select i.status, count(i) from Invoice i where i.tenantId = :tenantId group by i.status")
+    List<Object[]> countByStatus(@Param("tenantId") UUID tenantId);
+
+    @Query(value = """
+            select to_char(i.paid_at, 'YYYY-MM') as month, i.currency, sum(i.total)
+            from invoice i
+            where i.tenant_id = :tenantId and i.status = 'PAID' and i.paid_at >= :since
+            group by 1, 2
+            order by 1
+            """, nativeQuery = true)
+    List<Object[]> revenueByMonth(@Param("tenantId") UUID tenantId,
+                                  @Param("since") OffsetDateTime since);
+
+    @Query("""
+            select i.id, i.invoiceNumber, i.status, i.total, i.currency, c.name, i.updatedAt
+            from Invoice i, Customer c
+            where i.tenantId = :tenantId and c.id = i.customerId
+            order by i.updatedAt desc
+            """)
+    List<Object[]> recentWithCustomerName(@Param("tenantId") UUID tenantId, Pageable pageable);
 }
