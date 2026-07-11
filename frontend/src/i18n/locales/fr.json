@@ -241,6 +241,52 @@
       "removed": "Logo supprimé."
     }
   },
+  "team": {
+    "title": "Équipe",
+    "invite": "Inviter un membre",
+    "inviteTitle": "Inviter un membre",
+    "inviteSubtitle": "Nous enverrons un lien d'invitation par e-mail, valable 7 jours.",
+    "invited": "Invitation envoyée.",
+    "roleChanged": "Rôle mis à jour.",
+    "statusChanged": "Statut mis à jour.",
+    "ownershipTransferred": "Propriété transférée.",
+    "transferConfirm": "Transférer la propriété à {{name}} ? Vous deviendrez admin.",
+    "you": "vous",
+    "pending": "Invitation en attente",
+    "active": "Actif",
+    "inactive": "Inactif",
+    "deactivate": "Désactiver",
+    "activate": "Activer",
+    "makeOwner": "Nommer propriétaire",
+    "columns": {
+      "member": "Membre",
+      "role": "Rôle",
+      "status": "Statut"
+    },
+    "fields": {
+      "email": "E-mail",
+      "role": "Rôle",
+      "roleHint": "Les admins gèrent les paramètres et l'équipe ; les membres gèrent factures et clients."
+    },
+    "roles": {
+      "OWNER": "Propriétaire",
+      "ADMIN": "Admin",
+      "MEMBER": "Membre"
+    }
+  },
+  "invite": {
+    "title": "Rejoindre {{tenant}}",
+    "subtitle": "Vous êtes invité en tant que {{email}}. Choisissez votre nom et un mot de passe.",
+    "submit": "Accepter l'invitation",
+    "accepting": "Création du compte…",
+    "accepted": "Compte créé — vous pouvez vous connecter.",
+    "invalid": "Ce lien d'invitation est invalide ou a expiré.",
+    "fields": {
+      "fullName": "Nom complet",
+      "password": "Mot de passe",
+      "passwordHint": "Au moins 8 caractères avec une majuscule et un chiffre."
+    }
+  },
   "common": {
     "loading": "Chargement…",
     "cancel": "Annuler",

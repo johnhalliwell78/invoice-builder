@@ -16,6 +16,7 @@ const InvoiceFormPage = lazy(() => import('@/features/invoices/InvoiceFormPage')
 const InvoiceDetailPage = lazy(() => import('@/features/invoices/InvoiceDetailPage'));
 const PublicInvoicePage = lazy(() => import('@/features/public/PublicInvoicePage'));
 const SettingsPage = lazy(() => import('@/features/settings/SettingsPage'));
+const InviteAcceptPage = lazy(() => import('@/features/auth/InviteAcceptPage'));
 
 const Fallback = () => (
   <div className="flex min-h-screen items-center justify-center text-muted-foreground">Loading…</div>
@@ -56,6 +57,14 @@ export const router = createBrowserRouter([
     element: (
       <Suspense fallback={<Fallback />}>
         <PublicInvoicePage />
+      </Suspense>
+    ),
+  },
+  {
+    path: '/invite/:token',
+    element: (
+      <Suspense fallback={<Fallback />}>
+        <InviteAcceptPage />
       </Suspense>
     ),
   },

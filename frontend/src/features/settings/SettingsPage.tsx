@@ -15,6 +15,8 @@ import {
   useUploadLogo,
 } from '@/hooks/useTenant';
 import type { TenantUpdatePayload } from '@/api/tenant';
+import { useAuthStore } from '@/store/authStore';
+import { TeamCard } from './TeamCard';
 import { SUPPORTED_LOCALES } from '@/i18n';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -52,6 +54,8 @@ type FormValues = z.infer<typeof schema>;
 
 export default function SettingsPage() {
   const { t } = useTranslation();
+  const currentUser = useAuthStore((s) => s.user);
+  const canEdit = currentUser?.role === 'OWNER' || currentUser?.role === 'ADMIN';
   const { data: tenant, isPending } = useTenant();
   const update = useUpdateTenant();
   const uploadLogo = useUploadLogo();
@@ -176,6 +180,7 @@ export default function SettingsPage() {
         className="grid max-w-4xl gap-6"
         noValidate
       >
+        <fieldset disabled={!canEdit} className="contents">
         <Card>
           <CardHeader>
             <CardTitle>{t('settings.section.company')}</CardTitle>
@@ -278,10 +283,11 @@ export default function SettingsPage() {
         </Card>
 
         <div className="flex justify-end">
-          <Button type="submit" disabled={isSubmitting}>
+          <Button type="submit" disabled={isSubmitting || !canEdit}>
             {isSubmitting ? t('common.saving') : t('common.save')}
           </Button>
         </div>
+        </fieldset>
       </form>
 
       <Card className="mt-6 max-w-4xl">
@@ -299,13 +305,14 @@ export default function SettingsPage() {
             type="file"
             accept="image/png,image/jpeg"
             className="hidden"
+            aria-label={t('settings.logo.upload')}
             onChange={(e) => void handleLogoSelected(e.target.files?.[0])}
           />
           <div className="flex items-center gap-2">
             <Button
               type="button"
               variant="outline"
-              disabled={uploadLogo.isPending}
+              disabled={uploadLogo.isPending || !canEdit}
               onClick={() => fileInputRef.current?.click()}
             >
               <Upload className="mr-2 h-4 w-4" />
@@ -315,7 +322,7 @@ export default function SettingsPage() {
               <Button
                 type="button"
                 variant="ghost"
-                disabled={deleteLogo.isPending}
+                disabled={deleteLogo.isPending || !canEdit}
                 onClick={() => void handleLogoRemove()}
               >
                 <Trash2 className="mr-2 h-4 w-4 text-destructive" />
@@ -326,6 +333,8 @@ export default function SettingsPage() {
           <p className="w-full text-xs text-muted-foreground">{t('settings.logo.hint')}</p>
         </CardContent>
       </Card>
+
+      {canEdit && <TeamCard />}
     </div>
   );
 }

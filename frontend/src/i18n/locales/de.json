@@ -241,6 +241,52 @@
       "removed": "Logo entfernt."
     }
   },
+  "team": {
+    "title": "Team",
+    "invite": "Mitglied einladen",
+    "inviteTitle": "Mitglied einladen",
+    "inviteSubtitle": "Wir senden einen Einladungslink per E-Mail, 7 Tage gültig.",
+    "invited": "Einladung gesendet.",
+    "roleChanged": "Rolle aktualisiert.",
+    "statusChanged": "Status aktualisiert.",
+    "ownershipTransferred": "Eigentümerschaft übertragen.",
+    "transferConfirm": "Eigentümerschaft an {{name}} übertragen? Sie werden Admin.",
+    "you": "Sie",
+    "pending": "Einladung ausstehend",
+    "active": "Aktiv",
+    "inactive": "Inaktiv",
+    "deactivate": "Deaktivieren",
+    "activate": "Aktivieren",
+    "makeOwner": "Zum Eigentümer machen",
+    "columns": {
+      "member": "Mitglied",
+      "role": "Rolle",
+      "status": "Status"
+    },
+    "fields": {
+      "email": "E-Mail",
+      "role": "Rolle",
+      "roleHint": "Admins verwalten Einstellungen und Team; Mitglieder bearbeiten Rechnungen und Kunden."
+    },
+    "roles": {
+      "OWNER": "Eigentümer",
+      "ADMIN": "Admin",
+      "MEMBER": "Mitglied"
+    }
+  },
+  "invite": {
+    "title": "{{tenant}} beitreten",
+    "subtitle": "Sie wurden als {{email}} eingeladen. Wählen Sie Namen und Passwort.",
+    "submit": "Einladung annehmen",
+    "accepting": "Konto wird erstellt…",
+    "accepted": "Konto erstellt — Sie können sich jetzt anmelden.",
+    "invalid": "Dieser Einladungslink ist ungültig oder abgelaufen.",
+    "fields": {
+      "fullName": "Vollständiger Name",
+      "password": "Passwort",
+      "passwordHint": "Mindestens 8 Zeichen mit einem Großbuchstaben und einer Ziffer."
+    }
+  },
   "common": {
     "loading": "Wird geladen…",
     "cancel": "Abbrechen",

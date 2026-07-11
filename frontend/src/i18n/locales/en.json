@@ -241,6 +241,52 @@
       "removed": "Logo removed."
     }
   },
+  "team": {
+    "title": "Team",
+    "invite": "Invite member",
+    "inviteTitle": "Invite a member",
+    "inviteSubtitle": "We'll email an invitation link, valid for 7 days.",
+    "invited": "Invitation sent.",
+    "roleChanged": "Role updated.",
+    "statusChanged": "Status updated.",
+    "ownershipTransferred": "Ownership transferred.",
+    "transferConfirm": "Transfer ownership to {{name}}? You will become an admin.",
+    "you": "you",
+    "pending": "Invite pending",
+    "active": "Active",
+    "inactive": "Inactive",
+    "deactivate": "Deactivate",
+    "activate": "Activate",
+    "makeOwner": "Make owner",
+    "columns": {
+      "member": "Member",
+      "role": "Role",
+      "status": "Status"
+    },
+    "fields": {
+      "email": "Email",
+      "role": "Role",
+      "roleHint": "Admins can manage settings and the team; members handle invoices and customers."
+    },
+    "roles": {
+      "OWNER": "Owner",
+      "ADMIN": "Admin",
+      "MEMBER": "Member"
+    }
+  },
+  "invite": {
+    "title": "Join {{tenant}}",
+    "subtitle": "You've been invited as {{email}}. Choose your name and a password.",
+    "submit": "Accept invitation",
+    "accepting": "Creating account…",
+    "accepted": "Account created — you can sign in now.",
+    "invalid": "This invitation link is invalid or has expired.",
+    "fields": {
+      "fullName": "Full name",
+      "password": "Password",
+      "passwordHint": "At least 8 characters with an uppercase letter and a digit."
+    }
+  },
   "common": {
     "loading": "Loading…",
     "cancel": "Cancel",

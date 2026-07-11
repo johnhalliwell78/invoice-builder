@@ -1,7 +1,7 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ReactNode } from 'react';
 
 import '@/i18n';
@@ -14,7 +14,19 @@ vi.mock('@/api/tenant', () => ({
   deleteTenantLogo: vi.fn(),
 }));
 
+vi.mock('@/api/users', () => ({
+  listMembers: vi.fn(),
+  inviteMember: vi.fn(),
+  changeMemberRole: vi.fn(),
+  setMemberActive: vi.fn(),
+  transferOwnership: vi.fn(),
+  getInviteInfo: vi.fn(),
+  acceptInvite: vi.fn(),
+}));
+
 import { getTenant, updateTenant, type Tenant } from '@/api/tenant';
+import { listMembers } from '@/api/users';
+import { useAuthStore } from '@/store/authStore';
 import SettingsPage from './SettingsPage';
 
 const TENANT: Tenant = {
@@ -47,6 +59,21 @@ beforeEach(() => {
   vi.clearAllMocks();
   vi.mocked(getTenant).mockResolvedValue(TENANT);
   vi.mocked(updateTenant).mockResolvedValue(TENANT);
+  vi.mocked(listMembers).mockResolvedValue([]);
+  useAuthStore.getState().setAuth('test-token', {
+    id: 'user-1',
+    tenantId: 'ten-1',
+    email: 'owner@acme.example',
+    fullName: 'Owner',
+    avatarUrl: null,
+    role: 'OWNER',
+    provider: 'LOCAL',
+    locale: 'en',
+  });
+});
+
+afterEach(() => {
+  useAuthStore.getState().clearAuth();
 });
 
 describe('SettingsPage', () => {
