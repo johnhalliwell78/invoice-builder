@@ -6,6 +6,7 @@ import com.invoicebuilder.invoice.dto.EmailPreviewResponse;
 import com.invoicebuilder.invoice.dto.InvoiceListItem;
 import com.invoicebuilder.invoice.dto.InvoiceRequest;
 import com.invoicebuilder.invoice.dto.InvoiceResponse;
+import com.invoicebuilder.invoice.dto.ReminderResponse;
 import com.invoicebuilder.invoice.dto.SendInvoiceRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -30,6 +31,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -127,6 +129,13 @@ public class InvoiceController {
     @Operation(summary = "Preview the invoice email content (recipient, subject, body)")
     public ApiResponse<EmailPreviewResponse> emailPreview(@PathVariable UUID id) {
         return ApiResponse.of(EmailPreviewResponse.from(invoiceService.previewEmail(id)));
+    }
+
+    @GetMapping("/{id}/reminders")
+    @Operation(summary = "Reminder history (automatic overdue reminders and manual resends)")
+    public ApiResponse<List<ReminderResponse>> reminders(@PathVariable UUID id) {
+        return ApiResponse.of(invoiceService.listReminders(id).stream()
+                .map(ReminderResponse::from).toList());
     }
 
     private ResponseEntity<byte[]> pdfResponse(UUID id, ContentDisposition.Builder disposition,

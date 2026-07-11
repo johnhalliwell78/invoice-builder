@@ -38,4 +38,8 @@ public interface InvoiceRepository extends JpaRepository<Invoice, UUID> {
     List<UUID> findOverdueIds(@Param("tenantId") UUID tenantId,
                               @Param("statuses") List<InvoiceStatus> statuses,
                               @Param("today") LocalDate today);
+
+    @Query("select distinct i.tenantId from Invoice i where i.status in :statuses and i.dueDate < :today")
+    List<UUID> findTenantIdsWithOverdueCandidates(@Param("statuses") List<InvoiceStatus> statuses,
+                                                  @Param("today") LocalDate today);
 }

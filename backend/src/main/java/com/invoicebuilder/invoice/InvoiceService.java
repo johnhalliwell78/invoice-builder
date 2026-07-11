@@ -15,6 +15,8 @@ import com.invoicebuilder.tenant.LogoStorage;
 import com.invoicebuilder.tenant.Tenant;
 import com.invoicebuilder.tenant.TenantContext;
 import com.invoicebuilder.tenant.TenantRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.MessageSource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -37,6 +39,7 @@ import java.util.UUID;
 @Service
 public class InvoiceService {
 
+    private static final Logger log = LoggerFactory.getLogger(InvoiceService.class);
     private static final SecureRandom RANDOM = new SecureRandom();
 
     private final InvoiceRepository invoiceRepository;
@@ -49,6 +52,7 @@ public class InvoiceService {
     private final LogoStorage logoStorage;
     private final EmailService emailService;
     private final MessageSource messages;
+    private final InvoiceReminderRepository reminderRepository;
     private final Clock clock;
 
     public InvoiceService(InvoiceRepository invoiceRepository,
@@ -61,6 +65,7 @@ public class InvoiceService {
                           LogoStorage logoStorage,
                           EmailService emailService,
                           MessageSource messages,
+                          InvoiceReminderRepository reminderRepository,
                           Clock clock) {
         this.invoiceRepository = invoiceRepository;
         this.customerRepository = customerRepository;
@@ -72,6 +77,7 @@ public class InvoiceService {
         this.logoStorage = logoStorage;
         this.emailService = emailService;
         this.messages = messages;
+        this.reminderRepository = reminderRepository;
         this.clock = clock;
     }
 
@@ -238,25 +244,46 @@ public class InvoiceService {
         return new EmailPreview(recipient, subject, body);
     }
 
-    private void sendInvoiceEmail(Invoice invoice, SendInvoiceRequest request) {
+    /**
+     * Composes and delivers the invoice email. Returns the recipient the email
+     * went to, or {@code null} when delivery was skipped (no address known).
+     */
+    private String sendInvoiceEmail(Invoice invoice, SendInvoiceRequest request) {
         Tenant tenant = loadTenant(invoice.getTenantId());
         Customer customer = loadCustomer(invoice.getCustomerId());
         EmailPreview content = composeEmail(invoice, tenant, customer, request);
         if (content.recipientEmail() == null || content.recipientEmail().isBlank()) {
             // Customer has no email and caller didn't override — silently skip.
-            return;
+            return null;
         }
 
+        deliver(invoice, tenant, customer, content.recipientEmail(),
+                content.subject(), content.body(),
+                request == null ? List.of() : request.ccOrEmpty(),
+                request == null ? List.of() : request.bccOrEmpty());
+        return content.recipientEmail();
+    }
+
+    /** Renders the PDF, caches it, and hands the message to the email service. */
+    private void deliver(Invoice invoice, Tenant tenant, Customer customer,
+                         String recipient, String subject, String body,
+                         List<String> cc, List<String> bcc) {
         byte[] pdf = pdfGenerator.render(invoice, tenant, customer, null,
                 logoStorage.loadOrNull(tenant));
         pdfStorage.save(invoice.getTenantId(), invoice.getId(), pdf);
-
         emailService.send(new EmailService.EmailMessage(
-                content.recipientEmail(), customer.getName(),
-                request == null ? List.of() : request.ccOrEmpty(),
-                request == null ? List.of() : request.bccOrEmpty(),
-                content.subject(), content.body(),
+                recipient, customer.getName(), cc, bcc, subject, body,
                 "invoice-" + invoice.getInvoiceNumber() + ".pdf", pdf));
+    }
+
+    private void recordReminder(Invoice invoice, String recipient, ReminderType type) {
+        InvoiceReminder reminder = new InvoiceReminder();
+        reminder.setTenantId(invoice.getTenantId());
+        reminder.setInvoiceId(invoice.getId());
+        reminder.setRecipient(recipient);
+        reminder.setType(type);
+        reminder.setSentAt(OffsetDateTime.now(clock));
+        reminderRepository.save(reminder);
     }
 
     private static final Set<InvoiceStatus> RESENDABLE =
@@ -270,8 +297,18 @@ public class InvoiceService {
             throw new AppException(ErrorCode.INVALID_STATE_TRANSITION,
                     "Only sent, viewed, or overdue invoices can be resent");
         }
-        sendInvoiceEmail(invoice, request);
+        String recipient = sendInvoiceEmail(invoice, request);
+        if (recipient != null) {
+            recordReminder(invoice, recipient, ReminderType.MANUAL_RESEND);
+        }
         return invoice;
+    }
+
+    @Transactional(readOnly = true)
+    public List<InvoiceReminder> listReminders(UUID id) {
+        Invoice invoice = load(id);
+        return reminderRepository.findByInvoiceIdAndTenantIdOrderBySentAtDesc(
+                invoice.getId(), invoice.getTenantId());
     }
 
     @Transactional
@@ -292,7 +329,12 @@ public class InvoiceService {
         return invoice;
     }
 
-    /** Sweeps invoices past their due date into OVERDUE. Wired to a scheduled job in Phase 6. */
+    /**
+     * Sweeps invoices past their due date into OVERDUE and emails the customer
+     * a localized reminder. Runs from {@link OverdueSweeper} without a request
+     * context, so everything is keyed off the explicit {@code tenantId}. A
+     * failed reminder email never rolls back the status transition.
+     */
     @Transactional
     public int markOverdueForTenant(UUID tenantId, LocalDate today) {
         List<UUID> ids = invoiceRepository.findOverdueIds(
@@ -300,8 +342,30 @@ public class InvoiceService {
         for (UUID id : ids) {
             Invoice invoice = invoiceRepository.findById(id).orElseThrow();
             invoice.setStatus(InvoiceStatus.OVERDUE);
+            try {
+                sendOverdueReminder(invoice);
+            } catch (RuntimeException e) {
+                log.warn("Failed to send overdue reminder for invoice {}", invoice.getId(), e);
+            }
         }
         return ids.size();
+    }
+
+    private void sendOverdueReminder(Invoice invoice) {
+        Tenant tenant = loadTenant(invoice.getTenantId());
+        Customer customer = loadCustomer(invoice.getCustomerId());
+        String recipient = customer.getEmail();
+        if (recipient == null || recipient.isBlank()) {
+            return;
+        }
+        Locale locale = Locale.forLanguageTag(
+                tenant.getDefaultLocale() == null ? "en" : tenant.getDefaultLocale());
+        String subject = messages.getMessage("email.reminder.subject",
+                new Object[]{invoice.getInvoiceNumber(), tenant.getName()}, locale);
+        String body = messages.getMessage("email.reminder.body",
+                new Object[]{invoice.getInvoiceNumber(), invoice.getDueDate(), tenant.getName()}, locale);
+        deliver(invoice, tenant, customer, recipient, subject, body, List.of(), List.of());
+        recordReminder(invoice, recipient, ReminderType.AUTO_OVERDUE);
     }
 
     // ---------- helpers ----------

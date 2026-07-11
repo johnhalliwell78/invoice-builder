@@ -55,6 +55,7 @@ class InvoiceServiceTemplateTest {
     @Mock private LogoStorage logoStorage;
     @Mock private EmailService emailService;
     @Mock private MessageSource messages;
+    @Mock private InvoiceReminderRepository reminderRepository;
 
     private InvoiceService service;
     private Tenant tenant;
@@ -65,7 +66,8 @@ class InvoiceServiceTemplateTest {
     void setUp() {
         service = new InvoiceService(invoiceRepository, customerRepository, tenantRepository,
                 numberGenerator, new InvoiceCalculator(), pdfGenerator, pdfStorage, logoStorage,
-                emailService, messages, Clock.fixed(Instant.parse("2026-07-09T12:00:00Z"), ZoneOffset.UTC));
+                emailService, messages, reminderRepository,
+                Clock.fixed(Instant.parse("2026-07-09T12:00:00Z"), ZoneOffset.UTC));
         TenantContext.set(TENANT_ID);
 
         tenant = new Tenant();

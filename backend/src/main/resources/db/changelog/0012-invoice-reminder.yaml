@@ -1,0 +1,48 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0012-create-invoice-reminder
+      author: invoice-builder
+      changes:
+        - createTable:
+            tableName: invoice_reminder
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  defaultValueComputed: gen_random_uuid()
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: invoice_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_reminder_invoice
+                    referencedTableName: invoice
+                    referencedColumnNames: id
+                    deleteCascade: true
+              - column:
+                  name: recipient
+                  type: VARCHAR(255)
+              - column:
+                  name: type
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: sent_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  constraints:
+                    nullable: false
+        - createIndex:
+            tableName: invoice_reminder
+            indexName: idx_reminder_invoice
+            columns:
+              - column:
+                  name: invoice_id

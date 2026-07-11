@@ -60,6 +60,7 @@ class InvoiceServiceSendTest {
     @Mock private LogoStorage logoStorage;
     @Mock private EmailService emailService;
     @Mock private MessageSource messages;
+    @Mock private InvoiceReminderRepository reminderRepository;
 
     private InvoiceService service;
     private Invoice invoice;
@@ -70,7 +71,7 @@ class InvoiceServiceSendTest {
     void setUp() {
         service = new InvoiceService(invoiceRepository, customerRepository, tenantRepository,
                 numberGenerator, calculator, pdfGenerator, pdfStorage, logoStorage, emailService,
-                messages, Clock.fixed(NOW, ZoneOffset.UTC));
+                messages, reminderRepository, Clock.fixed(NOW, ZoneOffset.UTC));
         TenantContext.set(TENANT_ID);
 
         invoice = new Invoice();
@@ -256,6 +257,22 @@ class InvoiceServiceSendTest {
         verify(emailService).send(captor.capture());
         assertThat(captor.getValue().toEmail()).isEqualTo("reminder@example.com");
         assertThat(captor.getValue().subject()).isEqualTo("Reminder");
+    }
+
+    @Test
+    void resendRecordsManualResendHistory() {
+        stubInvoiceLookup();
+        stubParties();
+        stubPdf();
+        stubDefaultMessages();
+        invoice.setStatus(InvoiceStatus.SENT);
+
+        service.resend(INVOICE_ID, null);
+
+        ArgumentCaptor<InvoiceReminder> captor = ArgumentCaptor.forClass(InvoiceReminder.class);
+        verify(reminderRepository).save(captor.capture());
+        assertThat(captor.getValue().getType()).isEqualTo(ReminderType.MANUAL_RESEND);
+        assertThat(captor.getValue().getRecipient()).isEqualTo("billing@widget.example");
     }
 
     @Test
