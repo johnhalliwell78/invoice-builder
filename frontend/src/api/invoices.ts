@@ -119,6 +119,18 @@ export async function resendInvoice(id: string, payload?: SendInvoicePayload): P
   return res.data.data;
 }
 
+export interface Reminder {
+  id: string;
+  recipient: string | null;
+  type: 'AUTO_OVERDUE' | 'MANUAL_RESEND';
+  sentAt: string;
+}
+
+export async function listReminders(id: string): Promise<Reminder[]> {
+  const res = await api.get<ApiEnvelope<Reminder[]>>(`/api/v1/invoices/${id}/reminders`);
+  return res.data.data;
+}
+
 /** Fetches the rendered PDF as a Blob, optionally with a transient template override. */
 export async function fetchInvoicePdf(
   id: string,

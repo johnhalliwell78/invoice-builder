@@ -6,6 +6,7 @@ import {
   getEmailPreview,
   getInvoice,
   listInvoices,
+  listReminders,
   markPaid,
   resendInvoice,
   sendInvoice,
@@ -71,6 +72,14 @@ export function useEmailPreview(id: string, enabled: boolean) {
     queryKey: [...KEY, 'email-preview', id],
     queryFn: () => getEmailPreview(id),
     enabled,
+  });
+}
+
+export function useReminders(id: string | undefined) {
+  return useQuery({
+    queryKey: [...KEY, 'reminders', id],
+    queryFn: () => listReminders(id as string),
+    enabled: !!id,
   });
 }
 

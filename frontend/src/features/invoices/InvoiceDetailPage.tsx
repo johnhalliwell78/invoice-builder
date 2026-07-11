@@ -10,6 +10,7 @@ import {
   useDeleteInvoice,
   useInvoice,
   useMarkPaid,
+  useReminders,
 } from '@/hooks/useInvoices';
 import { useCustomer } from '@/hooks/useCustomers';
 import { Button } from '@/components/ui/button';
@@ -27,6 +28,7 @@ export default function InvoiceDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { data: invoice, isPending, error } = useInvoice(id);
   const customer = useCustomer(invoice?.customerId);
+  const reminders = useReminders(id);
 
   const markPaid = useMarkPaid();
   const cancel = useCancelInvoice();
@@ -216,6 +218,24 @@ export default function InvoiceDetailPage() {
                     <p className="whitespace-pre-line">{invoice.terms}</p>
                   </div>
                 )}
+              </CardContent>
+            </Card>
+          )}
+
+          {reminders.data && reminders.data.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>{t('invoices.reminders.title')}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2 text-sm">
+                {reminders.data.map((reminder) => (
+                  <div key={reminder.id} className="flex items-center justify-between gap-2">
+                    <span className="text-muted-foreground">
+                      {t(`invoices.reminders.${reminder.type}`)}
+                    </span>
+                    <span>{formatDate(reminder.sentAt, i18n.language)}</span>
+                  </div>
+                ))}
               </CardContent>
             </Card>
           )}
