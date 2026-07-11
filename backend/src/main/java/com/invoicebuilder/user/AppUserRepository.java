@@ -3,6 +3,7 @@ package com.invoicebuilder.user;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -14,4 +15,10 @@ public interface AppUserRepository extends JpaRepository<AppUser, UUID> {
     Optional<AppUser> findByProviderAndProviderId(AuthProvider provider, String providerId);
 
     boolean existsByEmail(String email);
+
+    List<AppUser> findByTenantIdOrderByCreatedAtAsc(UUID tenantId);
+
+    Optional<AppUser> findByIdAndTenantId(UUID id, UUID tenantId);
+
+    Optional<AppUser> findByInviteTokenHash(String inviteTokenHash);
 }

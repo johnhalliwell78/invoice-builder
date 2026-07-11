@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -40,13 +41,15 @@ public class TenantController {
     }
 
     @PutMapping
-    @Operation(summary = "Update the current tenant's settings")
+    @PreAuthorize("hasAnyRole('OWNER','ADMIN')")
+    @Operation(summary = "Update the current tenant's settings (owner/admin)")
     public ApiResponse<TenantResponse> update(@Valid @RequestBody TenantUpdateRequest request) {
         return ApiResponse.of(tenantService.update(request));
     }
 
     @PostMapping(value = "/logo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @Operation(summary = "Upload the tenant logo (PNG or JPEG, max 2 MB)")
+    @PreAuthorize("hasAnyRole('OWNER','ADMIN')")
+    @Operation(summary = "Upload the tenant logo (PNG or JPEG, max 2 MB; owner/admin)")
     public ApiResponse<TenantResponse> uploadLogo(@RequestParam("file") MultipartFile file) throws IOException {
         Tenant tenant = tenantService.loadCurrent();
         String path = logoStorage.save(tenant, file.getBytes(), file.getContentType());
@@ -67,7 +70,8 @@ public class TenantController {
     }
 
     @DeleteMapping("/logo")
-    @Operation(summary = "Remove the tenant logo")
+    @PreAuthorize("hasAnyRole('OWNER','ADMIN')")
+    @Operation(summary = "Remove the tenant logo (owner/admin)")
     public ApiResponse<TenantResponse> deleteLogo() {
         Tenant tenant = tenantService.loadCurrent();
         logoStorage.delete(tenant);

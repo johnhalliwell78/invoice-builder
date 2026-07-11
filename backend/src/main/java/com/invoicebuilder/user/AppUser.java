@@ -60,6 +60,12 @@ public class AppUser {
     @Column(name = "last_login_at")
     private OffsetDateTime lastLoginAt;
 
+    @Column(name = "invite_token_hash", length = 64, unique = true)
+    private String inviteTokenHash;
+
+    @Column(name = "invited_at")
+    private OffsetDateTime invitedAt;
+
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
@@ -162,6 +168,22 @@ public class AppUser {
 
     public void setLastLoginAt(OffsetDateTime lastLoginAt) {
         this.lastLoginAt = lastLoginAt;
+    }
+
+    public String getInviteTokenHash() {
+        return inviteTokenHash;
+    }
+
+    public void setInviteTokenHash(String inviteTokenHash) {
+        this.inviteTokenHash = inviteTokenHash;
+    }
+
+    public OffsetDateTime getInvitedAt() {
+        return invitedAt;
+    }
+
+    public void setInvitedAt(OffsetDateTime invitedAt) {
+        this.invitedAt = invitedAt;
     }
 
     public OffsetDateTime getCreatedAt() {

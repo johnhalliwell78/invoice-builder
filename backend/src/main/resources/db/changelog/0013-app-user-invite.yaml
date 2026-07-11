@@ -1,0 +1,16 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0013-app-user-invite
+      author: invoice-builder
+      changes:
+        - addColumn:
+            tableName: app_user
+            columns:
+              - column:
+                  name: invite_token_hash
+                  type: VARCHAR(64)
+                  constraints:
+                    unique: true
+              - column:
+                  name: invited_at
+                  type: TIMESTAMP WITH TIME ZONE
