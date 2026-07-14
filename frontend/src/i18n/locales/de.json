@@ -47,8 +47,22 @@
   },
   "dashboard": {
     "title": "Übersicht",
-    "welcome": "Willkommen, {{name}}",
-    "greeting": "Sie sind als {{role}} bei {{tenant}} angemeldet."
+    "subtitle": "Ihre Forderungen, Umsätze und letzten Aktivitäten auf einen Blick.",
+    "tiles": {
+      "outstanding": "Offen",
+      "overdue": "Überfällig",
+      "paidThisMonth": "Diesen Monat bezahlt"
+    },
+    "revenue": {
+      "title": "Umsatz — letzte 12 Monate"
+    },
+    "customers": {
+      "title": "Neue Kunden"
+    },
+    "recent": {
+      "title": "Letzte Aktivitäten",
+      "empty": "Noch keine Rechnungen."
+    }
   },
   "customers": {
     "title": "Kunden",

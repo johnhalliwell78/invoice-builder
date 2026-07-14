@@ -47,8 +47,22 @@
   },
   "dashboard": {
     "title": "Tableau de bord",
-    "welcome": "Bonjour, {{name}}",
-    "greeting": "Connecté en tant que {{role}} chez {{tenant}}."
+    "subtitle": "Vos créances, revenus et activité récente en un coup d'œil.",
+    "tiles": {
+      "outstanding": "En attente",
+      "overdue": "En retard",
+      "paidThisMonth": "Payé ce mois-ci"
+    },
+    "revenue": {
+      "title": "Revenus — 12 derniers mois"
+    },
+    "customers": {
+      "title": "Nouveaux clients"
+    },
+    "recent": {
+      "title": "Activité récente",
+      "empty": "Aucune facture pour le moment."
+    }
   },
   "customers": {
     "title": "Clients",

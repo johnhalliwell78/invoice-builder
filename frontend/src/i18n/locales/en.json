@@ -47,8 +47,22 @@
   },
   "dashboard": {
     "title": "Dashboard",
-    "welcome": "Welcome, {{name}}",
-    "greeting": "You're signed in as {{role}} at {{tenant}}."
+    "subtitle": "Your receivables, revenue, and recent activity at a glance.",
+    "tiles": {
+      "outstanding": "Outstanding",
+      "overdue": "Overdue",
+      "paidThisMonth": "Paid this month"
+    },
+    "revenue": {
+      "title": "Revenue — last 12 months"
+    },
+    "customers": {
+      "title": "New customers"
+    },
+    "recent": {
+      "title": "Recent activity",
+      "empty": "No invoices yet."
+    }
   },
   "customers": {
     "title": "Customers",
