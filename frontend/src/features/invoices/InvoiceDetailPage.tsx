@@ -13,6 +13,7 @@ import {
   useReminders,
 } from '@/hooks/useInvoices';
 import { useCustomer } from '@/hooks/useCustomers';
+import { useEntityAudit } from '@/hooks/useAudit';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PageHeader } from '@/components/PageHeader';
@@ -29,6 +30,7 @@ export default function InvoiceDetailPage() {
   const { data: invoice, isPending, error } = useInvoice(id);
   const customer = useCustomer(invoice?.customerId);
   const reminders = useReminders(id);
+  const activity = useEntityAudit('Invoice', id);
 
   const markPaid = useMarkPaid();
   const cancel = useCancelInvoice();
@@ -234,6 +236,24 @@ export default function InvoiceDetailPage() {
                       {t(`invoices.reminders.${reminder.type}`)}
                     </span>
                     <span>{formatDate(reminder.sentAt, i18n.language)}</span>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
+
+          {activity.data && activity.data.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>{t('invoices.activity.title')}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2 text-sm">
+                {activity.data.map((entry) => (
+                  <div key={entry.id} className="flex items-center justify-between gap-2">
+                    <span className="text-muted-foreground">
+                      {t(`audit.actions.${entry.action}`)}
+                    </span>
+                    <span>{formatDate(entry.createdAt, i18n.language)}</span>
                   </div>
                 ))}
               </CardContent>

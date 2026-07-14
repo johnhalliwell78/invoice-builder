@@ -1,5 +1,7 @@
 package com.invoicebuilder.customer;
 
+import com.invoicebuilder.audit.AuditAction;
+import com.invoicebuilder.audit.AuditService;
 import com.invoicebuilder.common.exception.AppException;
 import com.invoicebuilder.common.exception.ErrorCode;
 import com.invoicebuilder.customer.dto.CustomerRequest;
@@ -18,10 +20,12 @@ import java.util.UUID;
 public class CustomerService {
 
     private final CustomerRepository customerRepository;
+    private final AuditService auditService;
     private final Clock clock;
 
-    public CustomerService(CustomerRepository customerRepository, Clock clock) {
+    public CustomerService(CustomerRepository customerRepository, AuditService auditService, Clock clock) {
         this.customerRepository = customerRepository;
+        this.auditService = auditService;
         this.clock = clock;
     }
 
@@ -41,13 +45,16 @@ public class CustomerService {
         Customer customer = new Customer();
         customer.setTenantId(TenantContext.require());
         apply(customer, request);
-        return CustomerResponse.from(customerRepository.save(customer));
+        Customer saved = customerRepository.save(customer);
+        auditService.record(saved.getTenantId(), "Customer", saved.getId(), AuditAction.CREATE, null);
+        return CustomerResponse.from(saved);
     }
 
     @Transactional
     public CustomerResponse update(UUID id, CustomerRequest request) {
         Customer customer = load(id);
         apply(customer, request);
+        auditService.record(customer.getTenantId(), "Customer", customer.getId(), AuditAction.UPDATE, null);
         return CustomerResponse.from(customer);
     }
 
@@ -55,6 +62,7 @@ public class CustomerService {
     public void delete(UUID id) {
         Customer customer = load(id);
         customer.setDeletedAt(OffsetDateTime.now(clock));
+        auditService.record(customer.getTenantId(), "Customer", customer.getId(), AuditAction.DELETE, null);
     }
 
     private Customer load(UUID id) {

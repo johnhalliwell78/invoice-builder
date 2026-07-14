@@ -214,7 +214,10 @@
     "resendTitle": "{{number}} erneut senden",
     "resendSubtitle": "Die Rechnungs-E-Mail erneut senden — der Status bleibt unverändert.",
     "publicTitle": "Rechnung",
-    "publicNotFound": "Dieser Rechnungslink ist ungültig oder abgelaufen."
+    "publicNotFound": "Dieser Rechnungslink ist ungültig oder abgelaufen.",
+    "activity": {
+      "title": "Aktivität"
+    }
   },
   "settings": {
     "title": "Einstellungen",
@@ -316,5 +319,14 @@
     "loadFailed": "Daten konnten nicht geladen werden. Bitte erneut versuchen.",
     "retry": "Erneut versuchen",
     "close": "Schließen"
+  },
+  "audit": {
+    "actions": {
+      "CREATE": "Erstellt",
+      "UPDATE": "Bearbeitet",
+      "DELETE": "Gelöscht",
+      "STATUS_CHANGE": "Status geändert",
+      "SEND": "Gesendet"
+    }
   }
 }

@@ -3,6 +3,7 @@ package com.invoicebuilder.invoice;
 import com.invoicebuilder.common.exception.AppException;
 import com.invoicebuilder.customer.Customer;
 import com.invoicebuilder.customer.CustomerRepository;
+import com.invoicebuilder.audit.AuditService;
 import com.invoicebuilder.email.EmailService;
 import com.invoicebuilder.invoice.dto.InvoiceRequest;
 import com.invoicebuilder.invoice.dto.LineItemRequest;
@@ -56,6 +57,7 @@ class InvoiceServiceTemplateTest {
     @Mock private EmailService emailService;
     @Mock private MessageSource messages;
     @Mock private InvoiceReminderRepository reminderRepository;
+    @Mock private AuditService auditService;
 
     private InvoiceService service;
     private Tenant tenant;
@@ -66,7 +68,7 @@ class InvoiceServiceTemplateTest {
     void setUp() {
         service = new InvoiceService(invoiceRepository, customerRepository, tenantRepository,
                 numberGenerator, new InvoiceCalculator(), pdfGenerator, pdfStorage, logoStorage,
-                emailService, messages, reminderRepository,
+                emailService, messages, reminderRepository, auditService,
                 Clock.fixed(Instant.parse("2026-07-09T12:00:00Z"), ZoneOffset.UTC));
         TenantContext.set(TENANT_ID);
 

@@ -214,7 +214,10 @@
     "resendTitle": "Renvoyer {{number}}",
     "resendSubtitle": "Renvoyer l'e-mail de la facture — le statut reste inchangé.",
     "publicTitle": "Facture",
-    "publicNotFound": "Ce lien de facture est invalide ou a expiré."
+    "publicNotFound": "Ce lien de facture est invalide ou a expiré.",
+    "activity": {
+      "title": "Activité"
+    }
   },
   "settings": {
     "title": "Paramètres",
@@ -316,5 +319,14 @@
     "loadFailed": "Impossible de charger les données. Réessayez.",
     "retry": "Réessayer",
     "close": "Fermer"
+  },
+  "audit": {
+    "actions": {
+      "CREATE": "Créée",
+      "UPDATE": "Modifiée",
+      "DELETE": "Supprimée",
+      "STATUS_CHANGE": "Statut modifié",
+      "SEND": "Envoyée"
+    }
   }
 }

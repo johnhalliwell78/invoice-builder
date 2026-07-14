@@ -214,7 +214,10 @@
     "resendTitle": "Resend {{number}}",
     "resendSubtitle": "Send the invoice email again — the status won't change.",
     "publicTitle": "Invoice",
-    "publicNotFound": "This invoice link is invalid or has expired."
+    "publicNotFound": "This invoice link is invalid or has expired.",
+    "activity": {
+      "title": "Activity"
+    }
   },
   "settings": {
     "title": "Settings",
@@ -316,5 +319,14 @@
     "pageOf": "Page {{current}} of {{total}}",
     "loadFailed": "Could not load data. Try again.",
     "retry": "Retry"
+  },
+  "audit": {
+    "actions": {
+      "CREATE": "Created",
+      "UPDATE": "Edited",
+      "DELETE": "Deleted",
+      "STATUS_CHANGE": "Status changed",
+      "SEND": "Sent"
+    }
   }
 }

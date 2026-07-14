@@ -1,5 +1,7 @@
 package com.invoicebuilder.invoice;
 
+import com.invoicebuilder.audit.AuditAction;
+import com.invoicebuilder.audit.AuditService;
 import com.invoicebuilder.auth.UserPrincipal;
 import com.invoicebuilder.common.exception.AppException;
 import com.invoicebuilder.common.exception.ErrorCode;
@@ -33,6 +35,7 @@ import java.util.Base64;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -53,6 +56,7 @@ public class InvoiceService {
     private final EmailService emailService;
     private final MessageSource messages;
     private final InvoiceReminderRepository reminderRepository;
+    private final AuditService auditService;
     private final Clock clock;
 
     public InvoiceService(InvoiceRepository invoiceRepository,
@@ -66,6 +70,7 @@ public class InvoiceService {
                           EmailService emailService,
                           MessageSource messages,
                           InvoiceReminderRepository reminderRepository,
+                          AuditService auditService,
                           Clock clock) {
         this.invoiceRepository = invoiceRepository;
         this.customerRepository = customerRepository;
@@ -78,6 +83,7 @@ public class InvoiceService {
         this.emailService = emailService;
         this.messages = messages;
         this.reminderRepository = reminderRepository;
+        this.auditService = auditService;
         this.clock = clock;
     }
 
@@ -152,7 +158,9 @@ public class InvoiceService {
         applyLineItems(invoice, request.lineItems());
         applyTotals(invoice, request.discountAmount());
 
-        return invoiceRepository.save(invoice);
+        Invoice saved = invoiceRepository.save(invoice);
+        auditInvoice(saved, AuditAction.CREATE, null);
+        return saved;
     }
 
     @Transactional
@@ -178,6 +186,7 @@ public class InvoiceService {
         invoice.clearLineItems();
         applyLineItems(invoice, request.lineItems());
         applyTotals(invoice, request.discountAmount());
+        auditInvoice(invoice, AuditAction.UPDATE, null);
         return invoice;
     }
 
@@ -188,6 +197,7 @@ public class InvoiceService {
             throw new AppException(ErrorCode.INVOICE_NOT_EDITABLE,
                     "Only DRAFT invoices can be deleted");
         }
+        auditInvoice(invoice, AuditAction.DELETE, null);
         invoiceRepository.delete(invoice);
     }
 
@@ -204,6 +214,7 @@ public class InvoiceService {
         if (request == null || !request.isEmailSkipped()) {
             sendInvoiceEmail(invoice, request);
         }
+        auditInvoice(invoice, AuditAction.SEND, Map.<String, Object>of("status", "SENT"));
         return invoice;
     }
 
@@ -318,6 +329,7 @@ public class InvoiceService {
         invoice.setStatus(InvoiceStatus.PAID);
         invoice.setPaidAt(OffsetDateTime.now(clock));
         invoice.setAmountPaid(invoice.getTotal());
+        auditInvoice(invoice, AuditAction.STATUS_CHANGE, Map.<String, Object>of("status", "PAID"));
         return invoice;
     }
 
@@ -326,7 +338,12 @@ public class InvoiceService {
         Invoice invoice = load(id);
         invoice.getStatus().requireTransition(InvoiceStatus.CANCELLED);
         invoice.setStatus(InvoiceStatus.CANCELLED);
+        auditInvoice(invoice, AuditAction.STATUS_CHANGE, Map.<String, Object>of("status", "CANCELLED"));
         return invoice;
+    }
+
+    private void auditInvoice(Invoice invoice, AuditAction action, Map<String, Object> changes) {
+        auditService.record(invoice.getTenantId(), "Invoice", invoice.getId(), action, changes);
     }
 
     /**
