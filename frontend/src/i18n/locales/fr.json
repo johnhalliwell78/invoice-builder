@@ -318,7 +318,8 @@
     "pageOf": "Page {{current}} sur {{total}}",
     "loadFailed": "Impossible de charger les données. Réessayez.",
     "retry": "Réessayer",
-    "close": "Fermer"
+    "close": "Fermer",
+    "language": "Langue"
   },
   "audit": {
     "actions": {

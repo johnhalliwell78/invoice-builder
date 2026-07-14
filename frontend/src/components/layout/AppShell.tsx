@@ -6,10 +6,11 @@ import { LogOut, LayoutDashboard, FileText, Users, Settings } from 'lucide-react
 import { logout as logoutApi } from '@/api/auth';
 import { useAuthStore } from '@/store/authStore';
 import { Button } from '@/components/ui/button';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { cn } from '@/lib/utils';
 
 export function AppShell() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
   const clearAuth = useAuthStore((s) => s.clearAuth);
@@ -59,15 +60,7 @@ export function AppShell() {
           ))}
         </nav>
         <div className="mt-auto flex flex-col gap-2 px-2">
-          <select
-            className="h-8 rounded-md border bg-background px-2 text-xs"
-            value={i18n.language.slice(0, 2)}
-            onChange={(e) => void i18n.changeLanguage(e.target.value)}
-          >
-            <option value="en">English</option>
-            <option value="de">Deutsch</option>
-            <option value="fr">Français</option>
-          </select>
+          <LanguageSwitcher />
           {user && (
             <div className="rounded-md border bg-card p-2 text-xs">
               <div className="font-medium">{user.fullName}</div>

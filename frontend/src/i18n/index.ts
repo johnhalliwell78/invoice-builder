@@ -22,7 +22,10 @@ void i18n
     supportedLngs: [...SUPPORTED_LOCALES],
     interpolation: { escapeValue: false },
     detection: {
-      order: ['localStorage', 'navigator'],
+      // English is the default — only a locale the user explicitly picked (and
+      // that we persisted) overrides it. Browser language is intentionally not
+      // consulted, so first-time visitors always start in English.
+      order: ['localStorage'],
       caches: ['localStorage'],
       lookupLocalStorage: 'ib_locale',
     },
