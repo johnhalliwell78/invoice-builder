@@ -7,6 +7,7 @@ import com.invoicebuilder.auth.dto.UserResponse;
 import com.invoicebuilder.auth.jwt.JwtService;
 import com.invoicebuilder.common.exception.AppException;
 import com.invoicebuilder.common.exception.ErrorCode;
+import com.invoicebuilder.common.ratelimit.RateLimitService;
 import com.invoicebuilder.config.AppProperties;
 import com.invoicebuilder.tenant.Tenant;
 import com.invoicebuilder.tenant.TenantRepository;
@@ -44,6 +45,8 @@ public class AuthService {
     private final AppProperties appProperties;
     private final Clock clock;
 
+    private final RateLimitService rateLimitService;
+
     public AuthService(TenantRepository tenantRepository,
                        AppUserRepository userRepository,
                        TenantSlugGenerator slugGenerator,
@@ -52,6 +55,7 @@ public class AuthService {
                        JwtService jwtService,
                        RefreshTokenService refreshTokenService,
                        AppProperties appProperties,
+                       RateLimitService rateLimitService,
                        Clock clock) {
         this.tenantRepository = tenantRepository;
         this.userRepository = userRepository;
@@ -61,6 +65,7 @@ public class AuthService {
         this.jwtService = jwtService;
         this.refreshTokenService = refreshTokenService;
         this.appProperties = appProperties;
+        this.rateLimitService = rateLimitService;
         this.clock = clock;
     }
 
@@ -103,6 +108,14 @@ public class AuthService {
     @Transactional
     public AuthResult login(LoginRequest request) {
         String email = request.email().toLowerCase();
+
+        // Throttle brute-force by email before touching the auth manager.
+        AppProperties.RateLimit limits = appProperties.rateLimit();
+        if (!rateLimitService.tryAcquire("rl:login:" + email, limits.loginAttempts(), limits.loginWindow())) {
+            throw new AppException(ErrorCode.RATE_LIMIT_EXCEEDED,
+                    "Too many login attempts. Please try again later.");
+        }
+
         Authentication authentication;
         try {
             authentication = authenticationManager.authenticate(

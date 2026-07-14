@@ -5,6 +5,7 @@ import com.invoicebuilder.auth.jwt.JwtAuthenticationFilter;
 import com.invoicebuilder.auth.oauth2.CustomOAuth2UserService;
 import com.invoicebuilder.auth.oauth2.OAuth2AuthenticationFailureHandler;
 import com.invoicebuilder.auth.oauth2.OAuth2AuthenticationSuccessHandler;
+import com.invoicebuilder.common.ratelimit.RateLimitFilter;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -81,6 +82,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http,
                                            JwtAuthenticationFilter jwtFilter,
+                                           RateLimitFilter rateLimitFilter,
                                            JwtAuthenticationEntryPoint entryPoint,
                                            CorsConfigurationSource corsConfigurationSource,
                                            ObjectProvider<ClientRegistrationRepository> clientRegistrations,
@@ -97,7 +99,8 @@ public class SecurityConfig {
                         .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
                         .anyRequest().authenticated()
                 )
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(rateLimitFilter, JwtAuthenticationFilter.class);
 
         // Only enable OAuth2 login when at least one client registration is configured.
         if (clientRegistrations.getIfAvailable() != null) {
