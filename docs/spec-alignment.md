@@ -38,13 +38,13 @@ which deferred these pillars. They are additive work — nothing needs deleting.
 
 ## In the spec but NOT built — the gaps
 
-| # | Gap | Spec ref | Evidence | Effort |
+| # | Gap | Spec ref | Status | Effort |
 |---|---|---|---|---|
-| G1 | **Real-time notifications (WebSocket/STOMP)** — INVOICE_SENT/VIEWED/PAID/OVERDUE, CUSTOMER_CREATED | Sprint 5 / Phase 4 | `notification` pkg empty; no `@EnableWebSocketMessageBroker`; frontend `@stomp/stompjs`+`sockjs-client` unused | L |
-| G2 | **Notification module** — entity/service + `GET /notifications`, mark-read, unread-count + header dropdown + center page | Sprint 5 | `notification` table (0007) exists; no code; `frontend/src/features/notifications/` empty | M |
-| G3 | **Audit trail** — `AuditEntityListener`, `/audit-logs` API, activity-log UI | Sprint 7 / Phase 6 | `audit` pkg empty; `audit_log` table (0006) exists; no listener | M |
-| G4 | **Rate limiting** — login 5/15min, API 100/min (bucket4j + Redis) | Sprint 8 | bucket4j + redis deps present, zero usage; `RATE_LIMIT_EXCEEDED` code defined but unused | S |
-| G5 | **Currency rates** — scheduled fetch, `/currencies/rates`, Redis cache, conversion | Sprint 6 | `currency` pkg empty; `currency_rate` table (0008) exists; no job | M |
+| G4 | **Rate limiting** — login 5/15min, API 100/min | Sprint 8 | ✅ DONE 2026-07-14 — Redis fixed-window (`RateLimitService` + `RateLimitFilter`); Redis now in use | S |
+| G3 | **Audit trail** — service recording, `/audit-logs` API, activity UI | Sprint 7 / Phase 6 | ✅ DONE 2026-07-14 — `AuditService` records invoice/customer events; activity timeline card | M |
+| G2 | **Notification module** — entity/service + `GET /notifications`, mark-read, unread-count + header dropdown + center page | Sprint 5 | ⬜ TODO — `notification` table (0007) exists; no code yet | M |
+| G1 | **Real-time notifications (WebSocket/STOMP)** — INVOICE_SENT/VIEWED/PAID/OVERDUE, CUSTOMER_CREATED | Sprint 5 / Phase 4 | ⬜ TODO — depends on G2; frontend `@stomp/stompjs`+`sockjs-client` still unused | L |
+| G5 | **Currency rates** — scheduled fetch, `/currencies/rates`, cache, conversion | Sprint 6 | ⬜ TODO — `currency` pkg empty; `currency_rate` table (0008) exists | M |
 
 Minor: test coverage is a solid suite (60+ tests) but not measured to the
 spec's 80%/70% targets; Redis is provisioned but only needed once G4/G5 land.
