@@ -42,8 +42,8 @@ which deferred these pillars. They are additive work — nothing needs deleting.
 |---|---|---|---|---|
 | G4 | **Rate limiting** — login 5/15min, API 100/min | Sprint 8 | ✅ DONE 2026-07-14 — Redis fixed-window (`RateLimitService` + `RateLimitFilter`); Redis now in use | S |
 | G3 | **Audit trail** — service recording, `/audit-logs` API, activity UI | Sprint 7 / Phase 6 | ✅ DONE 2026-07-14 — `AuditService` records invoice/customer events; activity timeline card | M |
-| G2 | **Notification module** — entity/service + `GET /notifications`, mark-read, unread-count + header dropdown + center page | Sprint 5 | ⬜ TODO — `notification` table (0007) exists; no code yet | M |
-| G1 | **Real-time notifications (WebSocket/STOMP)** — INVOICE_SENT/VIEWED/PAID/OVERDUE, CUSTOMER_CREATED | Sprint 5 / Phase 4 | ⬜ TODO — depends on G2; frontend `@stomp/stompjs`+`sockjs-client` still unused | L |
+| G2 | **Notification module** — entity/service + `GET /notifications`, mark-read, unread-count + header dropdown | Sprint 5 | ✅ DONE 2026-07-14 — event-driven (`NotificationEvent` + AFTER_COMMIT listener), REST API, header bell with polled unread badge | M |
+| G1 | **Real-time notifications (WebSocket/STOMP)** — push the notifications G2 already persists | Sprint 5 / Phase 4 | ⬜ TODO — upgrades G2's polling to STOMP push; frontend `@stomp/stompjs`+`sockjs-client` still unused. Needs the running stack to verify end-to-end | L |
 | G5 | **Currency rates** — scheduled fetch, `/currencies/rates`, cache, conversion | Sprint 6 | ⬜ TODO — `currency` pkg empty; `currency_rate` table (0008) exists | M |
 
 Minor: test coverage is a solid suite (60+ tests) but not measured to the
