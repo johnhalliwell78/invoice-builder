@@ -5,6 +5,7 @@ import { LogOut, LayoutDashboard, FileText, Users, Settings } from 'lucide-react
 
 import { logout as logoutApi } from '@/api/auth';
 import { useAuthStore } from '@/store/authStore';
+import { useNotificationSocket } from '@/hooks/useNotificationSocket';
 import { Button } from '@/components/ui/button';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { NotificationBell } from '@/components/NotificationBell';
@@ -16,6 +17,7 @@ export function AppShell() {
   const user = useAuthStore((s) => s.user);
   const clearAuth = useAuthStore((s) => s.clearAuth);
   const [signingOut, setSigningOut] = useState(false);
+  useNotificationSocket();
 
   async function handleLogout() {
     setSigningOut(true);
