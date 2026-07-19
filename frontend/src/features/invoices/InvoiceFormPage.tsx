@@ -20,6 +20,8 @@ import { PageHeader } from '@/components/PageHeader';
 import { addDaysIso, formatCurrency, todayIso } from '@/lib/format';
 import type { ProblemDetail } from '@/types/api';
 
+const CURRENCIES = ['USD', 'EUR', 'GBP', 'CHF', 'JPY', 'CAD', 'AUD', 'SEK', 'NZD', 'SGD', 'CNY', 'INR'];
+
 const numberString = (max?: number) =>
   z
     .string()
@@ -188,7 +190,16 @@ export default function InvoiceFormPage() {
             </div>
             <div className="space-y-1.5">
               <Label>{t('invoices.fields.currency')}</Label>
-              <Input maxLength={3} {...register('currency')} />
+              <select
+                className="h-10 w-full rounded-md border bg-background px-3 text-sm"
+                {...register('currency')}
+              >
+                {CURRENCIES.map((code) => (
+                  <option key={code} value={code}>
+                    {code}
+                  </option>
+                ))}
+              </select>
             </div>
             <div className="space-y-1.5">
               <Label>{t('invoices.fields.discountAmount')}</Label>
