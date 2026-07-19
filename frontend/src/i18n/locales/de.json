@@ -329,5 +329,17 @@
       "STATUS_CHANGE": "Status geändert",
       "SEND": "Gesendet"
     }
+  },
+  "notifications": {
+    "title": "Benachrichtigungen",
+    "empty": "Noch keine Benachrichtigungen.",
+    "markAllRead": "Alle als gelesen markieren",
+    "types": {
+      "INVOICE_SENT": "Rechnung {{subject}} wurde gesendet",
+      "INVOICE_VIEWED": "Rechnung {{subject}} wurde angesehen",
+      "INVOICE_PAID": "Rechnung {{subject}} wurde bezahlt",
+      "INVOICE_OVERDUE": "Rechnung {{subject}} ist überfällig",
+      "CUSTOMER_CREATED": "Kunde {{subject}} wurde hinzugefügt"
+    }
   }
 }

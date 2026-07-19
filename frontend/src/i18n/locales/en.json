@@ -329,5 +329,17 @@
       "STATUS_CHANGE": "Status changed",
       "SEND": "Sent"
     }
+  },
+  "notifications": {
+    "title": "Notifications",
+    "empty": "No notifications yet.",
+    "markAllRead": "Mark all read",
+    "types": {
+      "INVOICE_SENT": "Invoice {{subject}} was sent",
+      "INVOICE_VIEWED": "Invoice {{subject}} was viewed",
+      "INVOICE_PAID": "Invoice {{subject}} was paid",
+      "INVOICE_OVERDUE": "Invoice {{subject}} is overdue",
+      "CUSTOMER_CREATED": "Customer {{subject}} was added"
+    }
   }
 }

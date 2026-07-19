@@ -7,6 +7,7 @@ import { logout as logoutApi } from '@/api/auth';
 import { useAuthStore } from '@/store/authStore';
 import { Button } from '@/components/ui/button';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import { NotificationBell } from '@/components/NotificationBell';
 import { cn } from '@/lib/utils';
 
 export function AppShell() {
@@ -73,9 +74,14 @@ export function AppShell() {
           </Button>
         </div>
       </aside>
-      <main className="p-8">
-        <Outlet />
-      </main>
+      <div className="flex flex-col">
+        <header className="flex items-center justify-end border-b bg-background px-8 py-3">
+          <NotificationBell />
+        </header>
+        <main className="p-8">
+          <Outlet />
+        </main>
+      </div>
     </div>
   );
 }

@@ -329,5 +329,17 @@
       "STATUS_CHANGE": "Statut modifié",
       "SEND": "Envoyée"
     }
+  },
+  "notifications": {
+    "title": "Notifications",
+    "empty": "Aucune notification pour le moment.",
+    "markAllRead": "Tout marquer comme lu",
+    "types": {
+      "INVOICE_SENT": "Facture {{subject}} envoyée",
+      "INVOICE_VIEWED": "Facture {{subject}} consultée",
+      "INVOICE_PAID": "Facture {{subject}} payée",
+      "INVOICE_OVERDUE": "Facture {{subject}} en retard",
+      "CUSTOMER_CREATED": "Client {{subject}} ajouté"
+    }
   }
 }
