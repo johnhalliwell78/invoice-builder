@@ -2,11 +2,17 @@ package com.invoicebuilder.customer;
 
 import com.invoicebuilder.audit.AuditAction;
 import com.invoicebuilder.audit.AuditService;
+import com.invoicebuilder.auth.UserPrincipal;
 import com.invoicebuilder.common.exception.AppException;
 import com.invoicebuilder.common.exception.ErrorCode;
 import com.invoicebuilder.customer.dto.CustomerRequest;
 import com.invoicebuilder.customer.dto.CustomerResponse;
+import com.invoicebuilder.notification.NotificationEvent;
+import com.invoicebuilder.notification.NotificationType;
 import com.invoicebuilder.tenant.TenantContext;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -21,11 +27,14 @@ public class CustomerService {
 
     private final CustomerRepository customerRepository;
     private final AuditService auditService;
+    private final ApplicationEventPublisher eventPublisher;
     private final Clock clock;
 
-    public CustomerService(CustomerRepository customerRepository, AuditService auditService, Clock clock) {
+    public CustomerService(CustomerRepository customerRepository, AuditService auditService,
+                           ApplicationEventPublisher eventPublisher, Clock clock) {
         this.customerRepository = customerRepository;
         this.auditService = auditService;
+        this.eventPublisher = eventPublisher;
         this.clock = clock;
     }
 
@@ -47,7 +56,14 @@ public class CustomerService {
         apply(customer, request);
         Customer saved = customerRepository.save(customer);
         auditService.record(saved.getTenantId(), "Customer", saved.getId(), AuditAction.CREATE, null);
+        eventPublisher.publishEvent(new NotificationEvent(saved.getTenantId(), currentUserId(),
+                NotificationType.CUSTOMER_CREATED, "Customer", saved.getId(), saved.getName()));
         return CustomerResponse.from(saved);
+    }
+
+    private static UUID currentUserId() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        return auth != null && auth.getPrincipal() instanceof UserPrincipal up ? up.userId() : null;
     }
 
     @Transactional

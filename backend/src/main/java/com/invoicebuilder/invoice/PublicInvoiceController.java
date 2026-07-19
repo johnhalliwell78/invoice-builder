@@ -6,10 +6,13 @@ import com.invoicebuilder.common.exception.ErrorCode;
 import com.invoicebuilder.customer.Customer;
 import com.invoicebuilder.customer.CustomerRepository;
 import com.invoicebuilder.invoice.dto.PublicInvoiceResponse;
+import com.invoicebuilder.notification.NotificationEvent;
+import com.invoicebuilder.notification.NotificationType;
 import com.invoicebuilder.tenant.Tenant;
 import com.invoicebuilder.tenant.TenantRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -34,15 +37,18 @@ public class PublicInvoiceController {
     private final InvoiceRepository invoiceRepository;
     private final TenantRepository tenantRepository;
     private final CustomerRepository customerRepository;
+    private final ApplicationEventPublisher eventPublisher;
     private final Clock clock;
 
     public PublicInvoiceController(InvoiceRepository invoiceRepository,
                                    TenantRepository tenantRepository,
                                    CustomerRepository customerRepository,
+                                   ApplicationEventPublisher eventPublisher,
                                    Clock clock) {
         this.invoiceRepository = invoiceRepository;
         this.tenantRepository = tenantRepository;
         this.customerRepository = customerRepository;
+        this.eventPublisher = eventPublisher;
         this.clock = clock;
     }
 
@@ -54,10 +60,12 @@ public class PublicInvoiceController {
         Invoice invoice = invoiceRepository.findByPublicToken(token)
                 .orElseThrow(() -> new AppException(ErrorCode.INVOICE_NOT_FOUND, "Invoice not found"));
 
-        // First view of a SENT invoice → mark VIEWED.
+        // First view of a SENT invoice → mark VIEWED and notify the issuer.
         if (invoice.getStatus() == InvoiceStatus.SENT) {
             invoice.setStatus(InvoiceStatus.VIEWED);
             invoice.setViewedAt(OffsetDateTime.now(clock));
+            eventPublisher.publishEvent(new NotificationEvent(invoice.getTenantId(), invoice.getCreatedBy(),
+                    NotificationType.INVOICE_VIEWED, "Invoice", invoice.getId(), invoice.getInvoiceNumber()));
         }
 
         Tenant tenant = tenantRepository.findById(invoice.getTenantId())

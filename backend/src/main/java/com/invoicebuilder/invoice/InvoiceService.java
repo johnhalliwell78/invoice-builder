@@ -11,6 +11,8 @@ import com.invoicebuilder.email.EmailService;
 import com.invoicebuilder.invoice.dto.InvoiceRequest;
 import com.invoicebuilder.invoice.dto.LineItemRequest;
 import com.invoicebuilder.invoice.dto.SendInvoiceRequest;
+import com.invoicebuilder.notification.NotificationEvent;
+import com.invoicebuilder.notification.NotificationType;
 import com.invoicebuilder.pdf.InvoicePdfGenerator;
 import com.invoicebuilder.pdf.PdfStorage;
 import com.invoicebuilder.tenant.LogoStorage;
@@ -19,6 +21,7 @@ import com.invoicebuilder.tenant.TenantContext;
 import com.invoicebuilder.tenant.TenantRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.MessageSource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -57,6 +60,7 @@ public class InvoiceService {
     private final MessageSource messages;
     private final InvoiceReminderRepository reminderRepository;
     private final AuditService auditService;
+    private final ApplicationEventPublisher eventPublisher;
     private final Clock clock;
 
     public InvoiceService(InvoiceRepository invoiceRepository,
@@ -71,6 +75,7 @@ public class InvoiceService {
                           MessageSource messages,
                           InvoiceReminderRepository reminderRepository,
                           AuditService auditService,
+                          ApplicationEventPublisher eventPublisher,
                           Clock clock) {
         this.invoiceRepository = invoiceRepository;
         this.customerRepository = customerRepository;
@@ -84,6 +89,7 @@ public class InvoiceService {
         this.messages = messages;
         this.reminderRepository = reminderRepository;
         this.auditService = auditService;
+        this.eventPublisher = eventPublisher;
         this.clock = clock;
     }
 
@@ -215,6 +221,7 @@ public class InvoiceService {
             sendInvoiceEmail(invoice, request);
         }
         auditInvoice(invoice, AuditAction.SEND, Map.<String, Object>of("status", "SENT"));
+        notifyInvoice(invoice, NotificationType.INVOICE_SENT);
         return invoice;
     }
 
@@ -330,6 +337,7 @@ public class InvoiceService {
         invoice.setPaidAt(OffsetDateTime.now(clock));
         invoice.setAmountPaid(invoice.getTotal());
         auditInvoice(invoice, AuditAction.STATUS_CHANGE, Map.<String, Object>of("status", "PAID"));
+        notifyInvoice(invoice, NotificationType.INVOICE_PAID);
         return invoice;
     }
 
@@ -346,6 +354,11 @@ public class InvoiceService {
         auditService.record(invoice.getTenantId(), "Invoice", invoice.getId(), action, changes);
     }
 
+    private void notifyInvoice(Invoice invoice, NotificationType type) {
+        eventPublisher.publishEvent(new NotificationEvent(invoice.getTenantId(), invoice.getCreatedBy(),
+                type, "Invoice", invoice.getId(), invoice.getInvoiceNumber()));
+    }
+
     /**
      * Sweeps invoices past their due date into OVERDUE and emails the customer
      * a localized reminder. Runs from {@link OverdueSweeper} without a request
@@ -359,6 +372,7 @@ public class InvoiceService {
         for (UUID id : ids) {
             Invoice invoice = invoiceRepository.findById(id).orElseThrow();
             invoice.setStatus(InvoiceStatus.OVERDUE);
+            notifyInvoice(invoice, NotificationType.INVOICE_OVERDUE);
             try {
                 sendOverdueReminder(invoice);
             } catch (RuntimeException e) {

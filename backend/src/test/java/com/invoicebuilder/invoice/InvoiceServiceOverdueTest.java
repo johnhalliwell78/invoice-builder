@@ -3,6 +3,7 @@ package com.invoicebuilder.invoice;
 import com.invoicebuilder.customer.Customer;
 import com.invoicebuilder.customer.CustomerRepository;
 import com.invoicebuilder.audit.AuditService;
+import org.springframework.context.ApplicationEventPublisher;
 import com.invoicebuilder.email.EmailService;
 import com.invoicebuilder.pdf.InvoicePdfGenerator;
 import com.invoicebuilder.pdf.PdfStorage;
@@ -58,6 +59,7 @@ class InvoiceServiceOverdueTest {
     @Mock private MessageSource messages;
     @Mock private InvoiceReminderRepository reminderRepository;
     @Mock private AuditService auditService;
+    @Mock private ApplicationEventPublisher eventPublisher;
 
     private InvoiceService service;
     private Invoice invoice;
@@ -68,7 +70,7 @@ class InvoiceServiceOverdueTest {
     void setUp() {
         service = new InvoiceService(invoiceRepository, customerRepository, tenantRepository,
                 numberGenerator, calculator, pdfGenerator, pdfStorage, logoStorage, emailService,
-                messages, reminderRepository, auditService,
+                messages, reminderRepository, auditService, eventPublisher,
                 Clock.fixed(Instant.parse("2026-07-11T03:15:00Z"), ZoneOffset.UTC));
 
         invoice = new Invoice();

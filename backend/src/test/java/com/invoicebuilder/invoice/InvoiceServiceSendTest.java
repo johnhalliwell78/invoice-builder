@@ -4,6 +4,7 @@ import com.invoicebuilder.common.exception.AppException;
 import com.invoicebuilder.customer.Customer;
 import com.invoicebuilder.customer.CustomerRepository;
 import com.invoicebuilder.audit.AuditService;
+import org.springframework.context.ApplicationEventPublisher;
 import com.invoicebuilder.email.EmailService;
 import com.invoicebuilder.invoice.dto.SendInvoiceRequest;
 import com.invoicebuilder.pdf.InvoicePdfGenerator;
@@ -63,6 +64,7 @@ class InvoiceServiceSendTest {
     @Mock private MessageSource messages;
     @Mock private InvoiceReminderRepository reminderRepository;
     @Mock private AuditService auditService;
+    @Mock private ApplicationEventPublisher eventPublisher;
 
     private InvoiceService service;
     private Invoice invoice;
@@ -73,7 +75,7 @@ class InvoiceServiceSendTest {
     void setUp() {
         service = new InvoiceService(invoiceRepository, customerRepository, tenantRepository,
                 numberGenerator, calculator, pdfGenerator, pdfStorage, logoStorage, emailService,
-                messages, reminderRepository, auditService, Clock.fixed(NOW, ZoneOffset.UTC));
+                messages, reminderRepository, auditService, eventPublisher, Clock.fixed(NOW, ZoneOffset.UTC));
         TenantContext.set(TENANT_ID);
 
         invoice = new Invoice();
