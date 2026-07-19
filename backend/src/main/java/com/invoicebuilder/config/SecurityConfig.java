@@ -40,6 +40,7 @@ public class SecurityConfig {
             "/oauth2/**",
             "/login/oauth2/**",
             "/api/v1/public/**",
+            "/ws/**",
             "/actuator/health",
             "/actuator/health/**",
             "/actuator/info",

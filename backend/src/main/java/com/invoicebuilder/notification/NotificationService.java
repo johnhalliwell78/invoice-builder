@@ -1,9 +1,11 @@
 package com.invoicebuilder.notification;
 
+import com.invoicebuilder.notification.dto.NotificationResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,9 +26,12 @@ public class NotificationService {
     private static final Logger log = LoggerFactory.getLogger(NotificationService.class);
 
     private final NotificationRepository repository;
+    private final SimpMessagingTemplate messagingTemplate;
 
-    public NotificationService(NotificationRepository repository) {
+    public NotificationService(NotificationRepository repository,
+                               SimpMessagingTemplate messagingTemplate) {
         this.repository = repository;
+        this.messagingTemplate = messagingTemplate;
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
@@ -49,6 +54,15 @@ public class NotificationService {
         notification.setReferenceType(event.referenceType());
         notification.setReferenceId(event.referenceId());
         Notification saved = repository.save(notification);
+        // Push to the recipient's own queue; a client that isn't connected simply
+        // picks it up on its next poll / fetch. Best-effort — broker hiccups must
+        // not fail the originating action.
+        try {
+            messagingTemplate.convertAndSendToUser(
+                    event.userId().toString(), "/queue/notifications", NotificationResponse.from(saved));
+        } catch (RuntimeException e) {
+            log.warn("Failed to broadcast notification {} to user {}", event.type(), event.userId(), e);
+        }
         log.debug("Notification {} created for user {}", event.type(), event.userId());
         return saved;
     }

@@ -6,12 +6,14 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -20,6 +22,7 @@ import static org.mockito.Mockito.when;
 class NotificationServiceTest {
 
     @Mock private NotificationRepository repository;
+    @Mock private SimpMessagingTemplate messagingTemplate;
     @InjectMocks private NotificationService service;
 
     @Test
@@ -40,6 +43,8 @@ class NotificationServiceTest {
         assertThat(saved.getTitle()).isEqualTo("Invoice paid");
         assertThat(saved.getMessage()).isEqualTo("INV-2026-0001");
         assertThat(saved.getReferenceId()).isEqualTo(invoiceId);
+        verify(messagingTemplate).convertAndSendToUser(
+                eq(userId.toString()), eq("/queue/notifications"), any());
     }
 
     @Test
