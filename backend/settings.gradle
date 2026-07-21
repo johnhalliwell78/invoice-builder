@@ -1,3 +1,14 @@
+// Declare public plugin repositories explicitly. A global corp init script
+// (~/.gradle/init.d) appends an internal Artifactory mirror to this list; when
+// nothing is declared here, that mirror becomes the ONLY plugin repository and
+// plugin resolution fails whenever the mirror is unreachable (off-VPN).
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        mavenCentral()
+    }
+}
+
 rootProject.name = 'invoice-builder-backend'
 
 // Gradle 8.x auto-discovers gradle/libs.versions.toml as the `libs` catalog.
