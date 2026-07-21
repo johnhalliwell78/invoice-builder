@@ -8,7 +8,8 @@
     "invoices": "Factures",
     "customers": "Clients",
     "settings": "Paramètres",
-    "logout": "Se déconnecter"
+    "logout": "Se déconnecter",
+    "products": "Produits"
   },
   "auth": {
     "login": {
@@ -342,6 +343,42 @@
       "INVOICE_PAID": "Facture {{subject}} payée",
       "INVOICE_OVERDUE": "Facture {{subject}} en retard",
       "CUSTOMER_CREATED": "Client {{subject}} ajouté"
+    }
+  },
+  "products": {
+    "title": "Produits",
+    "subtitle": "Articles et services réutilisables pour facturer plus vite.",
+    "create": "Nouveau produit",
+    "createTitle": "Nouveau produit",
+    "editTitle": "Modifier le produit",
+    "searchPlaceholder": "Rechercher par nom ou catégorie…",
+    "empty": "Aucun produit pour l'instant — créez le premier.",
+    "noMatches": "Aucun produit ne correspond à votre recherche.",
+    "created": "Produit créé.",
+    "updated": "Produit mis à jour.",
+    "deactivated": "Produit désactivé.",
+    "deactivateConfirm": "Désactiver \"{{name}}\" ? Il ne sera plus suggéré sur les factures.",
+    "columns": {
+      "name": "Nom",
+      "category": "Catégorie",
+      "unitPrice": "Prix unitaire",
+      "taxRate": "TVA %",
+      "status": "Statut"
+    },
+    "fields": {
+      "name": "Nom",
+      "category": "Catégorie",
+      "unitPrice": "Prix unitaire",
+      "taxRate": "TVA %",
+      "description": "Description",
+      "active": "Actif — suggéré sur les factures"
+    },
+    "status": {
+      "active": "Actif",
+      "inactive": "Inactif"
+    },
+    "section": {
+      "details": "Détails du produit"
     }
   }
 }

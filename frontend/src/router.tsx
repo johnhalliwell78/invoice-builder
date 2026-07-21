@@ -11,6 +11,8 @@ const OAuth2CallbackPage = lazy(() => import('@/features/auth/OAuth2CallbackPage
 const DashboardPage = lazy(() => import('@/features/dashboard/DashboardPage'));
 const CustomerListPage = lazy(() => import('@/features/customers/CustomerListPage'));
 const CustomerFormPage = lazy(() => import('@/features/customers/CustomerFormPage'));
+const ProductListPage = lazy(() => import('@/features/products/ProductListPage'));
+const ProductFormPage = lazy(() => import('@/features/products/ProductFormPage'));
 const InvoiceListPage = lazy(() => import('@/features/invoices/InvoiceListPage'));
 const InvoiceFormPage = lazy(() => import('@/features/invoices/InvoiceFormPage'));
 const InvoiceDetailPage = lazy(() => import('@/features/invoices/InvoiceDetailPage'));
@@ -135,6 +137,30 @@ export const router = createBrowserRouter([
             element: (
               <Suspense fallback={<Fallback />}>
                 <CustomerFormPage />
+              </Suspense>
+            ),
+          },
+          {
+            path: 'products',
+            element: (
+              <Suspense fallback={<Fallback />}>
+                <ProductListPage />
+              </Suspense>
+            ),
+          },
+          {
+            path: 'products/new',
+            element: (
+              <Suspense fallback={<Fallback />}>
+                <ProductFormPage />
+              </Suspense>
+            ),
+          },
+          {
+            path: 'products/:id',
+            element: (
+              <Suspense fallback={<Fallback />}>
+                <ProductFormPage />
               </Suspense>
             ),
           },

@@ -8,7 +8,8 @@
     "invoices": "Invoices",
     "customers": "Customers",
     "settings": "Settings",
-    "logout": "Sign out"
+    "logout": "Sign out",
+    "products": "Products"
   },
   "auth": {
     "login": {
@@ -342,6 +343,42 @@
       "INVOICE_PAID": "Invoice {{subject}} was paid",
       "INVOICE_OVERDUE": "Invoice {{subject}} is overdue",
       "CUSTOMER_CREATED": "Customer {{subject}} was added"
+    }
+  },
+  "products": {
+    "title": "Products",
+    "subtitle": "Reusable items and services for faster invoicing.",
+    "create": "New product",
+    "createTitle": "New product",
+    "editTitle": "Edit product",
+    "searchPlaceholder": "Search by name or category…",
+    "empty": "No products yet — create your first one.",
+    "noMatches": "No products match your search.",
+    "created": "Product created.",
+    "updated": "Product updated.",
+    "deactivated": "Product deactivated.",
+    "deactivateConfirm": "Deactivate \"{{name}}\"? It will no longer be suggested on invoices.",
+    "columns": {
+      "name": "Name",
+      "category": "Category",
+      "unitPrice": "Unit price",
+      "taxRate": "Tax %",
+      "status": "Status"
+    },
+    "fields": {
+      "name": "Name",
+      "category": "Category",
+      "unitPrice": "Unit price",
+      "taxRate": "Tax %",
+      "description": "Description",
+      "active": "Active — suggested on invoices"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "section": {
+      "details": "Product details"
     }
   }
 }

@@ -8,7 +8,8 @@
     "invoices": "Rechnungen",
     "customers": "Kunden",
     "settings": "Einstellungen",
-    "logout": "Abmelden"
+    "logout": "Abmelden",
+    "products": "Produkte"
   },
   "auth": {
     "login": {
@@ -342,6 +343,42 @@
       "INVOICE_PAID": "Rechnung {{subject}} wurde bezahlt",
       "INVOICE_OVERDUE": "Rechnung {{subject}} ist überfällig",
       "CUSTOMER_CREATED": "Kunde {{subject}} wurde hinzugefügt"
+    }
+  },
+  "products": {
+    "title": "Produkte",
+    "subtitle": "Wiederverwendbare Artikel und Leistungen für schnellere Rechnungen.",
+    "create": "Neues Produkt",
+    "createTitle": "Neues Produkt",
+    "editTitle": "Produkt bearbeiten",
+    "searchPlaceholder": "Nach Name oder Kategorie suchen…",
+    "empty": "Noch keine Produkte — legen Sie Ihr erstes an.",
+    "noMatches": "Keine Produkte für Ihre Suche.",
+    "created": "Produkt angelegt.",
+    "updated": "Produkt aktualisiert.",
+    "deactivated": "Produkt deaktiviert.",
+    "deactivateConfirm": "\"{{name}}\" deaktivieren? Es wird auf Rechnungen nicht mehr vorgeschlagen.",
+    "columns": {
+      "name": "Name",
+      "category": "Kategorie",
+      "unitPrice": "Einzelpreis",
+      "taxRate": "MwSt. %",
+      "status": "Status"
+    },
+    "fields": {
+      "name": "Name",
+      "category": "Kategorie",
+      "unitPrice": "Einzelpreis",
+      "taxRate": "MwSt. %",
+      "description": "Beschreibung",
+      "active": "Aktiv — wird auf Rechnungen vorgeschlagen"
+    },
+    "status": {
+      "active": "Aktiv",
+      "inactive": "Inaktiv"
+    },
+    "section": {
+      "details": "Produktdetails"
     }
   }
 }

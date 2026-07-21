@@ -11,6 +11,8 @@ import { ArrowLeft, Plus, Trash2 } from 'lucide-react';
 import { useCreateInvoice, useInvoice, useUpdateInvoice } from '@/hooks/useInvoices';
 import { useCustomerList } from '@/hooks/useCustomers';
 import type { InvoicePayload } from '@/api/invoices';
+import type { Product } from '@/api/products';
+import { ProductAutocompleteInput } from './ProductAutocompleteInput';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -77,6 +79,7 @@ export default function InvoiceFormPage() {
     handleSubmit,
     control,
     reset,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -94,6 +97,15 @@ export default function InvoiceFormPage() {
   });
 
   const { fields, append, remove } = useFieldArray({ control, name: 'lineItems' });
+
+  function applyProduct(index: number, product: Product) {
+    setValue(`lineItems.${index}.description`, product.name, {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
+    setValue(`lineItems.${index}.unitPrice`, String(product.unitPrice), { shouldDirty: true });
+    setValue(`lineItems.${index}.taxRate`, String(product.taxRate), { shouldDirty: true });
+  }
 
   useEffect(() => {
     if (existing) {
@@ -239,10 +251,11 @@ export default function InvoiceFormPage() {
               <div key={field.id} className="grid grid-cols-12 items-end gap-2">
                 <div className="col-span-12 space-y-1.5 sm:col-span-5">
                   {index === 0 && <Label className="text-xs">{t('invoices.fields.description')}</Label>}
-                  <Input
+                  <ProductAutocompleteInput
                     placeholder={t('invoices.fields.descriptionPlaceholder')}
-                    aria-invalid={!!errors.lineItems?.[index]?.description}
-                    {...register(`lineItems.${index}.description`)}
+                    invalid={!!errors.lineItems?.[index]?.description}
+                    registration={register(`lineItems.${index}.description`)}
+                    onPick={(product) => applyProduct(index, product)}
                   />
                 </div>
                 <div className="col-span-3 space-y-1.5 sm:col-span-1">
