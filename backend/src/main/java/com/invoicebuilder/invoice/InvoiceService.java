@@ -196,6 +196,49 @@ public class InvoiceService {
         return invoice;
     }
 
+    /**
+     * Creates a fresh DRAFT copy of any invoice: same customer, currency,
+     * template, notes, terms, and line items; new number; dates shifted to
+     * today with the source's payment term preserved. Lifecycle state
+     * (token, sent/viewed/paid, payments) is never carried over.
+     */
+    @Transactional
+    public Invoice duplicate(UUID id) {
+        Invoice source = load(id);
+        LocalDate today = LocalDate.now(clock);
+        long termDays = java.time.temporal.ChronoUnit.DAYS.between(
+                source.getIssueDate(), source.getDueDate());
+
+        Invoice copy = new Invoice();
+        copy.setTenantId(source.getTenantId());
+        copy.setCustomerId(source.getCustomerId());
+        copy.setStatus(InvoiceStatus.DRAFT);
+        copy.setInvoiceNumber(numberGenerator.reserveNext(source.getTenantId()));
+        copy.setCurrency(source.getCurrency());
+        copy.setIssueDate(today);
+        copy.setDueDate(today.plusDays(Math.max(0, termDays)));
+        copy.setNotes(source.getNotes());
+        copy.setTerms(source.getTerms());
+        copy.setTemplate(source.getTemplate());
+        copy.setCreatedBy(currentUserId());
+        for (InvoiceLineItem item : source.getLineItems()) {
+            InvoiceLineItem line = new InvoiceLineItem();
+            line.setDescription(item.getDescription());
+            line.setQuantity(item.getQuantity());
+            line.setUnitPrice(item.getUnitPrice());
+            line.setTaxRate(item.getTaxRate());
+            line.setDiscountPercent(item.getDiscountPercent());
+            line.setSortOrder(item.getSortOrder());
+            copy.addLineItem(line);
+        }
+        applyTotals(copy, source.getDiscountAmount());
+
+        Invoice saved = invoiceRepository.save(copy);
+        auditInvoice(saved, AuditAction.CREATE,
+                Map.<String, Object>of("duplicatedFrom", source.getInvoiceNumber()));
+        return saved;
+    }
+
     @Transactional
     public void delete(UUID id) {
         Invoice invoice = load(id);

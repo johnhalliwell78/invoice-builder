@@ -3,11 +3,12 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { isAxiosError } from 'axios';
 import { toast } from 'sonner';
-import { ArrowLeft, Ban, CheckCircle2, Eye, Pencil, Send, Trash2 } from 'lucide-react';
+import { ArrowLeft, Ban, CheckCircle2, Copy, Eye, Pencil, Send, Trash2 } from 'lucide-react';
 
 import {
   useCancelInvoice,
   useDeleteInvoice,
+  useDuplicateInvoice,
   useInvoice,
   useMarkPaid,
   useReminders,
@@ -35,6 +36,7 @@ export default function InvoiceDetailPage() {
   const markPaid = useMarkPaid();
   const cancel = useCancelInvoice();
   const del = useDeleteInvoice();
+  const duplicate = useDuplicateInvoice();
   const [previewOpen, setPreviewOpen] = useState(false);
   const [sendOpen, setSendOpen] = useState(false);
   const [sendMode, setSendMode] = useState<'send' | 'resend'>('send');
@@ -76,6 +78,21 @@ export default function InvoiceDetailPage() {
             <Button variant="outline" onClick={() => setPreviewOpen(true)}>
               <Eye className="mr-2 h-4 w-4" />
               {t('invoices.actions.preview')}
+            </Button>
+            <Button
+              variant="outline"
+              disabled={duplicate.isPending}
+              onClick={() =>
+                void action(
+                  duplicate
+                    .mutateAsync(invoice.id)
+                    .then((copy) => navigate(`/invoices/${copy.id}/edit`)),
+                  'invoices.duplicated',
+                )
+              }
+            >
+              <Copy className="mr-2 h-4 w-4" />
+              {t('invoices.actions.duplicate')}
             </Button>
             {isDraft && (
               <>

@@ -197,7 +197,8 @@
       "markPaid": "Mark paid",
       "cancel": "Cancel",
       "preview": "Preview",
-      "resend": "Resend"
+      "resend": "Resend",
+      "duplicate": "Duplicate"
     },
     "timeline": {
       "sent": "Sent on",
@@ -217,7 +218,8 @@
     "publicNotFound": "This invoice link is invalid or has expired.",
     "activity": {
       "title": "Activity"
-    }
+    },
+    "duplicated": "Invoice duplicated — you are now editing the copy."
   },
   "settings": {
     "title": "Settings",

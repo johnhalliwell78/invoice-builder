@@ -3,6 +3,7 @@ import {
   cancelInvoice,
   createInvoice,
   deleteInvoice,
+  duplicateInvoice,
   getEmailPreview,
   getInvoice,
   listInvoices,
@@ -46,6 +47,14 @@ export function useUpdateInvoice(id: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (payload: InvoicePayload) => updateInvoice(id, payload),
+    onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
+  });
+}
+
+export function useDuplicateInvoice() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => duplicateInvoice(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
   });
 }

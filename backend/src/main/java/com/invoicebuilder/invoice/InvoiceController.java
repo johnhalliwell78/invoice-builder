@@ -92,6 +92,14 @@ public class InvoiceController {
         return ApiResponse.of(InvoiceResponse.from(invoiceService.send(id, request)));
     }
 
+    @PostMapping("/{id}/duplicate")
+    @Operation(summary = "Duplicate any invoice into a fresh DRAFT (dates shifted to today)")
+    public ResponseEntity<ApiResponse<InvoiceResponse>> duplicate(@PathVariable UUID id) {
+        Invoice copy = invoiceService.duplicate(id);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.of(InvoiceResponse.from(copy)));
+    }
+
     @PostMapping("/{id}/resend")
     @Operation(summary = "Resend the invoice email (status unchanged)")
     public ApiResponse<InvoiceResponse> resend(@PathVariable UUID id,

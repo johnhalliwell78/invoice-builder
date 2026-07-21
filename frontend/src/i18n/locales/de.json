@@ -197,7 +197,8 @@
       "markPaid": "Als bezahlt markieren",
       "cancel": "Stornieren",
       "preview": "Vorschau",
-      "resend": "Erneut senden"
+      "resend": "Erneut senden",
+      "duplicate": "Duplizieren"
     },
     "timeline": {
       "sent": "Versendet am",
@@ -217,7 +218,8 @@
     "publicNotFound": "Dieser Rechnungslink ist ungültig oder abgelaufen.",
     "activity": {
       "title": "Aktivität"
-    }
+    },
+    "duplicated": "Rechnung dupliziert — Sie bearbeiten jetzt die Kopie."
   },
   "settings": {
     "title": "Einstellungen",

@@ -104,6 +104,11 @@ export async function deleteInvoice(id: string): Promise<void> {
   await api.delete(`/api/v1/invoices/${id}`);
 }
 
+export async function duplicateInvoice(id: string): Promise<Invoice> {
+  const res = await api.post<ApiEnvelope<Invoice>>(`/api/v1/invoices/${id}/duplicate`);
+  return res.data.data;
+}
+
 export async function sendInvoice(id: string, payload?: SendInvoicePayload): Promise<Invoice> {
   const res = await api.post<ApiEnvelope<Invoice>>(`/api/v1/invoices/${id}/send`, payload ?? {});
   return res.data.data;

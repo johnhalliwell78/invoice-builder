@@ -197,7 +197,8 @@
       "markPaid": "Marquer comme payée",
       "cancel": "Annuler",
       "preview": "Aperçu",
-      "resend": "Renvoyer"
+      "resend": "Renvoyer",
+      "duplicate": "Dupliquer"
     },
     "timeline": {
       "sent": "Envoyée le",
@@ -217,7 +218,8 @@
     "publicNotFound": "Ce lien de facture est invalide ou a expiré.",
     "activity": {
       "title": "Activité"
-    }
+    },
+    "duplicated": "Facture dupliquée — vous modifiez maintenant la copie."
   },
   "settings": {
     "title": "Paramètres",
