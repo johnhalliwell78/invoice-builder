@@ -322,7 +322,10 @@
     "loadFailed": "Impossible de charger les données. Réessayez.",
     "retry": "Réessayer",
     "close": "Fermer",
-    "language": "Langue"
+    "language": "Langue",
+    "clear": "Effacer",
+    "loadMore": "Charger plus",
+    "noResults": "Aucun résultat"
   },
   "audit": {
     "actions": {

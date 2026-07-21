@@ -1,4 +1,10 @@
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  keepPreviousData,
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 import {
   createCustomer,
   deleteCustomer,
@@ -15,6 +21,19 @@ export function useCustomerList(params: CustomerListParams) {
   return useQuery({
     queryKey: [...KEY, 'list', params],
     queryFn: () => listCustomers(params),
+    placeholderData: keepPreviousData,
+  });
+}
+
+/** Paged customer search for the combobox — first page on open, more via "load more". */
+export function useCustomerSearchInfinite(query: string, enabled: boolean) {
+  return useInfiniteQuery({
+    queryKey: [...KEY, 'combobox', query],
+    queryFn: ({ pageParam }) =>
+      listCustomers({ q: query || undefined, page: pageParam, size: 20, sort: 'name,asc' }),
+    initialPageParam: 0,
+    getNextPageParam: (last) => (last.last ? undefined : last.page + 1),
+    enabled,
     placeholderData: keepPreviousData,
   });
 }

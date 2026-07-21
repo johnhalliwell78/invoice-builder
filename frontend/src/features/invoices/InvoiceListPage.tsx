@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Plus } from 'lucide-react';
 
 import { useInvoiceList } from '@/hooks/useInvoices';
-import { useCustomerList } from '@/hooks/useCustomers';
+import { CustomerCombobox } from '@/components/CustomerCombobox';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -20,22 +20,20 @@ export default function InvoiceListPage() {
   const navigate = useNavigate();
 
   const [status, setStatus] = useState<InvoiceStatus | ''>('');
-  const [customerId, setCustomerId] = useState('');
+  const [customerFilter, setCustomerFilter] = useState<{ id: string; name: string } | null>(null);
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
   const [page, setPage] = useState(0);
 
   const { data, isPending, error } = useInvoiceList({
     status: status || undefined,
-    customerId: customerId || undefined,
+    customerId: customerFilter?.id ?? undefined,
     from: from || undefined,
     to: to || undefined,
     page,
     size: 20,
     sort: 'createdAt,desc',
   });
-
-  const customers = useCustomerList({ size: 200, sort: 'name,asc' });
 
   return (
     <div>
@@ -71,21 +69,16 @@ export default function InvoiceListPage() {
         </div>
         <div className="space-y-1.5">
           <Label>{t('invoices.filters.customer')}</Label>
-          <select
-            className="h-10 w-full rounded-md border bg-background px-3 text-sm"
-            value={customerId}
-            onChange={(e) => {
-              setCustomerId(e.target.value);
+          <CustomerCombobox
+            selectedId={customerFilter?.id ?? ''}
+            selectedName={customerFilter?.name}
+            clearable
+            placeholder={t('invoices.filters.allCustomers')}
+            onSelect={(c) => {
+              setCustomerFilter(c ? { id: c.id, name: c.name } : null);
               setPage(0);
             }}
-          >
-            <option value="">{t('invoices.filters.allCustomers')}</option>
-            {customers.data?.content.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
+          />
         </div>
         <div className="space-y-1.5">
           <Label>{t('invoices.filters.from')}</Label>
@@ -129,7 +122,6 @@ export default function InvoiceListPage() {
                 </tr>
               ) : (
                 data?.content.map((inv) => {
-                  const customer = customers.data?.content.find((c) => c.id === inv.customerId);
                   return (
                     <tr key={inv.id} className="hover:bg-muted/30">
                       <td className="px-4 py-3 font-medium">
@@ -137,7 +129,7 @@ export default function InvoiceListPage() {
                           {inv.invoiceNumber}
                         </Link>
                       </td>
-                      <td className="px-4 py-3 text-muted-foreground">{customer?.name ?? '—'}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{inv.customerName ?? '—'}</td>
                       <td className="px-4 py-3">
                         <StatusBadge status={inv.status} />
                       </td>

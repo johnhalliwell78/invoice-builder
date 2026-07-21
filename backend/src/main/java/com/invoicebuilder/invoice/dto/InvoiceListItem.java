@@ -13,6 +13,7 @@ import java.util.UUID;
 public record InvoiceListItem(
         UUID id,
         UUID customerId,
+        String customerName,
         String invoiceNumber,
         InvoiceStatus status,
         String currency,
@@ -22,10 +23,11 @@ public record InvoiceListItem(
         LocalDate dueDate
 ) {
 
-    public static InvoiceListItem from(Invoice i) {
+    public static InvoiceListItem from(Invoice i, String customerName) {
         return new InvoiceListItem(
                 i.getId(),
                 i.getCustomerId(),
+                customerName,
                 i.getInvoiceNumber(),
                 i.getStatus(),
                 i.getCurrency(),

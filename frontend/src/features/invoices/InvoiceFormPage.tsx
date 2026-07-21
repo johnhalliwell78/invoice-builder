@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useFieldArray, useForm, useWatch, type Control } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -9,7 +9,8 @@ import { toast } from 'sonner';
 import { ArrowLeft, Plus, Trash2 } from 'lucide-react';
 
 import { useCreateInvoice, useInvoice, useUpdateInvoice } from '@/hooks/useInvoices';
-import { useCustomerList } from '@/hooks/useCustomers';
+import { useCustomer } from '@/hooks/useCustomers';
+import { CustomerCombobox } from '@/components/CustomerCombobox';
 import type { InvoicePayload } from '@/api/invoices';
 import type { Product } from '@/api/products';
 import { ProductAutocompleteInput } from './ProductAutocompleteInput';
@@ -68,8 +69,10 @@ export default function InvoiceFormPage() {
   const isEdit = !!id && id !== 'new';
   const invoiceId = isEdit ? id : undefined;
 
-  const customers = useCustomerList({ size: 200, sort: 'name,asc' });
   const { data: existing, isPending: loadingInvoice } = useInvoice(invoiceId);
+  // Seed the combobox label when editing an existing invoice.
+  const existingCustomer = useCustomer(existing?.customerId);
+  const [pickedCustomer, setPickedCustomer] = useState<{ id: string; name: string } | null>(null);
   const create = useCreateInvoice();
   const update = useUpdateInvoice(invoiceId ?? '');
 
@@ -97,6 +100,7 @@ export default function InvoiceFormPage() {
   });
 
   const { fields, append, remove } = useFieldArray({ control, name: 'lineItems' });
+  const customerIdValue = useWatch({ control, name: 'customerId' });
 
   function applyProduct(index: number, product: Product) {
     setValue(`lineItems.${index}.description`, product.name, {
@@ -184,18 +188,16 @@ export default function InvoiceFormPage() {
           <CardContent className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5 sm:col-span-2">
               <Label>{t('invoices.fields.customer')} *</Label>
-              <select
-                className="h-10 w-full rounded-md border bg-background px-3 text-sm"
-                aria-invalid={!!errors.customerId}
-                {...register('customerId')}
-              >
-                <option value="">{t('invoices.fields.customerPlaceholder')}</option>
-                {customers.data?.content.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
+              <CustomerCombobox
+                selectedId={customerIdValue}
+                selectedName={pickedCustomer?.name ?? existingCustomer.data?.name}
+                invalid={!!errors.customerId}
+                placeholder={t('invoices.fields.customerPlaceholder')}
+                onSelect={(c) => {
+                  setPickedCustomer(c ? { id: c.id, name: c.name } : null);
+                  setValue('customerId', c?.id ?? '', { shouldValidate: true, shouldDirty: true });
+                }}
+              />
               {errors.customerId && (
                 <p className="text-xs text-destructive">{t('invoices.fields.customerRequired')}</p>
               )}

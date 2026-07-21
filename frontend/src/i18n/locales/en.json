@@ -322,7 +322,10 @@
     "pageOf": "Page {{current}} of {{total}}",
     "loadFailed": "Could not load data. Try again.",
     "retry": "Retry",
-    "language": "Language"
+    "language": "Language",
+    "clear": "Clear",
+    "loadMore": "Load more",
+    "noResults": "No results"
   },
   "audit": {
     "actions": {

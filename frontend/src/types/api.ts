@@ -82,6 +82,7 @@ export interface LineItem {
 export interface InvoiceListItem {
   id: string;
   customerId: string;
+  customerName: string | null;
   invoiceNumber: string;
   status: InvoiceStatus;
   currency: string;

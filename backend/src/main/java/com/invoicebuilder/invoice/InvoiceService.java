@@ -8,6 +8,7 @@ import com.invoicebuilder.common.exception.ErrorCode;
 import com.invoicebuilder.customer.Customer;
 import com.invoicebuilder.customer.CustomerRepository;
 import com.invoicebuilder.email.EmailService;
+import com.invoicebuilder.invoice.dto.InvoiceListItem;
 import com.invoicebuilder.invoice.dto.InvoiceRequest;
 import com.invoicebuilder.invoice.dto.LineItemRequest;
 import com.invoicebuilder.invoice.dto.SendInvoiceRequest;
@@ -41,6 +42,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class InvoiceService {
@@ -128,13 +130,24 @@ public class InvoiceService {
                 .orElse("invoice.pdf");
     }
 
+    /** List projection with customer names resolved in a single batch query. */
     @Transactional(readOnly = true)
-    public Page<Invoice> list(InvoiceStatus status,
-                              UUID customerId,
-                              LocalDate from,
-                              LocalDate to,
-                              Pageable pageable) {
-        return invoiceRepository.search(TenantContext.require(), status, customerId, from, to, pageable);
+    public Page<InvoiceListItem> listItems(InvoiceStatus status,
+                                           UUID customerId,
+                                           LocalDate from,
+                                           LocalDate to,
+                                           Pageable pageable) {
+        UUID tenantId = TenantContext.require();
+        Page<Invoice> page = invoiceRepository.search(tenantId, status, customerId, from, to, pageable);
+        if (page.isEmpty()) {
+            return page.map(i -> InvoiceListItem.from(i, null));
+        }
+        Set<UUID> customerIds = page.getContent().stream()
+                .map(Invoice::getCustomerId)
+                .collect(Collectors.toSet());
+        Map<UUID, String> names = customerRepository.findByTenantIdAndIdIn(tenantId, customerIds).stream()
+                .collect(Collectors.toMap(Customer::getId, Customer::getName));
+        return page.map(i -> InvoiceListItem.from(i, names.get(i.getCustomerId())));
     }
 
     @Transactional(readOnly = true)

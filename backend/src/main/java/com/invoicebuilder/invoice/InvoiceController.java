@@ -54,8 +54,7 @@ public class InvoiceController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         return ApiResponse.of(PageResponse.of(
-                invoiceService.list(status, customerId, from, to, pageable),
-                InvoiceListItem::from));
+                invoiceService.listItems(status, customerId, from, to, pageable)));
     }
 
     @GetMapping("/{id}")

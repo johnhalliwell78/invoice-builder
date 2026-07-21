@@ -322,7 +322,10 @@
     "loadFailed": "Daten konnten nicht geladen werden. Bitte erneut versuchen.",
     "retry": "Erneut versuchen",
     "close": "Schließen",
-    "language": "Sprache"
+    "language": "Sprache",
+    "clear": "Leeren",
+    "loadMore": "Mehr laden",
+    "noResults": "Keine Treffer"
   },
   "audit": {
     "actions": {
