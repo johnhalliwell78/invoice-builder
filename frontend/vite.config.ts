@@ -5,6 +5,19 @@ import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  // sockjs-client is CommonJS and references Node's `global` at load time,
+  // which doesn't exist in browsers — map it to globalThis in the app build
+  // AND in the dev-server dependency prebundle.
+  define: {
+    global: 'globalThis',
+  },
+  optimizeDeps: {
+    esbuildOptions: {
+      define: {
+        global: 'globalThis',
+      },
+    },
+  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
