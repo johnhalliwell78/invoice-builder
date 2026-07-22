@@ -48,16 +48,16 @@
 
 - [ ] Backend → frontend CRUD → autocomplete → verify → merge.
 
-## P2.4 Customer Improvements (branch `feat/customer-combobox`)
+## P2.4 Customer Improvements (branch `feat/customer-combobox`) — DONE 2026-07-22
 
 - New `CustomerCombobox` component (input + debounced server search + dropdown + keyboard nav + "load more" via `useInfiniteQuery`); replaces the 200-cap `<select>` in `InvoiceFormPage` and the filter dropdown in `InvoiceListPage`.
 - Backend already supports `q` + pagination — no changes expected.
 - Also: add `customerName` to `InvoiceListItem` (backend join) and drop the client-side join in `InvoiceListPage` (deletes the other 200-cap).
 - Tests: combobox component test; `InvoiceListItem` mapping test.
 
-- [ ] Implement → verify → merge.
+- [x] Implement → verify → merge. (incl. combobox a11y fixes from adversarial review)
 
-## P2.5 Estimate Workflow (branch `feat/estimates`)
+## P2.5 Estimate Workflow (branch `feat/estimates`) — DONE 2026-07-22
 
 - Changelog `0015-invoice-doc-type.yaml`: `doc_type VARCHAR(20) NOT NULL DEFAULT 'INVOICE'` on `invoice`; number prefix for estimates (`EST-…`) via separate tenant counter column `next_estimate_number`.
 - `DocType {INVOICE, ESTIMATE}`; `InvoiceStatus` gains `APPROVED`, `DECLINED` (estimate-only transitions: DRAFT→SENT→APPROVED|DECLINED; APPROVED→converted). Transition table becomes doc-type aware.
@@ -65,9 +65,9 @@
 - Frontend: Estimates nav page (reuses list/form/detail components parameterized by doc type), approve/decline/convert actions, public page shows "Estimate" title.
 - Tests: status machine per doc type; convert copies + links.
 
-- [ ] Backend state machine → endpoints → frontend → verify → merge.
+- [x] Backend state machine → endpoints → frontend → verify → merge.
 
-## P2.6 Recurring Invoices (branch `feat/recurring`)
+## P2.6 Recurring Invoices (branch `feat/recurring`) — DONE 2026-07-22
 
 - Changelog `0016-recurring-invoice.yaml`: `recurring_invoice(id, tenant_id, customer_id, frequency VARCHAR(10) DAILY|WEEKLY|MONTHLY|YEARLY, next_run DATE, active bool, auto_send bool, currency, template, notes, terms, line_items JSONB, created_by, timestamps)`.
 - `RecurringInvoiceSweeper` (daily 04:00 UTC, mirrors `OverdueSweeper`): for each due schedule → create DRAFT via `InvoiceService.create` payload from the JSONB snapshot → optionally `send` when `auto_send` → advance `next_run` by frequency.
@@ -75,9 +75,9 @@
 - Frontend: Recurring page (list + enable/disable + next run), "Make recurring" action on invoice detail. i18n ×3.
 - Tests: sweeper advances dates correctly across frequencies (month-end clamping!), generates drafts, honors active flag.
 
-- [ ] Backend → frontend → verify → merge.
+- [x] Backend → frontend → verify → merge.
 
-## P2.7 Payment Tracking (branch `feat/payments`)
+## P2.7 Payment Tracking (branch `feat/payments`) — DONE 2026-07-22
 
 - Changelog `0017-payment.yaml`: `payment(id, tenant_id, invoice_id FK, amount NUMERIC(15,2), method VARCHAR(30) BANK_TRANSFER|CARD|CASH|PAYPAL|OTHER, paid_on DATE, note ≤500, created_by, created_at)`.
 - `POST /api/v1/invoices/{id}/payments` (allowed for SENT/VIEWED/OVERDUE/PAID? — no: open statuses only), `GET …/payments`, `DELETE …/payments/{paymentId}` (recalculates). `amountPaid = Σ payments`; when `amountPaid ≥ total` → transition to PAID (`paidAt = latest payment`); deleting below total reverts PAID→SENT-family… **keep v1 simple: payments are append-only, no delete; document it.**
@@ -85,7 +85,7 @@
 - Frontend: Payments card on detail (history + balance), "Record payment" dialog (amount defaulting to balance, method, date, note); list page shows balance for partially paid.
 - Tests: partial → balance math; full → PAID transition; over-payment rejected.
 
-- [ ] Backend → frontend → verify → merge.
+- [x] Backend → frontend → verify → merge.
 
 ---
 
@@ -95,3 +95,22 @@
 - Estimates reuse the invoice machinery rather than a parallel table — one calculator, one PDF pipeline, one send flow. The cost is doc-type-aware transitions, contained in `InvoiceStatus`/service guards.
 - Payments deliberately append-only in v1; reversing payments touches accounting semantics that belong with credit notes (Phase 3+).
 - Deferred explicitly: Stripe/online payment collection (roadmap Phase 2 "revenue loop" in the analysis doc, but not in the user's Phase 2 list).
+
+---
+
+## Phase 2 completion note (2026-07-22)
+
+All of P2.1–P2.7 are merged to main. Implementation deltas vs this plan:
+
+- P2.5: estimate emails reuse invoice wording (documented v1 limitation);
+  estimates excluded from overdue sweeps AND all dashboard aggregates.
+- P2.6: added `anchor_day` so monthly/yearly schedules clamp through short
+  months without drifting; failed schedules advance anyway (no retry storms);
+  v1 has no standalone schedule editor — schedules are created from invoices.
+- P2.7: payments append-only as decided; `mark-paid` endpoint kept API-compat
+  by recording the remaining balance as an OTHER-method payment;
+  `InvoiceService.markPaid` removed in favor of `PaymentService`.
+
+Backend: 103 tests. Frontend: 29 tests. Next: Phase 3 (enterprise) per the
+lead-engineer roadmap, or the deferred revenue loop (Stripe) from the
+analysis doc.
