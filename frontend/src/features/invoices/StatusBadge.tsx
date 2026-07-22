@@ -9,6 +9,8 @@ const STYLE: Record<InvoiceStatus, string> = {
   PAID: 'bg-emerald-100 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200',
   OVERDUE: 'bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200',
   CANCELLED: 'bg-rose-100 text-rose-900 dark:bg-rose-950 dark:text-rose-200',
+  APPROVED: 'bg-emerald-100 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200',
+  DECLINED: 'bg-rose-100 text-rose-900 dark:bg-rose-950 dark:text-rose-200',
 };
 
 export function StatusBadge({ status }: { status: InvoiceStatus }) {

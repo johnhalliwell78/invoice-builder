@@ -1,5 +1,6 @@
 package com.invoicebuilder.invoice.dto;
 
+import com.invoicebuilder.invoice.DocType;
 import com.invoicebuilder.invoice.Invoice;
 import com.invoicebuilder.invoice.InvoiceStatus;
 
@@ -15,6 +16,7 @@ public record InvoiceListItem(
         UUID customerId,
         String customerName,
         String invoiceNumber,
+        DocType docType,
         InvoiceStatus status,
         String currency,
         BigDecimal total,
@@ -29,6 +31,7 @@ public record InvoiceListItem(
                 i.getCustomerId(),
                 customerName,
                 i.getInvoiceNumber(),
+                i.getDocType(),
                 i.getStatus(),
                 i.getCurrency(),
                 i.getTotal(),

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { LogOut, LayoutDashboard, FileText, Package, Users, Settings } from 'lucide-react';
+import { LogOut, LayoutDashboard, FileText, FileClock, Package, Users, Settings } from 'lucide-react';
 
 import { logout as logoutApi } from '@/api/auth';
 import { useAuthStore } from '@/store/authStore';
@@ -32,6 +32,7 @@ export function AppShell() {
   const navItems = [
     { to: '/', label: t('nav.dashboard'), icon: LayoutDashboard, end: true },
     { to: '/invoices', label: t('nav.invoices'), icon: FileText },
+    { to: '/estimates', label: t('nav.estimates'), icon: FileClock },
     { to: '/customers', label: t('nav.customers'), icon: Users },
     { to: '/products', label: t('nav.products'), icon: Package },
     { to: '/settings', label: t('nav.settings'), icon: Settings },

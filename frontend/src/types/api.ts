@@ -66,7 +66,15 @@ export interface PageResponse<T> {
   last: boolean;
 }
 
-export type InvoiceStatus = 'DRAFT' | 'SENT' | 'VIEWED' | 'PAID' | 'OVERDUE' | 'CANCELLED';
+export type InvoiceStatus =
+  | 'DRAFT'
+  | 'SENT'
+  | 'VIEWED'
+  | 'PAID'
+  | 'OVERDUE'
+  | 'CANCELLED'
+  | 'APPROVED'
+  | 'DECLINED';
 
 export interface LineItem {
   id?: string;
@@ -79,11 +87,14 @@ export interface LineItem {
   sortOrder?: number;
 }
 
+export type DocType = 'INVOICE' | 'ESTIMATE';
+
 export interface InvoiceListItem {
   id: string;
   customerId: string;
   customerName: string | null;
   invoiceNumber: string;
+  docType: DocType;
   status: InvoiceStatus;
   currency: string;
   total: string;
@@ -96,6 +107,8 @@ export interface Invoice {
   id: string;
   customerId: string;
   invoiceNumber: string;
+  docType: DocType;
+  convertedInvoiceId: string | null;
   status: InvoiceStatus;
   currency: string;
   subtotal: string;

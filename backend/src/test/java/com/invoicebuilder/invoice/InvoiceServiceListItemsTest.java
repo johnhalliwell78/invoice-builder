@@ -87,7 +87,7 @@ class InvoiceServiceListItemsTest {
         Page<Invoice> page = new PageImpl<>(
                 List.of(invoice(CUSTOMER_A, "INV-1"), invoice(CUSTOMER_MISSING, "INV-2")),
                 pageable, 2);
-        when(invoiceRepository.search(eq(TENANT_ID), any(), any(), any(), any(), eq(pageable)))
+        when(invoiceRepository.search(eq(TENANT_ID), eq(DocType.INVOICE), any(), any(), any(), any(), eq(pageable)))
                 .thenReturn(page);
 
         Customer customerA = new Customer();
@@ -97,7 +97,7 @@ class InvoiceServiceListItemsTest {
         when(customerRepository.findByTenantIdAndIdIn(TENANT_ID, Set.of(CUSTOMER_A, CUSTOMER_MISSING)))
                 .thenReturn(List.of(customerA));
 
-        Page<InvoiceListItem> items = service.listItems(null, null, null, null, pageable);
+        Page<InvoiceListItem> items = service.listItems(null, null, null, null, null, pageable);
 
         assertThat(items.getContent()).hasSize(2);
         assertThat(items.getContent().get(0).customerName()).isEqualTo("Acme GmbH");
@@ -107,10 +107,10 @@ class InvoiceServiceListItemsTest {
     @Test
     void listItemsSkipsCustomerLookupForEmptyPage() {
         Pageable pageable = PageRequest.of(0, 20);
-        when(invoiceRepository.search(eq(TENANT_ID), any(), any(), any(), any(), eq(pageable)))
+        when(invoiceRepository.search(eq(TENANT_ID), eq(DocType.INVOICE), any(), any(), any(), any(), eq(pageable)))
                 .thenReturn(Page.empty(pageable));
 
-        Page<InvoiceListItem> items = service.listItems(null, null, null, null, pageable);
+        Page<InvoiceListItem> items = service.listItems(null, null, null, null, null, pageable);
 
         assertThat(items).isEmpty();
         org.mockito.Mockito.verifyNoInteractions(customerRepository);

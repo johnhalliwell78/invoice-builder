@@ -141,6 +141,38 @@ export const router = createBrowserRouter([
             ),
           },
           {
+            path: 'estimates',
+            element: (
+              <Suspense fallback={<Fallback />}>
+                <InvoiceListPage docType="ESTIMATE" />
+              </Suspense>
+            ),
+          },
+          {
+            path: 'estimates/new',
+            element: (
+              <Suspense fallback={<Fallback />}>
+                <InvoiceFormPage docType="ESTIMATE" />
+              </Suspense>
+            ),
+          },
+          {
+            path: 'estimates/:id',
+            element: (
+              <Suspense fallback={<Fallback />}>
+                <InvoiceDetailPage />
+              </Suspense>
+            ),
+          },
+          {
+            path: 'estimates/:id/edit',
+            element: (
+              <Suspense fallback={<Fallback />}>
+                <InvoiceFormPage docType="ESTIMATE" />
+              </Suspense>
+            ),
+          },
+          {
             path: 'products',
             element: (
               <Suspense fallback={<Fallback />}>

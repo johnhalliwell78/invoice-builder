@@ -7,6 +7,8 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
+import com.invoicebuilder.invoice.DocType;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
@@ -33,6 +35,9 @@ public record InvoiceRequest(
 
         @Size(max = 4000) String terms,
 
-        @Size(max = 50) String template
+        @Size(max = 50) String template,
+
+        /** Null means INVOICE; set to ESTIMATE to create a quote. */
+        DocType docType
 ) {
 }

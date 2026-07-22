@@ -3,10 +3,13 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { isAxiosError } from 'axios';
 import { toast } from 'sonner';
-import { ArrowLeft, Ban, CheckCircle2, Copy, Eye, Pencil, Send, Trash2 } from 'lucide-react';
+import { ArrowLeft, ArrowRightLeft, Ban, CheckCircle2, Copy, Eye, Pencil, Send, Trash2, XCircle } from 'lucide-react';
 
 import {
+  useApproveEstimate,
   useCancelInvoice,
+  useConvertEstimate,
+  useDeclineEstimate,
   useDeleteInvoice,
   useDuplicateInvoice,
   useInvoice,
@@ -37,6 +40,9 @@ export default function InvoiceDetailPage() {
   const cancel = useCancelInvoice();
   const del = useDeleteInvoice();
   const duplicate = useDuplicateInvoice();
+  const approve = useApproveEstimate();
+  const decline = useDeclineEstimate();
+  const convert = useConvertEstimate();
   const [previewOpen, setPreviewOpen] = useState(false);
   const [sendOpen, setSendOpen] = useState(false);
   const [sendMode, setSendMode] = useState<'send' | 'resend'>('send');
@@ -58,10 +64,15 @@ export default function InvoiceDetailPage() {
     }
   }
 
+  const isEstimate = invoice.docType === 'ESTIMATE';
+  const base = isEstimate ? '/estimates' : '/invoices';
   const isDraft = invoice.status === 'DRAFT';
-  const canMarkPaid = ['SENT', 'VIEWED', 'OVERDUE'].includes(invoice.status);
-  const canCancel = ['SENT', 'VIEWED', 'OVERDUE'].includes(invoice.status);
-  const canResend = ['SENT', 'VIEWED', 'OVERDUE'].includes(invoice.status);
+  const openStatuses = isEstimate ? ['SENT', 'VIEWED'] : ['SENT', 'VIEWED', 'OVERDUE'];
+  const canMarkPaid = !isEstimate && openStatuses.includes(invoice.status);
+  const canCancel = openStatuses.includes(invoice.status);
+  const canResend = openStatuses.includes(invoice.status);
+  const canDecide = isEstimate && openStatuses.includes(invoice.status);
+  const canConvert = isEstimate && invoice.status === 'APPROVED' && !invoice.convertedInvoiceId;
   const cur = invoice.currency;
 
   return (
@@ -71,7 +82,7 @@ export default function InvoiceDetailPage() {
         description={customer.data?.name ?? '—'}
         actions={
           <div className="flex flex-wrap gap-2">
-            <Button variant="outline" onClick={() => navigate('/invoices')}>
+            <Button variant="outline" onClick={() => navigate(base)}>
               <ArrowLeft className="mr-2 h-4 w-4" />
               {t('common.back')}
             </Button>
@@ -86,7 +97,7 @@ export default function InvoiceDetailPage() {
                 void action(
                   duplicate
                     .mutateAsync(invoice.id)
-                    .then((copy) => navigate(`/invoices/${copy.id}/edit`)),
+                    .then((copy) => navigate(`${base}/${copy.id}/edit`)),
                   'invoices.duplicated',
                 )
               }
@@ -96,7 +107,7 @@ export default function InvoiceDetailPage() {
             </Button>
             {isDraft && (
               <>
-                <Button variant="outline" onClick={() => navigate(`/invoices/${invoice.id}/edit`)}>
+                <Button variant="outline" onClick={() => navigate(`${base}/${invoice.id}/edit`)}>
                   <Pencil className="mr-2 h-4 w-4" />
                   {t('common.edit')}
                 </Button>
@@ -104,7 +115,7 @@ export default function InvoiceDetailPage() {
                   variant="outline"
                   onClick={() =>
                     void (window.confirm(t('invoices.deleteConfirm', { number: invoice.invoiceNumber })) &&
-                      action(del.mutateAsync(invoice.id).then(() => navigate('/invoices')), 'invoices.deleted'))
+                      action(del.mutateAsync(invoice.id).then(() => navigate(base)), 'invoices.deleted'))
                   }
                 >
                   <Trash2 className="mr-2 h-4 w-4 text-destructive" />
@@ -115,6 +126,41 @@ export default function InvoiceDetailPage() {
                   {t('invoices.actions.send')}
                 </Button>
               </>
+            )}
+            {canDecide && (
+              <>
+                <Button
+                  disabled={approve.isPending}
+                  onClick={() => void action(approve.mutateAsync(invoice.id), 'estimates.approved')}
+                >
+                  <CheckCircle2 className="mr-2 h-4 w-4" />
+                  {t('estimates.actions.approve')}
+                </Button>
+                <Button
+                  variant="outline"
+                  disabled={decline.isPending}
+                  onClick={() => void action(decline.mutateAsync(invoice.id), 'estimates.declined')}
+                >
+                  <XCircle className="mr-2 h-4 w-4" />
+                  {t('estimates.actions.decline')}
+                </Button>
+              </>
+            )}
+            {canConvert && (
+              <Button
+                disabled={convert.isPending}
+                onClick={() =>
+                  void action(
+                    convert
+                      .mutateAsync(invoice.id)
+                      .then((created) => navigate(`/invoices/${created.id}`)),
+                    'estimates.converted',
+                  )
+                }
+              >
+                <ArrowRightLeft className="mr-2 h-4 w-4" />
+                {t('estimates.actions.convert')}
+              </Button>
             )}
             {canMarkPaid && (
               <Button onClick={() => void action(markPaid.mutateAsync(invoice.id), 'invoices.markedPaid')}>

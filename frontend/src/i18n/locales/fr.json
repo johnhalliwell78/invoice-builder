@@ -9,7 +9,8 @@
     "customers": "Clients",
     "settings": "Paramètres",
     "logout": "Se déconnecter",
-    "products": "Produits"
+    "products": "Produits",
+    "estimates": "Devis"
   },
   "auth": {
     "login": {
@@ -124,7 +125,9 @@
       "VIEWED": "Consultée",
       "PAID": "Payée",
       "OVERDUE": "En retard",
-      "CANCELLED": "Annulée"
+      "CANCELLED": "Annulée",
+      "APPROVED": "Approuvé",
+      "DECLINED": "Refusé"
     },
     "filters": {
       "status": "Statut",
@@ -382,6 +385,23 @@
     },
     "section": {
       "details": "Détails du produit"
+    }
+  },
+  "estimates": {
+    "title": "Devis",
+    "subtitle": "Des devis que vos clients peuvent approuver avant facturation.",
+    "create": "Nouveau devis",
+    "createTitle": "Nouveau devis",
+    "editTitle": "Modifier le devis",
+    "empty": "Aucun devis pour l'instant — créez le premier.",
+    "publicTitle": "Devis",
+    "approved": "Devis approuvé.",
+    "declined": "Devis refusé.",
+    "converted": "Devis converti — voici la nouvelle facture brouillon.",
+    "actions": {
+      "approve": "Approuver",
+      "decline": "Refuser",
+      "convert": "Convertir en facture"
     }
   }
 }

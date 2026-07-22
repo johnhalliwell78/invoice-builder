@@ -11,13 +11,17 @@ import { Label } from '@/components/ui/label';
 import { PageHeader } from '@/components/PageHeader';
 import { StatusBadge } from './StatusBadge';
 import { formatCurrency, formatDate } from '@/lib/format';
-import type { InvoiceStatus } from '@/types/api';
+import type { DocType, InvoiceStatus } from '@/types/api';
 
-const STATUS_OPTIONS: InvoiceStatus[] = ['DRAFT', 'SENT', 'VIEWED', 'PAID', 'OVERDUE', 'CANCELLED'];
+const INVOICE_STATUSES: InvoiceStatus[] = ['DRAFT', 'SENT', 'VIEWED', 'PAID', 'OVERDUE', 'CANCELLED'];
+const ESTIMATE_STATUSES: InvoiceStatus[] = ['DRAFT', 'SENT', 'VIEWED', 'APPROVED', 'DECLINED', 'CANCELLED'];
 
-export default function InvoiceListPage() {
+export default function InvoiceListPage({ docType = 'INVOICE' }: { docType?: DocType }) {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
+  const isEstimate = docType === 'ESTIMATE';
+  const base = isEstimate ? '/estimates' : '/invoices';
+  const statusOptions = isEstimate ? ESTIMATE_STATUSES : INVOICE_STATUSES;
 
   const [status, setStatus] = useState<InvoiceStatus | ''>('');
   const [customerFilter, setCustomerFilter] = useState<{ id: string; name: string } | null>(null);
@@ -26,6 +30,7 @@ export default function InvoiceListPage() {
   const [page, setPage] = useState(0);
 
   const { data, isPending, error } = useInvoiceList({
+    docType,
     status: status || undefined,
     customerId: customerFilter?.id ?? undefined,
     from: from || undefined,
@@ -38,12 +43,12 @@ export default function InvoiceListPage() {
   return (
     <div>
       <PageHeader
-        title={t('invoices.title')}
-        description={t('invoices.subtitle')}
+        title={isEstimate ? t('estimates.title') : t('invoices.title')}
+        description={isEstimate ? t('estimates.subtitle') : t('invoices.subtitle')}
         actions={
-          <Button onClick={() => navigate('/invoices/new')}>
+          <Button onClick={() => navigate(`${base}/new`)}>
             <Plus className="mr-2 h-4 w-4" />
-            {t('invoices.create')}
+            {isEstimate ? t('estimates.create') : t('invoices.create')}
           </Button>
         }
       />
@@ -60,7 +65,7 @@ export default function InvoiceListPage() {
             }}
           >
             <option value="">{t('invoices.filters.allStatuses')}</option>
-            {STATUS_OPTIONS.map((s) => (
+            {statusOptions.map((s) => (
               <option key={s} value={s}>
                 {t(`invoices.status.${s}`)}
               </option>
@@ -117,7 +122,7 @@ export default function InvoiceListPage() {
               ) : data && data.totalElements === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-4 py-12 text-center text-muted-foreground">
-                    {t('invoices.empty')}
+                    {isEstimate ? t('estimates.empty') : t('invoices.empty')}
                   </td>
                 </tr>
               ) : (
@@ -125,7 +130,7 @@ export default function InvoiceListPage() {
                   return (
                     <tr key={inv.id} className="hover:bg-muted/30">
                       <td className="px-4 py-3 font-medium">
-                        <Link to={`/invoices/${inv.id}`} className="hover:underline">
+                        <Link to={`${base}/${inv.id}`} className="hover:underline">
                           {inv.invoiceNumber}
                         </Link>
                       </td>

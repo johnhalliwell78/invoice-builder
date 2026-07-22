@@ -29,3 +29,5 @@ databaseChangeLog:
       file: db/changelog/0013-app-user-invite.yaml
   - include:
       file: db/changelog/0014-product.yaml
+  - include:
+      file: db/changelog/0015-estimate.yaml

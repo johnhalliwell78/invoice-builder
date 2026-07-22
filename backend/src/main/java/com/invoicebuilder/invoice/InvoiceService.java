@@ -132,13 +132,15 @@ public class InvoiceService {
 
     /** List projection with customer names resolved in a single batch query. */
     @Transactional(readOnly = true)
-    public Page<InvoiceListItem> listItems(InvoiceStatus status,
+    public Page<InvoiceListItem> listItems(DocType docType,
+                                           InvoiceStatus status,
                                            UUID customerId,
                                            LocalDate from,
                                            LocalDate to,
                                            Pageable pageable) {
         UUID tenantId = TenantContext.require();
-        Page<Invoice> page = invoiceRepository.search(tenantId, status, customerId, from, to, pageable);
+        Page<Invoice> page = invoiceRepository.search(
+                tenantId, docType == null ? DocType.INVOICE : docType, status, customerId, from, to, pageable);
         if (page.isEmpty()) {
             return page.map(i -> InvoiceListItem.from(i, null));
         }
@@ -165,7 +167,11 @@ public class InvoiceService {
         invoice.setTenantId(tenantId);
         invoice.setCustomerId(request.customerId());
         invoice.setStatus(InvoiceStatus.DRAFT);
-        invoice.setInvoiceNumber(numberGenerator.reserveNext(tenantId));
+        DocType docType = request.docType() == null ? DocType.INVOICE : request.docType();
+        invoice.setDocType(docType);
+        invoice.setInvoiceNumber(docType == DocType.ESTIMATE
+                ? numberGenerator.reserveNextEstimate(tenantId)
+                : numberGenerator.reserveNext(tenantId));
         invoice.setCurrency(resolveCurrency(request.currency(), tenant));
         invoice.setIssueDate(request.issueDate());
         invoice.setDueDate(request.dueDate());
@@ -226,7 +232,10 @@ public class InvoiceService {
         copy.setTenantId(source.getTenantId());
         copy.setCustomerId(source.getCustomerId());
         copy.setStatus(InvoiceStatus.DRAFT);
-        copy.setInvoiceNumber(numberGenerator.reserveNext(source.getTenantId()));
+        copy.setDocType(source.getDocType());
+        copy.setInvoiceNumber(source.getDocType() == DocType.ESTIMATE
+                ? numberGenerator.reserveNextEstimate(source.getTenantId())
+                : numberGenerator.reserveNext(source.getTenantId()));
         copy.setCurrency(source.getCurrency());
         copy.setIssueDate(today);
         copy.setDueDate(today.plusDays(Math.max(0, termDays)));
@@ -253,6 +262,89 @@ public class InvoiceService {
     }
 
     @Transactional
+    public Invoice approve(UUID id) {
+        Invoice estimate = loadEstimate(id);
+        estimate.getStatus().requireTransition(DocType.ESTIMATE, InvoiceStatus.APPROVED);
+        estimate.setStatus(InvoiceStatus.APPROVED);
+        auditInvoice(estimate, AuditAction.STATUS_CHANGE, Map.<String, Object>of("status", "APPROVED"));
+        return estimate;
+    }
+
+    @Transactional
+    public Invoice decline(UUID id) {
+        Invoice estimate = loadEstimate(id);
+        estimate.getStatus().requireTransition(DocType.ESTIMATE, InvoiceStatus.DECLINED);
+        estimate.setStatus(InvoiceStatus.DECLINED);
+        auditInvoice(estimate, AuditAction.STATUS_CHANGE, Map.<String, Object>of("status", "DECLINED"));
+        return estimate;
+    }
+
+    /**
+     * Converts an APPROVED estimate into a fresh DRAFT invoice (copy like
+     * {@link #duplicate}, but always doc type INVOICE with an INV number) and
+     * stamps the estimate with the created invoice's id. One-shot: a second
+     * conversion is rejected.
+     */
+    @Transactional
+    public Invoice convert(UUID id) {
+        Invoice estimate = loadEstimate(id);
+        if (estimate.getStatus() != InvoiceStatus.APPROVED) {
+            throw new AppException(ErrorCode.INVALID_STATE_TRANSITION,
+                    "Only APPROVED estimates can be converted");
+        }
+        if (estimate.getConvertedInvoiceId() != null) {
+            throw new AppException(ErrorCode.INVALID_STATE_TRANSITION,
+                    "Estimate was already converted");
+        }
+
+        LocalDate today = LocalDate.now(clock);
+        long termDays = java.time.temporal.ChronoUnit.DAYS.between(
+                estimate.getIssueDate(), estimate.getDueDate());
+
+        Invoice invoice = new Invoice();
+        invoice.setTenantId(estimate.getTenantId());
+        invoice.setCustomerId(estimate.getCustomerId());
+        invoice.setDocType(DocType.INVOICE);
+        invoice.setStatus(InvoiceStatus.DRAFT);
+        invoice.setInvoiceNumber(numberGenerator.reserveNext(estimate.getTenantId()));
+        invoice.setCurrency(estimate.getCurrency());
+        invoice.setIssueDate(today);
+        invoice.setDueDate(today.plusDays(Math.max(0, termDays)));
+        invoice.setNotes(estimate.getNotes());
+        invoice.setTerms(estimate.getTerms());
+        invoice.setTemplate(estimate.getTemplate());
+        invoice.setCreatedBy(currentUserId());
+        for (InvoiceLineItem item : estimate.getLineItems()) {
+            InvoiceLineItem line = new InvoiceLineItem();
+            line.setDescription(item.getDescription());
+            line.setQuantity(item.getQuantity());
+            line.setUnitPrice(item.getUnitPrice());
+            line.setTaxRate(item.getTaxRate());
+            line.setDiscountPercent(item.getDiscountPercent());
+            line.setSortOrder(item.getSortOrder());
+            invoice.addLineItem(line);
+        }
+        applyTotals(invoice, estimate.getDiscountAmount());
+
+        Invoice saved = invoiceRepository.save(invoice);
+        estimate.setConvertedInvoiceId(saved.getId());
+        auditInvoice(saved, AuditAction.CREATE,
+                Map.<String, Object>of("convertedFrom", estimate.getInvoiceNumber()));
+        auditInvoice(estimate, AuditAction.UPDATE,
+                Map.<String, Object>of("convertedTo", saved.getInvoiceNumber()));
+        return saved;
+    }
+
+    private Invoice loadEstimate(UUID id) {
+        Invoice invoice = load(id);
+        if (invoice.getDocType() != DocType.ESTIMATE) {
+            throw new AppException(ErrorCode.INVALID_STATE_TRANSITION,
+                    "Action only applies to estimates");
+        }
+        return invoice;
+    }
+
+    @Transactional
     public void delete(UUID id) {
         Invoice invoice = load(id);
         if (!invoice.getStatus().isEditable()) {
@@ -266,7 +358,7 @@ public class InvoiceService {
     @Transactional
     public Invoice send(UUID id, SendInvoiceRequest request) {
         Invoice invoice = load(id);
-        invoice.getStatus().requireTransition(InvoiceStatus.SENT);
+        invoice.getStatus().requireTransition(invoice.getDocType(), InvoiceStatus.SENT);
         invoice.setStatus(InvoiceStatus.SENT);
         invoice.setSentAt(OffsetDateTime.now(clock));
         if (invoice.getPublicToken() == null) {
@@ -388,7 +480,7 @@ public class InvoiceService {
     @Transactional
     public Invoice markPaid(UUID id) {
         Invoice invoice = load(id);
-        invoice.getStatus().requireTransition(InvoiceStatus.PAID);
+        invoice.getStatus().requireTransition(invoice.getDocType(), InvoiceStatus.PAID);
         invoice.setStatus(InvoiceStatus.PAID);
         invoice.setPaidAt(OffsetDateTime.now(clock));
         invoice.setAmountPaid(invoice.getTotal());
@@ -400,7 +492,7 @@ public class InvoiceService {
     @Transactional
     public Invoice cancel(UUID id) {
         Invoice invoice = load(id);
-        invoice.getStatus().requireTransition(InvoiceStatus.CANCELLED);
+        invoice.getStatus().requireTransition(invoice.getDocType(), InvoiceStatus.CANCELLED);
         invoice.setStatus(InvoiceStatus.CANCELLED);
         auditInvoice(invoice, AuditAction.STATUS_CHANGE, Map.<String, Object>of("status", "CANCELLED"));
         return invoice;

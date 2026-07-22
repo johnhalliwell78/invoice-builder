@@ -13,29 +13,45 @@ public enum InvoiceStatus {
     VIEWED,
     PAID,
     OVERDUE,
-    CANCELLED;
+    CANCELLED,
+    APPROVED,
+    DECLINED;
 
     /**
-     * Allowed status transitions, keyed by current status. PAID and CANCELLED
-     * are terminal (absent from the map). VIEWED is reached only via the public
-     * view endpoint; SENT_TO_OVERDUE happens via a scheduled job. Manual
-     * actions (send / mark-paid / cancel) cover the rest.
+     * Allowed transitions for real invoices. PAID and CANCELLED are terminal
+     * (absent from the map). VIEWED is reached only via the public view
+     * endpoint; SENT→OVERDUE happens via a scheduled job. Manual actions
+     * (send / mark-paid / cancel) cover the rest.
      */
-    private static final Map<InvoiceStatus, Set<InvoiceStatus>> ALLOWED = Map.of(
+    private static final Map<InvoiceStatus, Set<InvoiceStatus>> INVOICE_ALLOWED = Map.of(
             DRAFT, EnumSet.of(SENT),
             SENT, EnumSet.of(VIEWED, PAID, CANCELLED, OVERDUE),
             VIEWED, EnumSet.of(PAID, CANCELLED, OVERDUE),
             OVERDUE, EnumSet.of(PAID, CANCELLED)
     );
 
-    public boolean canTransitionTo(InvoiceStatus target) {
-        return ALLOWED.getOrDefault(this, Set.of()).contains(target);
+    /**
+     * Allowed transitions for estimates: DRAFT→SENT→(VIEWED)→APPROVED|DECLINED,
+     * cancellable while open. APPROVED and DECLINED are terminal; estimates
+     * never become PAID or OVERDUE.
+     */
+    private static final Map<InvoiceStatus, Set<InvoiceStatus>> ESTIMATE_ALLOWED = Map.of(
+            DRAFT, EnumSet.of(SENT),
+            SENT, EnumSet.of(VIEWED, APPROVED, DECLINED, CANCELLED),
+            VIEWED, EnumSet.of(APPROVED, DECLINED, CANCELLED)
+    );
+
+    public boolean canTransitionTo(DocType docType, InvoiceStatus target) {
+        Map<InvoiceStatus, Set<InvoiceStatus>> allowed =
+                docType == DocType.ESTIMATE ? ESTIMATE_ALLOWED : INVOICE_ALLOWED;
+        return allowed.getOrDefault(this, Set.of()).contains(target);
     }
 
-    public void requireTransition(InvoiceStatus target) {
-        if (!canTransitionTo(target)) {
+    public void requireTransition(DocType docType, InvoiceStatus target) {
+        if (!canTransitionTo(docType, target)) {
             throw new AppException(ErrorCode.INVALID_STATE_TRANSITION,
-                    "Cannot transition invoice from %s to %s".formatted(this, target));
+                    "Cannot transition %s from %s to %s".formatted(
+                            docType.name().toLowerCase(), this, target));
         }
     }
 
@@ -44,6 +60,6 @@ public enum InvoiceStatus {
     }
 
     public boolean isTerminal() {
-        return this == PAID || this == CANCELLED;
+        return this == PAID || this == CANCELLED || this == APPROVED || this == DECLINED;
     }
 }

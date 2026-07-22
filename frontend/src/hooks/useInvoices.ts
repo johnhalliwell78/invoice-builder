@@ -1,6 +1,9 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
+  approveInvoice,
   cancelInvoice,
+  convertEstimate,
+  declineInvoice,
   createInvoice,
   deleteInvoice,
   duplicateInvoice,
@@ -97,6 +100,30 @@ export function useResendInvoice() {
   return useMutation({
     mutationFn: (args: { id: string; payload?: SendInvoicePayload }) =>
       resendInvoice(args.id, args.payload),
+    onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
+  });
+}
+
+export function useApproveEstimate() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => approveInvoice(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
+  });
+}
+
+export function useDeclineEstimate() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => declineInvoice(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
+  });
+}
+
+export function useConvertEstimate() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => convertEstimate(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
   });
 }

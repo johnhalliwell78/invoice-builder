@@ -46,6 +46,14 @@ public class Invoice {
     @Column(nullable = false, length = 20)
     private InvoiceStatus status = InvoiceStatus.DRAFT;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "doc_type", nullable = false, length = 20)
+    private DocType docType = DocType.INVOICE;
+
+    /** For estimates: the invoice created from this estimate, once converted. */
+    @Column(name = "converted_invoice_id")
+    private UUID convertedInvoiceId;
+
     @Column(nullable = false, length = 3)
     private String currency;
 
@@ -154,6 +162,22 @@ public class Invoice {
 
     public void setStatus(InvoiceStatus status) {
         this.status = status;
+    }
+
+    public DocType getDocType() {
+        return docType;
+    }
+
+    public void setDocType(DocType docType) {
+        this.docType = docType;
+    }
+
+    public UUID getConvertedInvoiceId() {
+        return convertedInvoiceId;
+    }
+
+    public void setConvertedInvoiceId(UUID convertedInvoiceId) {
+        this.convertedInvoiceId = convertedInvoiceId;
     }
 
     public String getCurrency() {

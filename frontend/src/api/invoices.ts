@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { api } from './client';
-import type { ApiEnvelope, Invoice, InvoiceListItem, InvoiceStatus, PageResponse } from '@/types/api';
+import type { ApiEnvelope, DocType, Invoice, InvoiceListItem, InvoiceStatus, PageResponse } from '@/types/api';
 
 export interface SendInvoicePayload {
   recipientEmail?: string;
@@ -21,6 +21,7 @@ export interface PublicInvoiceView {
   issuer: { name: string; address: Address | null; taxId: string | null };
   recipient: { name: string; address: Address | null };
   invoiceNumber: string;
+  docType: DocType;
   status: InvoiceStatus;
   currency: string;
   subtotal: string;
@@ -61,6 +62,7 @@ export interface InvoicePayload {
   notes?: string;
   terms?: string;
   template?: string;
+  docType?: DocType;
   lineItems: Array<{
     description: string;
     quantity: string;
@@ -71,6 +73,7 @@ export interface InvoicePayload {
 }
 
 export interface InvoiceListParams {
+  docType?: DocType;
   status?: InvoiceStatus;
   customerId?: string;
   from?: string;
@@ -158,6 +161,21 @@ export async function getPublicInvoice(token: string): Promise<PublicInvoiceView
   const res = await axios.get<ApiEnvelope<PublicInvoiceView>>(
     `${base}/api/v1/public/invoices/${token}`,
   );
+  return res.data.data;
+}
+
+export async function approveInvoice(id: string): Promise<Invoice> {
+  const res = await api.post<ApiEnvelope<Invoice>>(`/api/v1/invoices/${id}/approve`);
+  return res.data.data;
+}
+
+export async function declineInvoice(id: string): Promise<Invoice> {
+  const res = await api.post<ApiEnvelope<Invoice>>(`/api/v1/invoices/${id}/decline`);
+  return res.data.data;
+}
+
+export async function convertEstimate(id: string): Promise<Invoice> {
+  const res = await api.post<ApiEnvelope<Invoice>>(`/api/v1/invoices/${id}/convert`);
   return res.data.data;
 }
 

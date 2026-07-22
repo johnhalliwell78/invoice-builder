@@ -21,7 +21,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PageHeader } from '@/components/PageHeader';
 import { addDaysIso, formatCurrency, todayIso } from '@/lib/format';
-import type { ProblemDetail } from '@/types/api';
+import type { DocType, ProblemDetail } from '@/types/api';
 
 const CURRENCIES = ['USD', 'EUR', 'GBP', 'CHF', 'JPY', 'CAD', 'AUD', 'SEK', 'NZD', 'SGD', 'CNY', 'INR'];
 
@@ -62,9 +62,11 @@ const blankLine = () => ({
   discountPercent: '0',
 });
 
-export default function InvoiceFormPage() {
+export default function InvoiceFormPage({ docType = 'INVOICE' }: { docType?: DocType }) {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
+  const isEstimate = docType === 'ESTIMATE';
+  const base = isEstimate ? '/estimates' : '/invoices';
   const { id } = useParams<{ id: string }>();
   const isEdit = !!id && id !== 'new';
   const invoiceId = isEdit ? id : undefined;
@@ -143,6 +145,7 @@ export default function InvoiceFormPage() {
       discountAmount: values.discountAmount,
       notes: values.notes || undefined,
       terms: values.terms || undefined,
+      docType,
       lineItems: values.lineItems.map((li) => ({
         description: li.description.trim(),
         quantity: li.quantity,
@@ -157,7 +160,7 @@ export default function InvoiceFormPage() {
         ? await update.mutateAsync(payload)
         : await create.mutateAsync(payload);
       toast.success(isEdit ? t('invoices.updated') : t('invoices.created'));
-      navigate(`/invoices/${saved.id}`);
+      navigate(`${base}/${saved.id}`);
     } catch (err) {
       const detail = isAxiosError<ProblemDetail>(err) ? err.response?.data?.detail : undefined;
       toast.error(detail ?? t('auth.errors.default'));
@@ -171,9 +174,13 @@ export default function InvoiceFormPage() {
   return (
     <div>
       <PageHeader
-        title={isEdit ? t('invoices.editTitle') : t('invoices.createTitle')}
+        title={
+          isEdit
+            ? t(isEstimate ? 'estimates.editTitle' : 'invoices.editTitle')
+            : t(isEstimate ? 'estimates.createTitle' : 'invoices.createTitle')
+        }
         actions={
-          <Button variant="outline" onClick={() => navigate('/invoices')}>
+          <Button variant="outline" onClick={() => navigate(base)}>
             <ArrowLeft className="mr-2 h-4 w-4" />
             {t('common.back')}
           </Button>
@@ -314,7 +321,7 @@ export default function InvoiceFormPage() {
         </Card>
 
         <div className="flex justify-end gap-2">
-          <Button type="button" variant="outline" onClick={() => navigate('/invoices')}>
+          <Button type="button" variant="outline" onClick={() => navigate(base)}>
             {t('common.cancel')}
           </Button>
           <Button type="submit" disabled={isSubmitting}>

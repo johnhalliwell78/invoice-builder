@@ -48,13 +48,14 @@ public class InvoiceController {
     @GetMapping
     @Operation(summary = "List invoices with optional filters")
     public ApiResponse<PageResponse<InvoiceListItem>> list(
+            @RequestParam(required = false, defaultValue = "INVOICE") DocType docType,
             @RequestParam(required = false) InvoiceStatus status,
             @RequestParam(required = false) UUID customerId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         return ApiResponse.of(PageResponse.of(
-                invoiceService.listItems(status, customerId, from, to, pageable)));
+                invoiceService.listItems(docType, status, customerId, from, to, pageable)));
     }
 
     @GetMapping("/{id}")
@@ -89,6 +90,26 @@ public class InvoiceController {
     public ApiResponse<InvoiceResponse> send(@PathVariable UUID id,
                                              @Valid @RequestBody(required = false) SendInvoiceRequest request) {
         return ApiResponse.of(InvoiceResponse.from(invoiceService.send(id, request)));
+    }
+
+    @PostMapping("/{id}/approve")
+    @Operation(summary = "Approve an open estimate")
+    public ApiResponse<InvoiceResponse> approve(@PathVariable UUID id) {
+        return ApiResponse.of(InvoiceResponse.from(invoiceService.approve(id)));
+    }
+
+    @PostMapping("/{id}/decline")
+    @Operation(summary = "Decline an open estimate")
+    public ApiResponse<InvoiceResponse> decline(@PathVariable UUID id) {
+        return ApiResponse.of(InvoiceResponse.from(invoiceService.decline(id)));
+    }
+
+    @PostMapping("/{id}/convert")
+    @Operation(summary = "Convert an APPROVED estimate into a fresh DRAFT invoice")
+    public ResponseEntity<ApiResponse<InvoiceResponse>> convert(@PathVariable UUID id) {
+        Invoice invoice = invoiceService.convert(id);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.of(InvoiceResponse.from(invoice)));
     }
 
     @PostMapping("/{id}/duplicate")

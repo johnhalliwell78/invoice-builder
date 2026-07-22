@@ -1,0 +1,38 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0015-estimate-doc-type
+      author: invoice-builder
+      changes:
+        - addColumn:
+            tableName: invoice
+            columns:
+              - column:
+                  name: doc_type
+                  type: VARCHAR(20)
+                  defaultValue: INVOICE
+                  constraints:
+                    nullable: false
+              - column:
+                  name: converted_invoice_id
+                  type: UUID
+                  constraints:
+                    foreignKeyName: fk_invoice_converted_invoice
+                    referencedTableName: invoice
+                    referencedColumnNames: id
+        - addColumn:
+            tableName: tenant
+            columns:
+              - column:
+                  name: next_estimate_number
+                  type: INT
+                  defaultValueNumeric: 1
+                  constraints:
+                    nullable: false
+        - createIndex:
+            tableName: invoice
+            indexName: idx_invoice_tenant_doc_type
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: doc_type

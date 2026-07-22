@@ -9,7 +9,8 @@
     "customers": "Customers",
     "settings": "Settings",
     "logout": "Sign out",
-    "products": "Products"
+    "products": "Products",
+    "estimates": "Estimates"
   },
   "auth": {
     "login": {
@@ -124,7 +125,9 @@
       "VIEWED": "Viewed",
       "PAID": "Paid",
       "OVERDUE": "Overdue",
-      "CANCELLED": "Cancelled"
+      "CANCELLED": "Cancelled",
+      "APPROVED": "Approved",
+      "DECLINED": "Declined"
     },
     "filters": {
       "status": "Status",
@@ -382,6 +385,23 @@
     },
     "section": {
       "details": "Product details"
+    }
+  },
+  "estimates": {
+    "title": "Estimates",
+    "subtitle": "Quotes your customers can approve before you invoice.",
+    "create": "New estimate",
+    "createTitle": "New estimate",
+    "editTitle": "Edit estimate",
+    "empty": "No estimates yet — create your first one.",
+    "publicTitle": "Estimate",
+    "approved": "Estimate approved.",
+    "declined": "Estimate declined.",
+    "converted": "Estimate converted — here is the new draft invoice.",
+    "actions": {
+      "approve": "Approve",
+      "decline": "Decline",
+      "convert": "Convert to invoice"
     }
   }
 }

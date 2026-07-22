@@ -43,7 +43,8 @@ export default function PublicInvoicePage() {
       <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-3xl font-semibold tracking-tight">
-            {t('invoices.publicTitle')} {invoice.invoiceNumber}
+            {t(invoice.docType === 'ESTIMATE' ? 'estimates.publicTitle' : 'invoices.publicTitle')}{' '}
+            {invoice.invoiceNumber}
           </h1>
           <p className="text-sm text-muted-foreground">{invoice.issuer.name}</p>
         </div>

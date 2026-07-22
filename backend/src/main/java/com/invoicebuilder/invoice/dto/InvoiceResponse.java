@@ -1,5 +1,6 @@
 package com.invoicebuilder.invoice.dto;
 
+import com.invoicebuilder.invoice.DocType;
 import com.invoicebuilder.invoice.Invoice;
 import com.invoicebuilder.invoice.InvoiceStatus;
 
@@ -13,7 +14,9 @@ public record InvoiceResponse(
         UUID id,
         UUID customerId,
         String invoiceNumber,
+        DocType docType,
         InvoiceStatus status,
+        UUID convertedInvoiceId,
         String currency,
         BigDecimal subtotal,
         BigDecimal taxTotal,
@@ -39,7 +42,9 @@ public record InvoiceResponse(
                 i.getId(),
                 i.getCustomerId(),
                 i.getInvoiceNumber(),
+                i.getDocType(),
                 i.getStatus(),
+                i.getConvertedInvoiceId(),
                 i.getCurrency(),
                 i.getSubtotal(),
                 i.getTaxTotal(),

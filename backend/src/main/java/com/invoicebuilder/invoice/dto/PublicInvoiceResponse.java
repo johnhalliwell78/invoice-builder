@@ -2,6 +2,7 @@ package com.invoicebuilder.invoice.dto;
 
 import com.invoicebuilder.common.Address;
 import com.invoicebuilder.customer.Customer;
+import com.invoicebuilder.invoice.DocType;
 import com.invoicebuilder.invoice.Invoice;
 import com.invoicebuilder.invoice.InvoiceStatus;
 import com.invoicebuilder.tenant.Tenant;
@@ -18,6 +19,7 @@ public record PublicInvoiceResponse(
         Issuer issuer,
         Recipient recipient,
         String invoiceNumber,
+        DocType docType,
         InvoiceStatus status,
         String currency,
         BigDecimal subtotal,
@@ -43,6 +45,7 @@ public record PublicInvoiceResponse(
                 new Issuer(tenant.getName(), tenant.getAddress(), tenant.getTaxId()),
                 new Recipient(customer.getName(), customer.getAddress()),
                 invoice.getInvoiceNumber(),
+                invoice.getDocType(),
                 invoice.getStatus(),
                 invoice.getCurrency(),
                 invoice.getSubtotal(),

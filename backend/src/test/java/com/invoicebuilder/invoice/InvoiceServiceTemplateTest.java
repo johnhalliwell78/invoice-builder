@@ -107,7 +107,7 @@ class InvoiceServiceTemplateTest {
                 LocalDate.of(2026, 7, 9), LocalDate.of(2026, 8, 8),
                 List.of(new LineItemRequest("Consulting", BigDecimal.ONE, new BigDecimal("100.00"),
                         BigDecimal.ZERO, BigDecimal.ZERO)),
-                BigDecimal.ZERO, null, null, template);
+                BigDecimal.ZERO, null, null, template, null);
     }
 
     @Test
