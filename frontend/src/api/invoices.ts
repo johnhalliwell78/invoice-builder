@@ -179,6 +179,34 @@ export async function convertEstimate(id: string): Promise<Invoice> {
   return res.data.data;
 }
 
+export type PaymentMethod = 'BANK_TRANSFER' | 'CARD' | 'CASH' | 'PAYPAL' | 'OTHER';
+
+export interface Payment {
+  id: string;
+  amount: string;
+  method: PaymentMethod;
+  paidOn: string;
+  note: string | null;
+  createdAt: string;
+}
+
+export interface PaymentPayload {
+  amount: string;
+  method: PaymentMethod;
+  paidOn?: string;
+  note?: string;
+}
+
+export async function recordPayment(id: string, payload: PaymentPayload): Promise<Payment> {
+  const res = await api.post<ApiEnvelope<Payment>>(`/api/v1/invoices/${id}/payments`, payload);
+  return res.data.data;
+}
+
+export async function listPayments(id: string): Promise<Payment[]> {
+  const res = await api.get<ApiEnvelope<Payment[]>>(`/api/v1/invoices/${id}/payments`);
+  return res.data.data;
+}
+
 export async function markPaid(id: string): Promise<Invoice> {
   const res = await api.post<ApiEnvelope<Invoice>>(`/api/v1/invoices/${id}/mark-paid`);
   return res.data.data;

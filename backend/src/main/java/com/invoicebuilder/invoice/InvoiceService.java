@@ -478,18 +478,6 @@ public class InvoiceService {
     }
 
     @Transactional
-    public Invoice markPaid(UUID id) {
-        Invoice invoice = load(id);
-        invoice.getStatus().requireTransition(invoice.getDocType(), InvoiceStatus.PAID);
-        invoice.setStatus(InvoiceStatus.PAID);
-        invoice.setPaidAt(OffsetDateTime.now(clock));
-        invoice.setAmountPaid(invoice.getTotal());
-        auditInvoice(invoice, AuditAction.STATUS_CHANGE, Map.<String, Object>of("status", "PAID"));
-        notifyInvoice(invoice, NotificationType.INVOICE_PAID);
-        return invoice;
-    }
-
-    @Transactional
     public Invoice cancel(UUID id) {
         Invoice invoice = load(id);
         invoice.getStatus().requireTransition(invoice.getDocType(), InvoiceStatus.CANCELLED);

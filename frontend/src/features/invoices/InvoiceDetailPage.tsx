@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { isAxiosError } from 'axios';
 import { toast } from 'sonner';
-import { ArrowLeft, ArrowRightLeft, Ban, CheckCircle2, Copy, Eye, Pencil, Repeat, Send, Trash2, XCircle } from 'lucide-react';
+import { ArrowLeft, ArrowRightLeft, Ban, Banknote, CheckCircle2, Copy, Eye, Pencil, Repeat, Send, Trash2, XCircle } from 'lucide-react';
 
 import {
   useApproveEstimate,
@@ -14,6 +14,7 @@ import {
   useDuplicateInvoice,
   useInvoice,
   useMarkPaid,
+  usePayments,
   useReminders,
 } from '@/hooks/useInvoices';
 import { useCustomer } from '@/hooks/useCustomers';
@@ -25,6 +26,7 @@ import { StatusBadge } from './StatusBadge';
 import { InvoicePreviewDialog } from './InvoicePreviewDialog';
 import { SendInvoiceDialog } from './SendInvoiceDialog';
 import { MakeRecurringDialog } from './MakeRecurringDialog';
+import { RecordPaymentDialog } from './RecordPaymentDialog';
 import { formatCurrency, formatDate } from '@/lib/format';
 import type { ProblemDetail } from '@/types/api';
 
@@ -35,6 +37,7 @@ export default function InvoiceDetailPage() {
   const { data: invoice, isPending, error } = useInvoice(id);
   const customer = useCustomer(invoice?.customerId);
   const reminders = useReminders(id);
+  const payments = usePayments(id);
   const activity = useEntityAudit('Invoice', id);
 
   const markPaid = useMarkPaid();
@@ -47,6 +50,7 @@ export default function InvoiceDetailPage() {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [sendOpen, setSendOpen] = useState(false);
   const [recurringOpen, setRecurringOpen] = useState(false);
+  const [paymentOpen, setPaymentOpen] = useState(false);
   const [sendMode, setSendMode] = useState<'send' | 'resend'>('send');
 
   if (isPending) {
@@ -76,6 +80,7 @@ export default function InvoiceDetailPage() {
   const canDecide = isEstimate && openStatuses.includes(invoice.status);
   const canConvert = isEstimate && invoice.status === 'APPROVED' && !invoice.convertedInvoiceId;
   const cur = invoice.currency;
+  const balance = (Number(invoice.total) - Number(invoice.amountPaid)).toFixed(2);
 
   return (
     <div>
@@ -168,6 +173,12 @@ export default function InvoiceDetailPage() {
               >
                 <ArrowRightLeft className="mr-2 h-4 w-4" />
                 {t('estimates.actions.convert')}
+              </Button>
+            )}
+            {canMarkPaid && (
+              <Button variant="outline" onClick={() => setPaymentOpen(true)}>
+                <Banknote className="mr-2 h-4 w-4" />
+                {t('payments.actions.record')}
               </Button>
             )}
             {canMarkPaid && (
@@ -313,6 +324,32 @@ export default function InvoiceDetailPage() {
             </Card>
           )}
 
+          {payments.data && payments.data.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>{t('payments.title')}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2 text-sm">
+                {payments.data.map((payment) => (
+                  <div key={payment.id} className="flex items-center justify-between gap-2">
+                    <span className="text-muted-foreground">
+                      {t(`payments.method.${payment.method}`)} · {formatDate(payment.paidOn, i18n.language)}
+                    </span>
+                    <span className="tabular-nums">
+                      {formatCurrency(payment.amount, cur, i18n.language)}
+                    </span>
+                  </div>
+                ))}
+                {invoice.status !== 'PAID' && (
+                  <div className="flex items-center justify-between gap-2 border-t pt-2 font-medium">
+                    <span>{t('payments.balance')}</span>
+                    <span className="tabular-nums">{formatCurrency(balance, cur, i18n.language)}</span>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
           {activity.data && activity.data.length > 0 && (
             <Card>
               <CardHeader>
@@ -339,6 +376,13 @@ export default function InvoiceDetailPage() {
         invoiceId={invoice.id}
         invoiceNumber={invoice.invoiceNumber}
         initialTemplate={invoice.template}
+      />
+      <RecordPaymentDialog
+        open={paymentOpen}
+        onClose={() => setPaymentOpen(false)}
+        invoiceId={invoice.id}
+        invoiceNumber={invoice.invoiceNumber}
+        balance={balance}
       />
       <MakeRecurringDialog
         open={recurringOpen}

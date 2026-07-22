@@ -1,6 +1,9 @@
 package com.invoicebuilder.invoice;
 
 import com.invoicebuilder.common.dto.ApiResponse;
+import com.invoicebuilder.payment.PaymentService;
+import com.invoicebuilder.payment.dto.PaymentRequest;
+import com.invoicebuilder.payment.dto.PaymentResponse;
 import com.invoicebuilder.recurring.RecurringInvoiceService;
 import com.invoicebuilder.recurring.dto.MakeRecurringRequest;
 import com.invoicebuilder.recurring.dto.RecurringInvoiceResponse;
@@ -44,11 +47,14 @@ public class InvoiceController {
 
     private final InvoiceService invoiceService;
     private final RecurringInvoiceService recurringService;
+    private final PaymentService paymentService;
 
     public InvoiceController(InvoiceService invoiceService,
-                             RecurringInvoiceService recurringService) {
+                             RecurringInvoiceService recurringService,
+                             PaymentService paymentService) {
         this.invoiceService = invoiceService;
         this.recurringService = recurringService;
+        this.paymentService = paymentService;
     }
 
     @GetMapping
@@ -98,6 +104,20 @@ public class InvoiceController {
         return ApiResponse.of(InvoiceResponse.from(invoiceService.send(id, request)));
     }
 
+    @PostMapping("/{id}/payments")
+    @Operation(summary = "Record a payment against an open invoice (append-only)")
+    public ResponseEntity<ApiResponse<PaymentResponse>> recordPayment(
+            @PathVariable UUID id, @Valid @RequestBody PaymentRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.of(paymentService.record(id, request)));
+    }
+
+    @GetMapping("/{id}/payments")
+    @Operation(summary = "List payments received for an invoice")
+    public ApiResponse<List<PaymentResponse>> listPayments(@PathVariable UUID id) {
+        return ApiResponse.of(paymentService.list(id));
+    }
+
     @PostMapping("/{id}/make-recurring")
     @Operation(summary = "Create a recurring schedule from this invoice")
     public ResponseEntity<ApiResponse<RecurringInvoiceResponse>> makeRecurring(
@@ -144,7 +164,8 @@ public class InvoiceController {
     @PostMapping("/{id}/mark-paid")
     @Operation(summary = "Mark invoice as paid")
     public ApiResponse<InvoiceResponse> markPaid(@PathVariable UUID id) {
-        return ApiResponse.of(InvoiceResponse.from(invoiceService.markPaid(id)));
+        paymentService.markRemainingPaid(id);
+        return ApiResponse.of(InvoiceResponse.from(invoiceService.get(id)));
     }
 
     @PostMapping("/{id}/cancel")

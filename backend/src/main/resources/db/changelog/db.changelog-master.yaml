@@ -33,3 +33,5 @@ databaseChangeLog:
       file: db/changelog/0015-estimate.yaml
   - include:
       file: db/changelog/0016-recurring-invoice.yaml
+  - include:
+      file: db/changelog/0017-payment.yaml

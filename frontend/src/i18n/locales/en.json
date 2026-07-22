@@ -444,5 +444,32 @@
       "autoSend": "Send each generated invoice automatically",
       "confirm": "Create schedule"
     }
+  },
+  "payments": {
+    "title": "Payments",
+    "balance": "Outstanding balance",
+    "balanceShort": "Balance {{amount}}",
+    "recorded": "Payment recorded.",
+    "actions": {
+      "record": "Record payment"
+    },
+    "fields": {
+      "amount": "Amount",
+      "method": "Method",
+      "paidOn": "Payment date",
+      "note": "Note"
+    },
+    "method": {
+      "BANK_TRANSFER": "Bank transfer",
+      "CARD": "Card",
+      "CASH": "Cash",
+      "PAYPAL": "PayPal",
+      "OTHER": "Other"
+    },
+    "dialog": {
+      "title": "Record payment for {{number}}",
+      "description": "Outstanding balance: {{balance}}. Payments are final and cannot be deleted.",
+      "confirm": "Record payment"
+    }
   }
 }

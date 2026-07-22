@@ -146,6 +146,17 @@ export default function InvoiceListPage({ docType = 'INVOICE' }: { docType?: Doc
                       </td>
                       <td className="px-4 py-3 text-right font-medium tabular-nums">
                         {formatCurrency(inv.total, inv.currency, i18n.language)}
+                        {Number(inv.amountPaid) > 0 && inv.status !== 'PAID' && (
+                          <div className="text-xs font-normal text-muted-foreground">
+                            {t('payments.balanceShort', {
+                              amount: formatCurrency(
+                                (Number(inv.total) - Number(inv.amountPaid)).toFixed(2),
+                                inv.currency,
+                                i18n.language,
+                              ),
+                            })}
+                          </div>
+                        )}
                       </td>
                     </tr>
                   );

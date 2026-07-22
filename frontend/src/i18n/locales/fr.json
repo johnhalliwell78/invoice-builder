@@ -444,5 +444,32 @@
       "autoSend": "Envoyer automatiquement chaque facture générée",
       "confirm": "Créer la planification"
     }
+  },
+  "payments": {
+    "title": "Paiements",
+    "balance": "Solde restant",
+    "balanceShort": "Solde {{amount}}",
+    "recorded": "Paiement enregistré.",
+    "actions": {
+      "record": "Enregistrer un paiement"
+    },
+    "fields": {
+      "amount": "Montant",
+      "method": "Moyen de paiement",
+      "paidOn": "Date de paiement",
+      "note": "Note"
+    },
+    "method": {
+      "BANK_TRANSFER": "Virement",
+      "CARD": "Carte",
+      "CASH": "Espèces",
+      "PAYPAL": "PayPal",
+      "OTHER": "Autre"
+    },
+    "dialog": {
+      "title": "Enregistrer un paiement pour {{number}}",
+      "description": "Solde restant : {{balance}}. Les paiements sont définitifs et ne peuvent pas être supprimés.",
+      "confirm": "Enregistrer le paiement"
+    }
   }
 }

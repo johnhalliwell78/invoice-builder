@@ -10,13 +10,16 @@ import {
   getEmailPreview,
   getInvoice,
   listInvoices,
+  listPayments,
   listReminders,
   markPaid,
+  recordPayment,
   resendInvoice,
   sendInvoice,
   updateInvoice,
   type InvoiceListParams,
   type InvoicePayload,
+  type PaymentPayload,
   type SendInvoicePayload,
 } from '@/api/invoices';
 
@@ -124,6 +127,22 @@ export function useConvertEstimate() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => convertEstimate(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
+  });
+}
+
+export function usePayments(id: string | undefined) {
+  return useQuery({
+    queryKey: [...KEY, 'payments', id],
+    queryFn: () => listPayments(id as string),
+    enabled: !!id,
+  });
+}
+
+export function useRecordPayment(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: PaymentPayload) => recordPayment(id, payload),
     onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
   });
 }

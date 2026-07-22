@@ -1,0 +1,70 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0017-create-payment
+      author: invoice-builder
+      changes:
+        - createTable:
+            tableName: payment
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  defaultValueComputed: gen_random_uuid()
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_payment_tenant
+                    referencedTableName: tenant
+                    referencedColumnNames: id
+              - column:
+                  name: invoice_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_payment_invoice
+                    referencedTableName: invoice
+                    referencedColumnNames: id
+              - column:
+                  name: amount
+                  type: NUMERIC(15,2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: method
+                  type: VARCHAR(30)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: paid_on
+                  type: DATE
+                  constraints:
+                    nullable: false
+              - column:
+                  name: note
+                  type: VARCHAR(500)
+              - column:
+                  name: created_by
+                  type: UUID
+              - column:
+                  name: created_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  defaultValueComputed: now()
+                  constraints:
+                    nullable: false
+        - createIndex:
+            tableName: payment
+            indexName: idx_payment_invoice
+            columns:
+              - column:
+                  name: invoice_id
+        - createIndex:
+            tableName: payment
+            indexName: idx_payment_tenant
+            columns:
+              - column:
+                  name: tenant_id

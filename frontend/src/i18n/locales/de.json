@@ -444,5 +444,32 @@
       "autoSend": "Jede erzeugte Rechnung automatisch versenden",
       "confirm": "Zeitplan anlegen"
     }
+  },
+  "payments": {
+    "title": "Zahlungen",
+    "balance": "Offener Betrag",
+    "balanceShort": "Offen {{amount}}",
+    "recorded": "Zahlung erfasst.",
+    "actions": {
+      "record": "Zahlung erfassen"
+    },
+    "fields": {
+      "amount": "Betrag",
+      "method": "Zahlungsart",
+      "paidOn": "Zahlungsdatum",
+      "note": "Notiz"
+    },
+    "method": {
+      "BANK_TRANSFER": "Überweisung",
+      "CARD": "Karte",
+      "CASH": "Bar",
+      "PAYPAL": "PayPal",
+      "OTHER": "Sonstiges"
+    },
+    "dialog": {
+      "title": "Zahlung für {{number}} erfassen",
+      "description": "Offener Betrag: {{balance}}. Zahlungen sind endgültig und können nicht gelöscht werden.",
+      "confirm": "Zahlung erfassen"
+    }
   }
 }
