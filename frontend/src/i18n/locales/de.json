@@ -10,7 +10,8 @@
     "settings": "Einstellungen",
     "logout": "Abmelden",
     "products": "Produkte",
-    "estimates": "Angebote"
+    "estimates": "Angebote",
+    "recurring": "Wiederkehrend"
   },
   "auth": {
     "login": {
@@ -402,6 +403,46 @@
       "approve": "Annehmen",
       "decline": "Ablehnen",
       "convert": "In Rechnung umwandeln"
+    }
+  },
+  "recurring": {
+    "title": "Wiederkehrende Rechnungen",
+    "subtitle": "Zeitpläne, die automatisch Rechnungsentwürfe erzeugen.",
+    "empty": "Noch keine Zeitpläne — öffnen Sie eine Rechnung und wählen Sie \"Wiederkehrend machen\".",
+    "created": "Zeitplan angelegt.",
+    "deleted": "Zeitplan gelöscht.",
+    "paused": "Zeitplan pausiert.",
+    "resumed": "Zeitplan fortgesetzt.",
+    "deleteConfirm": "Zeitplan für \"{{name}}\" löschen? Bereits erzeugte Rechnungen bleiben erhalten.",
+    "on": "An",
+    "off": "Aus",
+    "columns": {
+      "customer": "Kunde",
+      "frequency": "Intervall",
+      "nextRun": "Nächster Lauf",
+      "autoSend": "Auto-Versand",
+      "status": "Status"
+    },
+    "frequency": {
+      "DAILY": "Täglich",
+      "WEEKLY": "Wöchentlich",
+      "MONTHLY": "Monatlich",
+      "YEARLY": "Jährlich"
+    },
+    "status": {
+      "active": "Aktiv",
+      "paused": "Pausiert"
+    },
+    "actions": {
+      "pause": "Pausieren",
+      "resume": "Fortsetzen",
+      "makeRecurring": "Wiederkehrend machen"
+    },
+    "dialog": {
+      "title": "{{number}} wiederholen",
+      "description": "Nach diesem Zeitplan wird ein Rechnungsentwurf mit denselben Positionen erzeugt.",
+      "autoSend": "Jede erzeugte Rechnung automatisch versenden",
+      "confirm": "Zeitplan anlegen"
     }
   }
 }

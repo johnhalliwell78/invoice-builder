@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { isAxiosError } from 'axios';
 import { toast } from 'sonner';
-import { ArrowLeft, ArrowRightLeft, Ban, CheckCircle2, Copy, Eye, Pencil, Send, Trash2, XCircle } from 'lucide-react';
+import { ArrowLeft, ArrowRightLeft, Ban, CheckCircle2, Copy, Eye, Pencil, Repeat, Send, Trash2, XCircle } from 'lucide-react';
 
 import {
   useApproveEstimate,
@@ -24,6 +24,7 @@ import { PageHeader } from '@/components/PageHeader';
 import { StatusBadge } from './StatusBadge';
 import { InvoicePreviewDialog } from './InvoicePreviewDialog';
 import { SendInvoiceDialog } from './SendInvoiceDialog';
+import { MakeRecurringDialog } from './MakeRecurringDialog';
 import { formatCurrency, formatDate } from '@/lib/format';
 import type { ProblemDetail } from '@/types/api';
 
@@ -45,6 +46,7 @@ export default function InvoiceDetailPage() {
   const convert = useConvertEstimate();
   const [previewOpen, setPreviewOpen] = useState(false);
   const [sendOpen, setSendOpen] = useState(false);
+  const [recurringOpen, setRecurringOpen] = useState(false);
   const [sendMode, setSendMode] = useState<'send' | 'resend'>('send');
 
   if (isPending) {
@@ -126,6 +128,12 @@ export default function InvoiceDetailPage() {
                   {t('invoices.actions.send')}
                 </Button>
               </>
+            )}
+            {!isEstimate && (
+              <Button variant="outline" onClick={() => setRecurringOpen(true)}>
+                <Repeat className="mr-2 h-4 w-4" />
+                {t('recurring.actions.makeRecurring')}
+              </Button>
             )}
             {canDecide && (
               <>
@@ -331,6 +339,12 @@ export default function InvoiceDetailPage() {
         invoiceId={invoice.id}
         invoiceNumber={invoice.invoiceNumber}
         initialTemplate={invoice.template}
+      />
+      <MakeRecurringDialog
+        open={recurringOpen}
+        onClose={() => setRecurringOpen(false)}
+        invoiceId={invoice.id}
+        invoiceNumber={invoice.invoiceNumber}
       />
       <SendInvoiceDialog
         open={sendOpen}

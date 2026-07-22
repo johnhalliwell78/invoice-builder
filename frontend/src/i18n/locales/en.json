@@ -10,7 +10,8 @@
     "settings": "Settings",
     "logout": "Sign out",
     "products": "Products",
-    "estimates": "Estimates"
+    "estimates": "Estimates",
+    "recurring": "Recurring"
   },
   "auth": {
     "login": {
@@ -402,6 +403,46 @@
       "approve": "Approve",
       "decline": "Decline",
       "convert": "Convert to invoice"
+    }
+  },
+  "recurring": {
+    "title": "Recurring invoices",
+    "subtitle": "Schedules that generate draft invoices automatically.",
+    "empty": "No recurring schedules yet — open an invoice and choose \"Make recurring\".",
+    "created": "Recurring schedule created.",
+    "deleted": "Recurring schedule deleted.",
+    "paused": "Schedule paused.",
+    "resumed": "Schedule resumed.",
+    "deleteConfirm": "Delete the recurring schedule for \"{{name}}\"? Already generated invoices are kept.",
+    "on": "On",
+    "off": "Off",
+    "columns": {
+      "customer": "Customer",
+      "frequency": "Frequency",
+      "nextRun": "Next run",
+      "autoSend": "Auto-send",
+      "status": "Status"
+    },
+    "frequency": {
+      "DAILY": "Daily",
+      "WEEKLY": "Weekly",
+      "MONTHLY": "Monthly",
+      "YEARLY": "Yearly"
+    },
+    "status": {
+      "active": "Active",
+      "paused": "Paused"
+    },
+    "actions": {
+      "pause": "Pause",
+      "resume": "Resume",
+      "makeRecurring": "Make recurring"
+    },
+    "dialog": {
+      "title": "Repeat {{number}}",
+      "description": "A draft invoice with the same items will be generated on this schedule.",
+      "autoSend": "Send each generated invoice automatically",
+      "confirm": "Create schedule"
     }
   }
 }

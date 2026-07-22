@@ -1,6 +1,9 @@
 package com.invoicebuilder.invoice;
 
 import com.invoicebuilder.common.dto.ApiResponse;
+import com.invoicebuilder.recurring.RecurringInvoiceService;
+import com.invoicebuilder.recurring.dto.MakeRecurringRequest;
+import com.invoicebuilder.recurring.dto.RecurringInvoiceResponse;
 import com.invoicebuilder.common.dto.PageResponse;
 import com.invoicebuilder.invoice.dto.EmailPreviewResponse;
 import com.invoicebuilder.invoice.dto.InvoiceListItem;
@@ -40,9 +43,12 @@ import java.util.UUID;
 public class InvoiceController {
 
     private final InvoiceService invoiceService;
+    private final RecurringInvoiceService recurringService;
 
-    public InvoiceController(InvoiceService invoiceService) {
+    public InvoiceController(InvoiceService invoiceService,
+                             RecurringInvoiceService recurringService) {
         this.invoiceService = invoiceService;
+        this.recurringService = recurringService;
     }
 
     @GetMapping
@@ -90,6 +96,14 @@ public class InvoiceController {
     public ApiResponse<InvoiceResponse> send(@PathVariable UUID id,
                                              @Valid @RequestBody(required = false) SendInvoiceRequest request) {
         return ApiResponse.of(InvoiceResponse.from(invoiceService.send(id, request)));
+    }
+
+    @PostMapping("/{id}/make-recurring")
+    @Operation(summary = "Create a recurring schedule from this invoice")
+    public ResponseEntity<ApiResponse<RecurringInvoiceResponse>> makeRecurring(
+            @PathVariable UUID id, @Valid @RequestBody MakeRecurringRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.of(recurringService.makeRecurring(id, request)));
     }
 
     @PostMapping("/{id}/approve")

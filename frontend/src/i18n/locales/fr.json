@@ -10,7 +10,8 @@
     "settings": "Paramètres",
     "logout": "Se déconnecter",
     "products": "Produits",
-    "estimates": "Devis"
+    "estimates": "Devis",
+    "recurring": "Récurrentes"
   },
   "auth": {
     "login": {
@@ -402,6 +403,46 @@
       "approve": "Approuver",
       "decline": "Refuser",
       "convert": "Convertir en facture"
+    }
+  },
+  "recurring": {
+    "title": "Factures récurrentes",
+    "subtitle": "Des planifications qui génèrent automatiquement des brouillons de facture.",
+    "empty": "Aucune planification — ouvrez une facture et choisissez « Rendre récurrente ».",
+    "created": "Planification créée.",
+    "deleted": "Planification supprimée.",
+    "paused": "Planification en pause.",
+    "resumed": "Planification reprise.",
+    "deleteConfirm": "Supprimer la planification pour « {{name}} » ? Les factures déjà générées sont conservées.",
+    "on": "Oui",
+    "off": "Non",
+    "columns": {
+      "customer": "Client",
+      "frequency": "Fréquence",
+      "nextRun": "Prochaine échéance",
+      "autoSend": "Envoi auto",
+      "status": "Statut"
+    },
+    "frequency": {
+      "DAILY": "Quotidienne",
+      "WEEKLY": "Hebdomadaire",
+      "MONTHLY": "Mensuelle",
+      "YEARLY": "Annuelle"
+    },
+    "status": {
+      "active": "Active",
+      "paused": "En pause"
+    },
+    "actions": {
+      "pause": "Mettre en pause",
+      "resume": "Reprendre",
+      "makeRecurring": "Rendre récurrente"
+    },
+    "dialog": {
+      "title": "Répéter {{number}}",
+      "description": "Un brouillon de facture avec les mêmes lignes sera généré selon cette planification.",
+      "autoSend": "Envoyer automatiquement chaque facture générée",
+      "confirm": "Créer la planification"
     }
   }
 }
