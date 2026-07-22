@@ -52,11 +52,12 @@ function renderBox(onSelect: (c: Customer | null) => void, selected?: { id: stri
 
 beforeEach(() => {
   vi.clearAllMocks();
-  vi.mocked(listCustomers).mockResolvedValue(pageOf([acme, globex], 0, false));
+  vi.mocked(listCustomers).mockResolvedValue(pageOf([acme, globex], 0, true));
 });
 
 describe('CustomerCombobox', () => {
   it('opens on focus and lists customers from the server', async () => {
+    vi.mocked(listCustomers).mockResolvedValue(pageOf([acme, globex], 0, false));
     const user = userEvent.setup();
     renderBox(vi.fn());
 
@@ -78,16 +79,38 @@ describe('CustomerCombobox', () => {
     expect(onSelect).toHaveBeenCalledWith(acme);
   });
 
-  it('selects the highlighted option with the keyboard', async () => {
+  it('selects the highlighted option with the keyboard and exposes it via aria-activedescendant', async () => {
     const user = userEvent.setup();
     const onSelect = vi.fn();
     renderBox(onSelect);
 
     await user.click(screen.getByRole('combobox'));
     await screen.findByRole('option', { name: /Acme GmbH/ });
-    await user.keyboard('{ArrowDown}{Enter}');
+    await user.keyboard('{ArrowDown}');
 
+    const input = screen.getByRole('combobox');
+    const highlighted = screen.getByRole('option', { name: /Globex Corp/ });
+    expect(input).toHaveAttribute('aria-activedescendant', highlighted.id);
+
+    await user.keyboard('{Enter}');
     expect(onSelect).toHaveBeenCalledWith(globex);
+  });
+
+  it('reaches later pages by keyboard: ArrowDown at the last option loads more', async () => {
+    const third = { ...acme, id: 'c3', name: 'Initech Ltd' };
+    vi.mocked(listCustomers).mockImplementation((params) =>
+      Promise.resolve(
+        params.page === 1 ? pageOf([third], 1, true) : pageOf([acme, globex], 0, false),
+      ),
+    );
+    const user = userEvent.setup();
+    renderBox(vi.fn());
+
+    await user.click(screen.getByRole('combobox'));
+    await screen.findByRole('option', { name: /Acme GmbH/ });
+    await user.keyboard('{ArrowDown}');
+
+    expect(await screen.findByRole('option', { name: /Initech Ltd/ })).toBeInTheDocument();
   });
 
   it('clears the selection', async () => {

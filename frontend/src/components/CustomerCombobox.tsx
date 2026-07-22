@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useId, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { X } from 'lucide-react';
 
@@ -35,6 +35,8 @@ export function CustomerCombobox({
   const [text, setText] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
   const [highlight, setHighlight] = useState(0);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const listboxId = useId();
 
   const query = useDebouncedValue(text ?? '', 300);
   const search = useCustomerSearchInfinite(query, open);
@@ -50,12 +52,30 @@ export function CustomerCombobox({
     setHighlight(0);
   }
 
+  function moveHighlight(delta: 1 | -1) {
+    setHighlight((h) => {
+      const next = Math.min(Math.max(h + delta, 0), Math.max(options.length - 1, 0));
+      // Reaching the end pulls in the next page so every match stays
+      // keyboard-reachable, not just the first 20.
+      if (delta === 1 && next === options.length - 1 && search.hasNextPage && !search.isFetchingNextPage) {
+        void search.fetchNextPage();
+      }
+      return next;
+    });
+  }
+
   return (
     <div className="relative">
       <div className="relative">
         <Input
+          ref={inputRef}
           role="combobox"
           aria-expanded={open}
+          aria-controls={listboxId}
+          aria-autocomplete="list"
+          aria-activedescendant={
+            open && options[highlight] ? `${listboxId}-opt-${highlight}` : undefined
+          }
           aria-invalid={invalid}
           autoComplete="off"
           placeholder={placeholder}
@@ -77,13 +97,14 @@ export function CustomerCombobox({
             } else if (e.key === 'ArrowDown') {
               e.preventDefault();
               setOpen(true);
-              setHighlight((h) => Math.min(h + 1, options.length - 1));
+              moveHighlight(1);
             } else if (e.key === 'ArrowUp') {
               e.preventDefault();
-              setHighlight((h) => Math.max(h - 1, 0));
-            } else if (e.key === 'Enter' && open && options[highlight]) {
+              moveHighlight(-1);
+            } else if (e.key === 'Enter' && open) {
+              // Always swallow Enter while the list is open — never submit the form mid-search.
               e.preventDefault();
-              pick(options[highlight]);
+              if (options[highlight]) pick(options[highlight]);
             }
           }}
         />
@@ -92,7 +113,11 @@ export function CustomerCombobox({
             type="button"
             aria-label={t('common.clear')}
             className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground hover:text-foreground"
-            onClick={() => pick(null)}
+            onClick={() => {
+              pick(null);
+              // The button unmounts with the selection — hand focus back to the input.
+              inputRef.current?.focus();
+            }}
           >
             <X className="h-4 w-4" />
           </button>
@@ -100,21 +125,18 @@ export function CustomerCombobox({
       </div>
 
       {open && (
-        <ul
-          role="listbox"
-          aria-label={t('customers.title')}
-          className="absolute z-10 mt-1 max-h-72 w-full overflow-auto rounded-md border bg-background shadow-md"
-        >
+        <div className="absolute z-10 mt-1 max-h-72 w-full overflow-auto rounded-md border bg-background shadow-md">
           {options.length === 0 && !search.isPending && (
-            <li className="px-3 py-2 text-sm text-muted-foreground">{t('common.noResults')}</li>
+            <div className="px-3 py-2 text-sm text-muted-foreground">{t('common.noResults')}</div>
           )}
-          {options.map((customer, index) => (
-            <li key={customer.id}>
-              <button
-                type="button"
+          <ul id={listboxId} role="listbox" aria-label={t('customers.title')}>
+            {options.map((customer, index) => (
+              <li
+                key={customer.id}
+                id={`${listboxId}-opt-${index}`}
                 role="option"
                 aria-selected={customer.id === selectedId}
-                className={`flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm ${
+                className={`flex w-full cursor-pointer items-center justify-between gap-2 px-3 py-2 text-left text-sm ${
                   index === highlight ? 'bg-accent' : 'hover:bg-accent'
                 }`}
                 // preventDefault keeps focus on the input so blur doesn't swallow the click
@@ -126,11 +148,11 @@ export function CustomerCombobox({
                 {customer.company && (
                   <span className="shrink-0 text-xs text-muted-foreground">{customer.company}</span>
                 )}
-              </button>
-            </li>
-          ))}
+              </li>
+            ))}
+          </ul>
           {search.hasNextPage && (
-            <li className="border-t p-1">
+            <div className="border-t p-1">
               <Button
                 type="button"
                 variant="ghost"
@@ -142,9 +164,9 @@ export function CustomerCombobox({
               >
                 {t('common.loadMore')}
               </Button>
-            </li>
+            </div>
           )}
-        </ul>
+        </div>
       )}
     </div>
   );
