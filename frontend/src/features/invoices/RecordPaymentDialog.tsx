@@ -87,7 +87,12 @@ export function RecordPaymentDialog({ open, onClose, invoiceId, invoiceNumber, b
         </div>
         <div className="space-y-1.5">
           <Label>{t('payments.fields.paidOn')}</Label>
-          <Input type="date" value={paidOn} onChange={(e) => setPaidOn(e.target.value)} />
+          <Input
+            type="date"
+            max={todayIso()}
+            value={paidOn}
+            onChange={(e) => setPaidOn(e.target.value)}
+          />
         </div>
         <div className="space-y-1.5">
           <Label>{t('payments.fields.note')}</Label>

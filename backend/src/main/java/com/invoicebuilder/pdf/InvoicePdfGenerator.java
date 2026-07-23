@@ -134,7 +134,7 @@ public class InvoicePdfGenerator {
         left.add(p(tenant.getName(), 18, true))
                 .add(formatTenantAddress(tenant));
         Cell right = bare()
-                .add(p(t("pdf.invoice.title", locale).toUpperCase(), 28, true)
+                .add(p(t(titleKey(invoice), locale).toUpperCase(), 28, true)
                         .setTextAlignment(TextAlignment.RIGHT))
                 .add(new Paragraph(invoice.getInvoiceNumber()).setFontColor(MUTED)
                         .setTextAlignment(TextAlignment.RIGHT));
@@ -148,7 +148,7 @@ public class InvoicePdfGenerator {
                                     DeviceRgb accent, byte[] logoBytes) {
         Table band = new Table(UnitValue.createPercentArray(new float[]{60, 40})).useAllAvailableWidth();
         Cell left = bare().setBackgroundColor(accent).setPadding(16)
-                .add(coloredP(t("pdf.invoice.title", locale).toUpperCase(), 24, WHITE, true))
+                .add(coloredP(t(titleKey(invoice), locale).toUpperCase(), 24, WHITE, true))
                 .add(new Paragraph(invoice.getInvoiceNumber())
                         .setFontColor(new DeviceRgb(220, 230, 255)));
         Cell right = bare().setBackgroundColor(accent).setPadding(16)
@@ -177,7 +177,9 @@ public class InvoicePdfGenerator {
         DateTimeFormatter dateFmt = DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(locale);
         Table meta = new Table(UnitValue.createPercentArray(new float[]{50, 50}));
         addMetaRow(meta, t("pdf.invoice.issueDate", locale), invoice.getIssueDate().format(dateFmt));
-        addMetaRow(meta, t("pdf.invoice.dueDate", locale), invoice.getDueDate().format(dateFmt));
+        addMetaRow(meta, t(invoice.getDocType() == com.invoicebuilder.invoice.DocType.ESTIMATE
+                ? "pdf.estimate.validUntil" : "pdf.invoice.dueDate", locale),
+                invoice.getDueDate().format(dateFmt));
         if (tenant.getTaxId() != null) {
             addMetaRow(meta, t("pdf.invoice.taxId", locale), tenant.getTaxId());
         }
@@ -287,6 +289,11 @@ public class InvoicePdfGenerator {
     }
 
     // ------------------------------------------------------------------ helpers
+
+    private static String titleKey(Invoice invoice) {
+        return invoice.getDocType() == com.invoicebuilder.invoice.DocType.ESTIMATE
+                ? "pdf.estimate.title" : "pdf.invoice.title";
+    }
 
     private String t(String key, Locale locale) {
         return messages.getMessage(key, null, key, locale);

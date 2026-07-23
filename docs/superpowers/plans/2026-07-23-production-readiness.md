@@ -27,7 +27,7 @@ touches real money, that class of bug needs a permanent safety net.
 - Keep unit tests fast: ITs live in the same `test` task but skip without
   Docker; CI gets them for free via `./gradlew check`.
 
-- [ ] Implement → verify (with Docker) → merge.
+- [x] Implement → verify (with Docker) → merge. Mutation-verified: pre-fix transaction shape fails RecurringSweepIT.
 
 ## PR.2 Estimate email + PDF wording (branch `fix/estimate-wording`)
 
@@ -35,7 +35,7 @@ touches real money, that class of bug needs a permanent safety net.
   Add doc-type-aware message keys (en/de/fr ×2 files) and pick by
   `invoice.getDocType()`. Public page already says "Estimate".
 
-- [ ] Implement → verify → merge.
+- [x] Implement → verify → merge.
 
 ## PR.3 Input validation odds and ends (branch `fix/validation-polish`)
 
@@ -44,7 +44,7 @@ touches real money, that class of bug needs a permanent safety net.
   is legitimate, postdating is not.
 - Frontend: date input min/max hints to match.
 
-- [ ] Implement → verify → merge.
+- [x] Implement → verify → merge.
 
 ## PR.4 E2E smoke (Playwright) — NEXT milestone, not this one
 

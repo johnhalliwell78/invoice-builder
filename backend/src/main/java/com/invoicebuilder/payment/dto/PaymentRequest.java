@@ -4,6 +4,7 @@ import com.invoicebuilder.payment.PaymentMethod;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PastOrPresent;
 import jakarta.validation.constraints.Size;
 
 import java.math.BigDecimal;
@@ -17,8 +18,8 @@ public record PaymentRequest(
 
         @NotNull PaymentMethod method,
 
-        /** Null means today. */
-        LocalDate paidOn,
+        /** Null means today. Backdating is fine; postdating is not. */
+        @PastOrPresent LocalDate paidOn,
 
         @Size(max = 500) String note
 ) {

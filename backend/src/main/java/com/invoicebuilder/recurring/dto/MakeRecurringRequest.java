@@ -1,6 +1,7 @@
 package com.invoicebuilder.recurring.dto;
 
 import com.invoicebuilder.recurring.Frequency;
+import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDate;
@@ -11,6 +12,6 @@ public record MakeRecurringRequest(
         boolean autoSend,
 
         /** First generation date; null means one period after today. */
-        LocalDate firstRun
+        @FutureOrPresent LocalDate firstRun
 ) {
 }

@@ -159,6 +159,26 @@ class InvoiceServiceEstimateTest {
     }
 
     @Test
+    void estimateEmailUsesEstimateWording() {
+        com.invoicebuilder.tenant.Tenant tenant = new com.invoicebuilder.tenant.Tenant();
+        tenant.setName("Acme");
+        tenant.setDefaultLocale("en");
+        when(tenantRepository.findById(TENANT_ID)).thenReturn(Optional.of(tenant));
+        com.invoicebuilder.customer.Customer customer = new com.invoicebuilder.customer.Customer();
+        customer.setEmail("c@example.test");
+        when(customerRepository.findById(CUSTOMER_ID)).thenReturn(Optional.of(customer));
+        when(messages.getMessage(org.mockito.ArgumentMatchers.startsWith("email.estimate."),
+                any(), any(java.util.Locale.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
+
+        var preview = service.previewEmail(ESTIMATE_ID);
+
+        // Estimate documents must resolve estimate email keys, not invoice ones.
+        assertThat(preview.subject()).isEqualTo("email.estimate.subject");
+        assertThat(preview.body()).isEqualTo("email.estimate.bodyDefault");
+    }
+
+    @Test
     void duplicateKeepsDocTypeAndNumberSeries() {
         when(numberGenerator.reserveNextEstimate(TENANT_ID)).thenReturn("EST-2026-0009");
 

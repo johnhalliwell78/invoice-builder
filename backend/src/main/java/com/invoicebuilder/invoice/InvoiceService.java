@@ -126,7 +126,7 @@ public class InvoiceService {
 
     public String suggestedFilename(UUID id) {
         return invoiceRepository.findByIdAndTenantId(id, TenantContext.require())
-                .map(i -> "invoice-" + i.getInvoiceNumber() + ".pdf")
+                .map(i -> filenameFor(i))
                 .orElse("invoice.pdf");
     }
 
@@ -392,6 +392,11 @@ public class InvoiceService {
      * Resolves recipient, subject, and body: explicit request values win,
      * otherwise localized defaults from the tenant's locale bundle.
      */
+    private static String filenameFor(Invoice invoice) {
+        String prefix = invoice.getDocType() == DocType.ESTIMATE ? "estimate-" : "invoice-";
+        return prefix + invoice.getInvoiceNumber() + ".pdf";
+    }
+
     private EmailPreview composeEmail(Invoice invoice, Tenant tenant, Customer customer,
                                       SendInvoiceRequest request) {
         String recipient = request != null && request.recipientEmail() != null && !request.recipientEmail().isBlank()
@@ -400,14 +405,15 @@ public class InvoiceService {
 
         Locale locale = Locale.forLanguageTag(
                 tenant.getDefaultLocale() == null ? "en" : tenant.getDefaultLocale());
+        String keyPrefix = invoice.getDocType() == DocType.ESTIMATE ? "email.estimate" : "email.invoice";
         String subject = request != null && request.subject() != null && !request.subject().isBlank()
                 ? request.subject()
-                : messages.getMessage("email.invoice.subject",
+                : messages.getMessage(keyPrefix + ".subject",
                         new Object[]{invoice.getInvoiceNumber(), tenant.getName()},
                         locale);
         String body = request != null && request.message() != null && !request.message().isBlank()
                 ? request.message()
-                : messages.getMessage("email.invoice.bodyDefault",
+                : messages.getMessage(keyPrefix + ".bodyDefault",
                         new Object[]{invoice.getInvoiceNumber(), invoice.getDueDate(), tenant.getName()},
                         locale);
         return new EmailPreview(recipient, subject, body);
@@ -442,7 +448,7 @@ public class InvoiceService {
         pdfStorage.save(invoice.getTenantId(), invoice.getId(), pdf);
         emailService.send(new EmailService.EmailMessage(
                 recipient, customer.getName(), cc, bcc, subject, body,
-                "invoice-" + invoice.getInvoiceNumber() + ".pdf", pdf));
+                filenameFor(invoice), pdf));
     }
 
     private void recordReminder(Invoice invoice, String recipient, ReminderType type) {
