@@ -61,8 +61,9 @@ class RecurringInvoiceServiceTest {
     @BeforeEach
     void setUp() {
         service = new RecurringInvoiceService(recurringRepository, invoiceRepository,
-                customerRepository, invoiceService, auditService,
-                Clock.fixed(NOW, ZoneOffset.UTC));
+                customerRepository, invoiceService,
+                new RecurringInvoiceRunner(recurringRepository, invoiceService),
+                auditService, Clock.fixed(NOW, ZoneOffset.UTC));
         TenantContext.set(TENANT_ID);
         lenient().when(recurringRepository.save(any(RecurringInvoice.class)))
                 .thenAnswer(inv -> inv.getArgument(0));
@@ -158,10 +159,28 @@ class RecurringInvoiceServiceTest {
                 .isInstanceOf(AppException.class);
     }
 
+    @Test
+    void makeRecurringKeepsExplicitMonthEndAnchor() {
+        when(invoiceRepository.findByIdAndTenantId(INVOICE_ID, TENANT_ID))
+                .thenReturn(Optional.of(sourceInvoice()));
+
+        service.makeRecurring(INVOICE_ID,
+                new MakeRecurringRequest(Frequency.MONTHLY, false, LocalDate.of(2027, 1, 31)));
+
+        ArgumentCaptor<RecurringInvoice> captor = ArgumentCaptor.forClass(RecurringInvoice.class);
+        verify(recurringRepository).save(captor.capture());
+        // Anchor survives clamping: Jan 31 → Feb 28 → back to Mar 31.
+        assertThat(captor.getValue().getAnchorDay()).isEqualTo(31);
+        assertThat(captor.getValue().getNextRun()).isEqualTo(LocalDate.of(2027, 1, 31));
+    }
+
     // ---------- generation sweep ----------
 
     private RecurringInvoice schedule(LocalDate nextRun, boolean autoSend) {
         RecurringInvoice r = new RecurringInvoice();
+        ReflectionTestUtils.setField(r, "id", UUID.randomUUID());
+        lenient().when(recurringRepository.findByIdAndTenantId(r.getId(), TENANT_ID))
+                .thenReturn(Optional.of(r));
         r.setTenantId(TENANT_ID);
         r.setCustomerId(CUSTOMER_ID);
         r.setFrequency(Frequency.MONTHLY);
@@ -185,7 +204,9 @@ class RecurringInvoiceServiceTest {
         RecurringInvoice due = schedule(LocalDate.of(2026, 5, 22), false);
         when(recurringRepository.findByTenantIdAndActiveTrueAndNextRunLessThanEqual(TENANT_ID, TODAY))
                 .thenReturn(List.of(due));
-        when(invoiceService.create(any(InvoiceRequest.class))).thenReturn(new Invoice());
+        Invoice draft = new Invoice();
+        ReflectionTestUtils.setField(draft, "id", UUID.randomUUID());
+        when(invoiceService.create(any(InvoiceRequest.class))).thenReturn(draft);
 
         int created = service.generateDueForTenant(TENANT_ID, TODAY);
 
@@ -223,9 +244,11 @@ class RecurringInvoiceServiceTest {
         RecurringInvoice healthy = schedule(TODAY, false);
         when(recurringRepository.findByTenantIdAndActiveTrueAndNextRunLessThanEqual(TENANT_ID, TODAY))
                 .thenReturn(List.of(failing, healthy));
+        Invoice healthyDraft = new Invoice();
+        ReflectionTestUtils.setField(healthyDraft, "id", UUID.randomUUID());
         when(invoiceService.create(any(InvoiceRequest.class)))
                 .thenThrow(new IllegalStateException("boom"))
-                .thenReturn(new Invoice());
+                .thenReturn(healthyDraft);
 
         int created = service.generateDueForTenant(TENANT_ID, TODAY);
 

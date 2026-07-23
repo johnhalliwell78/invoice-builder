@@ -403,7 +403,12 @@
       "approve": "Approve",
       "decline": "Decline",
       "convert": "Convert to invoice"
-    }
+    },
+    "createdToast": "Estimate created.",
+    "updated": "Estimate updated.",
+    "deleted": "Estimate deleted.",
+    "duplicated": "Estimate duplicated — editing the new draft.",
+    "deleteConfirm": "Delete estimate {{number}}? This cannot be undone."
   },
   "recurring": {
     "title": "Recurring invoices",

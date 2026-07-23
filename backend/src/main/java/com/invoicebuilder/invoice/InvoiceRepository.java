@@ -2,7 +2,9 @@ package com.invoicebuilder.invoice;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -17,6 +19,16 @@ import java.util.UUID;
 public interface InvoiceRepository extends JpaRepository<Invoice, UUID> {
 
     Optional<Invoice> findByIdAndTenantId(UUID id, UUID tenantId);
+
+    /**
+     * Row-locked load for read-modify-write flows (payments, estimate
+     * conversion): serializes concurrent mutations of the same invoice so
+     * balance checks and one-shot guards cannot race.
+     */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select i from Invoice i where i.id = :id and i.tenantId = :tenantId")
+    Optional<Invoice> findByIdAndTenantIdForUpdate(@Param("id") UUID id,
+                                                   @Param("tenantId") UUID tenantId);
 
     Optional<Invoice> findByPublicToken(String publicToken);
 

@@ -403,7 +403,12 @@
       "approve": "Approuver",
       "decline": "Refuser",
       "convert": "Convertir en facture"
-    }
+    },
+    "createdToast": "Devis créé.",
+    "updated": "Devis mis à jour.",
+    "deleted": "Devis supprimé.",
+    "duplicated": "Devis dupliqué — modification du nouveau brouillon.",
+    "deleteConfirm": "Supprimer le devis {{number}} ? Cette action est irréversible."
   },
   "recurring": {
     "title": "Factures récurrentes",

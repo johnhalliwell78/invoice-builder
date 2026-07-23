@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { isAxiosError } from 'axios';
 import { toast } from 'sonner';
@@ -31,14 +31,25 @@ export function RecordPaymentDialog({ open, onClose, invoiceId, invoiceNumber, b
   const [note, setNote] = useState('');
   const record = useRecordPayment(invoiceId);
 
-  // Re-seed the default amount each time the dialog opens (balance changes as payments land).
-  useEffect(() => {
-    if (open) setAmount(balance);
-  }, [open, balance]);
+  // Re-seed the default amount only when the dialog transitions to open —
+  // a background refetch must not clobber what the user is typing.
+  const [wasOpen, setWasOpen] = useState(false);
+  if (open && !wasOpen) {
+    setWasOpen(true);
+    setAmount(balance);
+    setPaidOn(todayIso());
+  } else if (!open && wasOpen) {
+    setWasOpen(false);
+  }
 
   async function submit() {
     try {
-      await record.mutateAsync({ amount, method, paidOn, note: note.trim() || undefined });
+      await record.mutateAsync({
+        amount,
+        method,
+        paidOn: paidOn || undefined,
+        note: note.trim() || undefined,
+      });
       toast.success(t('payments.recorded'));
       setNote('');
       onClose();

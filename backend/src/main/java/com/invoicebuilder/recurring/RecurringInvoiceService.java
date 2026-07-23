@@ -11,8 +11,6 @@ import com.invoicebuilder.invoice.DocType;
 import com.invoicebuilder.invoice.Invoice;
 import com.invoicebuilder.invoice.InvoiceRepository;
 import com.invoicebuilder.invoice.InvoiceService;
-import com.invoicebuilder.invoice.dto.InvoiceRequest;
-import com.invoicebuilder.invoice.dto.LineItemRequest;
 import com.invoicebuilder.recurring.dto.MakeRecurringRequest;
 import com.invoicebuilder.recurring.dto.RecurringInvoiceResponse;
 import com.invoicebuilder.tenant.TenantContext;
@@ -44,6 +42,7 @@ public class RecurringInvoiceService {
     private final InvoiceRepository invoiceRepository;
     private final CustomerRepository customerRepository;
     private final InvoiceService invoiceService;
+    private final RecurringInvoiceRunner runner;
     private final AuditService auditService;
     private final Clock clock;
 
@@ -51,12 +50,14 @@ public class RecurringInvoiceService {
                                    InvoiceRepository invoiceRepository,
                                    CustomerRepository customerRepository,
                                    @Lazy InvoiceService invoiceService,
+                                   RecurringInvoiceRunner runner,
                                    AuditService auditService,
                                    Clock clock) {
         this.recurringRepository = recurringRepository;
         this.invoiceRepository = invoiceRepository;
         this.customerRepository = customerRepository;
         this.invoiceService = invoiceService;
+        this.runner = runner;
         this.auditService = auditService;
         this.clock = clock;
     }
@@ -109,10 +110,15 @@ public class RecurringInvoiceService {
                 .toList());
         schedule.setCreatedBy(currentUserId());
 
+        // Anchor to the requested (or today's) day BEFORE any clamping — a
+        // schedule made on Jan 31 must return to the 31st, not drift to 28.
+        int anchorDay = request.firstRun() != null
+                ? request.firstRun().getDayOfMonth()
+                : today.getDayOfMonth();
         LocalDate firstRun = request.firstRun() != null
                 ? request.firstRun()
-                : advance(today, request.frequency(), today.getDayOfMonth());
-        schedule.setAnchorDay(firstRun.getDayOfMonth());
+                : advance(today, request.frequency(), anchorDay);
+        schedule.setAnchorDay(anchorDay);
         schedule.setNextRun(firstRun);
 
         RecurringInvoice saved = recurringRepository.save(schedule);
@@ -156,52 +162,45 @@ public class RecurringInvoiceService {
     /**
      * Generates drafts for every due schedule of one tenant. Requires
      * {@link TenantContext} to be set (the sweeper does this per tenant).
-     * Each schedule yields at most one draft per sweep; after a long outage
-     * the schedule fast-forwards past today instead of spamming drafts.
-     * Failures are isolated per schedule and the date still advances so a
-     * permanently broken schedule cannot retry-storm forever.
+     * Deliberately NOT transactional: each schedule runs in its own
+     * REQUIRES_NEW transaction via {@link RecurringInvoiceRunner}, so one
+     * broken schedule can neither roll back the other schedules' drafts nor
+     * mark a shared transaction rollback-only. On failure the date still
+     * advances (own transaction) so a permanently broken schedule skips its
+     * period instead of retry-storming every sweep. Auto-send happens after
+     * the draft's transaction committed — a mail failure keeps the draft.
      */
-    @Transactional
     public int generateDueForTenant(UUID tenantId, LocalDate today) {
         List<RecurringInvoice> due =
                 recurringRepository.findByTenantIdAndActiveTrueAndNextRunLessThanEqual(tenantId, today);
         int created = 0;
         for (RecurringInvoice schedule : due) {
+            UUID draftId = null;
             try {
-                Invoice draft = invoiceService.create(toInvoiceRequest(schedule, today));
-                if (schedule.isAutoSend()) {
-                    invoiceService.send(draft.getId(), null);
+                draftId = runner.runOne(schedule.getId(), tenantId, today);
+                if (draftId != null) {
+                    created++;
                 }
-                created++;
             } catch (RuntimeException e) {
                 log.error("Recurring generation failed for schedule {} (tenant {})",
                         schedule.getId(), tenantId, e);
+                try {
+                    runner.advanceOnly(schedule.getId(), tenantId, today);
+                } catch (RuntimeException advanceFailure) {
+                    log.error("Could not advance schedule {} after failure", schedule.getId(),
+                            advanceFailure);
+                }
             }
-            LocalDate next = schedule.getNextRun();
-            while (!next.isAfter(today)) {
-                next = advance(next, schedule.getFrequency(), schedule.getAnchorDay());
+            if (draftId != null && schedule.isAutoSend()) {
+                try {
+                    invoiceService.send(draftId, null);
+                } catch (RuntimeException e) {
+                    log.error("Auto-send failed for schedule {} — draft {} kept as DRAFT",
+                            schedule.getId(), draftId, e);
+                }
             }
-            schedule.setNextRun(next);
         }
         return created;
-    }
-
-    private InvoiceRequest toInvoiceRequest(RecurringInvoice schedule, LocalDate today) {
-        return new InvoiceRequest(
-                schedule.getCustomerId(),
-                schedule.getCurrency(),
-                today,
-                today.plusDays(schedule.getDueDays()),
-                schedule.getLineItems().stream()
-                        .map(li -> new LineItemRequest(li.description(), li.quantity(),
-                                li.unitPrice(), li.taxRate(), li.discountPercent()))
-                        .toList(),
-                schedule.getDiscountAmount(),
-                schedule.getNotes(),
-                schedule.getTerms(),
-                schedule.getTemplate(),
-                DocType.INVOICE
-        );
     }
 
     private RecurringInvoice load(UUID id) {

@@ -81,14 +81,7 @@ public class PaymentService {
 
         invoice.setAmountPaid(invoice.getAmountPaid().add(request.amount()));
         if (invoice.getAmountPaid().compareTo(invoice.getTotal()) >= 0) {
-            invoice.getStatus().requireTransition(invoice.getDocType(), InvoiceStatus.PAID);
-            invoice.setStatus(InvoiceStatus.PAID);
-            invoice.setPaidAt(OffsetDateTime.now(clock));
-            auditService.record(invoice.getTenantId(), "Invoice", invoice.getId(),
-                    AuditAction.STATUS_CHANGE, Map.<String, Object>of("status", "PAID"));
-            eventPublisher.publishEvent(new NotificationEvent(invoice.getTenantId(),
-                    invoice.getCreatedBy(), NotificationType.INVOICE_PAID,
-                    "Invoice", invoice.getId(), invoice.getInvoiceNumber()));
+            transitionToPaid(invoice);
         } else {
             auditService.record(invoice.getTenantId(), "Invoice", invoice.getId(),
                     AuditAction.UPDATE, Map.<String, Object>of(
@@ -98,16 +91,32 @@ public class PaymentService {
         return PaymentResponse.from(saved);
     }
 
-    /** The former "mark paid": records the whole remaining balance as one payment. */
+    /**
+     * The former "mark paid": records the whole remaining balance as one
+     * payment. A zero-total (or already covered) open invoice has nothing to
+     * record — it transitions straight to PAID, preserving the pre-payments
+     * behavior for free/goodwill invoices.
+     */
     @Transactional
-    public PaymentResponse markRemainingPaid(UUID invoiceId) {
+    public void markRemainingPaid(UUID invoiceId) {
         Invoice invoice = loadOpenInvoice(invoiceId);
         BigDecimal balance = invoice.getTotal().subtract(invoice.getAmountPaid());
-        if (balance.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new AppException(ErrorCode.INVALID_STATE_TRANSITION,
-                    "Invoice has no remaining balance");
+        if (balance.compareTo(BigDecimal.ZERO) > 0) {
+            record(invoiceId, new PaymentRequest(balance, PaymentMethod.OTHER, null, null));
+        } else {
+            transitionToPaid(invoice);
         }
-        return record(invoiceId, new PaymentRequest(balance, PaymentMethod.OTHER, null, null));
+    }
+
+    private void transitionToPaid(Invoice invoice) {
+        invoice.getStatus().requireTransition(invoice.getDocType(), InvoiceStatus.PAID);
+        invoice.setStatus(InvoiceStatus.PAID);
+        invoice.setPaidAt(OffsetDateTime.now(clock));
+        auditService.record(invoice.getTenantId(), "Invoice", invoice.getId(),
+                AuditAction.STATUS_CHANGE, Map.<String, Object>of("status", "PAID"));
+        eventPublisher.publishEvent(new NotificationEvent(invoice.getTenantId(),
+                invoice.getCreatedBy(), NotificationType.INVOICE_PAID,
+                "Invoice", invoice.getId(), invoice.getInvoiceNumber()));
     }
 
     @Transactional(readOnly = true)
@@ -122,7 +131,8 @@ public class PaymentService {
 
     private Invoice loadOpenInvoice(UUID invoiceId) {
         UUID tenantId = TenantContext.require();
-        Invoice invoice = invoiceRepository.findByIdAndTenantId(invoiceId, tenantId)
+        // Row lock: concurrent payments serialize, so the balance check holds.
+        Invoice invoice = invoiceRepository.findByIdAndTenantIdForUpdate(invoiceId, tenantId)
                 .orElseThrow(() -> new AppException(ErrorCode.INVOICE_NOT_FOUND, "Invoice not found"));
         if (invoice.getDocType() != DocType.INVOICE) {
             throw new AppException(ErrorCode.INVALID_STATE_TRANSITION,

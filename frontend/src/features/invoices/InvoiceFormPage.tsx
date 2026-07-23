@@ -159,7 +159,11 @@ export default function InvoiceFormPage({ docType = 'INVOICE' }: { docType?: Doc
       const saved = isEdit && invoiceId
         ? await update.mutateAsync(payload)
         : await create.mutateAsync(payload);
-      toast.success(isEdit ? t('invoices.updated') : t('invoices.created'));
+      toast.success(
+        isEdit
+          ? t(isEstimate ? 'estimates.updated' : 'invoices.updated')
+          : t(isEstimate ? 'estimates.createdToast' : 'invoices.created'),
+      );
       navigate(`${base}/${saved.id}`);
     } catch (err) {
       const detail = isAxiosError<ProblemDetail>(err) ? err.response?.data?.detail : undefined;

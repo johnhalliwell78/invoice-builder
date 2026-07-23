@@ -336,7 +336,10 @@ public class InvoiceService {
     }
 
     private Invoice loadEstimate(UUID id) {
-        Invoice invoice = load(id);
+        // Row lock: two concurrent convert/approve calls serialize, so the
+        // one-shot convertedInvoiceId guard and transitions cannot race.
+        Invoice invoice = invoiceRepository.findByIdAndTenantIdForUpdate(id, TenantContext.require())
+                .orElseThrow(() -> new AppException(ErrorCode.INVOICE_NOT_FOUND, "Invoice not found"));
         if (invoice.getDocType() != DocType.ESTIMATE) {
             throw new AppException(ErrorCode.INVALID_STATE_TRANSITION,
                     "Action only applies to estimates");

@@ -105,7 +105,7 @@ export default function InvoiceDetailPage() {
                   duplicate
                     .mutateAsync(invoice.id)
                     .then((copy) => navigate(`${base}/${copy.id}/edit`)),
-                  'invoices.duplicated',
+                  isEstimate ? 'estimates.duplicated' : 'invoices.duplicated',
                 )
               }
             >
@@ -121,8 +121,15 @@ export default function InvoiceDetailPage() {
                 <Button
                   variant="outline"
                   onClick={() =>
-                    void (window.confirm(t('invoices.deleteConfirm', { number: invoice.invoiceNumber })) &&
-                      action(del.mutateAsync(invoice.id).then(() => navigate(base)), 'invoices.deleted'))
+                    void (window.confirm(
+                      t(isEstimate ? 'estimates.deleteConfirm' : 'invoices.deleteConfirm', {
+                        number: invoice.invoiceNumber,
+                      }),
+                    ) &&
+                      action(
+                        del.mutateAsync(invoice.id).then(() => navigate(base)),
+                        isEstimate ? 'estimates.deleted' : 'invoices.deleted',
+                      ))
                   }
                 >
                   <Trash2 className="mr-2 h-4 w-4 text-destructive" />

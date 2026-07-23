@@ -68,6 +68,8 @@ class PaymentServiceTest {
 
         lenient().when(invoiceRepository.findByIdAndTenantId(INVOICE_ID, TENANT_ID))
                 .thenReturn(Optional.of(invoice));
+        lenient().when(invoiceRepository.findByIdAndTenantIdForUpdate(INVOICE_ID, TENANT_ID))
+                .thenReturn(Optional.of(invoice));
         lenient().when(paymentRepository.save(any(Payment.class)))
                 .thenAnswer(inv -> inv.getArgument(0));
     }
@@ -140,6 +142,17 @@ class PaymentServiceTest {
         ArgumentCaptor<Payment> captor = ArgumentCaptor.forClass(Payment.class);
         verify(paymentRepository).save(captor.capture());
         assertThat(captor.getValue().getPaidOn()).isEqualTo(LocalDate.of(2026, 7, 22));
+    }
+
+    @Test
+    void zeroTotalInvoiceCanStillBeMarkedPaid() {
+        invoice.setTotal(BigDecimal.ZERO);
+
+        service.markRemainingPaid(INVOICE_ID);
+
+        assertThat(invoice.getStatus()).isEqualTo(InvoiceStatus.PAID);
+        assertThat(invoice.getPaidAt()).isNotNull();
+        verify(paymentRepository, never()).save(any(Payment.class));
     }
 
     @Test

@@ -89,6 +89,8 @@ class InvoiceServiceEstimateTest {
 
         lenient().when(invoiceRepository.findByIdAndTenantId(ESTIMATE_ID, TENANT_ID))
                 .thenReturn(Optional.of(estimate));
+        lenient().when(invoiceRepository.findByIdAndTenantIdForUpdate(ESTIMATE_ID, TENANT_ID))
+                .thenReturn(Optional.of(estimate));
         lenient().when(invoiceRepository.save(any(Invoice.class))).thenAnswer(inv -> inv.getArgument(0));
     }
 

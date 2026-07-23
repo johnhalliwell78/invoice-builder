@@ -403,7 +403,12 @@
       "approve": "Annehmen",
       "decline": "Ablehnen",
       "convert": "In Rechnung umwandeln"
-    }
+    },
+    "createdToast": "Angebot erstellt.",
+    "updated": "Angebot aktualisiert.",
+    "deleted": "Angebot gelöscht.",
+    "duplicated": "Angebot dupliziert — neuer Entwurf wird bearbeitet.",
+    "deleteConfirm": "Angebot {{number}} löschen? Dies kann nicht rückgängig gemacht werden."
   },
   "recurring": {
     "title": "Wiederkehrende Rechnungen",
