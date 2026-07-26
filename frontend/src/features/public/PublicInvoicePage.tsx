@@ -16,32 +16,62 @@ export default function PublicInvoicePage() {
   const [invoice, setInvoice] = useState<PublicInvoiceView | null>(null);
   const [error, setError] = useState(false);
   const [redirecting, setRedirecting] = useState(false);
+  const [confirming, setConfirming] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const load = useCallback(() => {
-    if (!token) return;
-    getPublicInvoice(token)
-      .then(setInvoice)
-      .catch(() => setError(true));
-  }, [token]);
+  const load = useCallback(
+    () =>
+      token
+        ? getPublicInvoice(token)
+            .then((fresh) => {
+              setInvoice(fresh);
+              return fresh;
+            })
+            .catch(() => {
+              setError(true);
+              return null;
+            })
+        : Promise.resolve(null),
+    [token],
+  );
 
-  useEffect(load, [load]);
+  useEffect(() => {
+    void load();
+  }, [load]);
 
   // Returning from Stripe. The redirect only tells us the shopper came back —
-  // the webhook is what actually books the payment, so re-read the invoice
-  // instead of assuming it is paid.
+  // the webhook is what actually books the payment, and it usually lands a
+  // second or two later. Until the ledger confirms, the invoice still looks
+  // unpaid, so we must NOT re-offer the pay button: that is how a shopper
+  // ends up charged twice.
   const paymentResult = searchParams.get('payment');
   useEffect(() => {
     if (!paymentResult) return;
     if (paymentResult === 'success') {
       toast.success(t('payments.public.thanks'));
-      load();
+      setConfirming(true);
+      // Poll briefly for the webhook to land; give up quietly and leave the
+      // button suppressed rather than risk a second charge.
+      let attempts = 0;
+      const tick = async () => {
+        attempts += 1;
+        const fresh = await load();
+        const settled = fresh != null && Number(fresh.amountPaid) > 0;
+        if (settled || attempts >= 6) {
+          if (settled) setConfirming(false);
+          return;
+        }
+        window.setTimeout(() => void tick(), 2000);
+      };
+      window.setTimeout(() => void tick(), 1500);
     } else if (paymentResult === 'cancelled') {
       toast.info(t('payments.public.cancelled'));
     }
     searchParams.delete('payment');
     setSearchParams(searchParams, { replace: true });
-  }, [paymentResult, load, t, searchParams, setSearchParams]);
+    // Runs once per return from Stripe; load/t/searchParams are stable enough here.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paymentResult]);
 
   async function pay() {
     if (!token) return;
@@ -82,7 +112,10 @@ export default function PublicInvoicePage() {
           </h1>
           <p className="text-sm text-muted-foreground">{invoice.issuer.name}</p>
         </div>
-        {invoice.paymentEnabled && (
+        {confirming && (
+          <span className="text-sm text-muted-foreground">{t('payments.public.confirming')}</span>
+        )}
+        {invoice.paymentEnabled && !confirming && (
           <Button size="lg" disabled={redirecting} onClick={() => void pay()}>
             <CreditCard className="mr-2 h-4 w-4" />
             {redirecting

@@ -481,7 +481,8 @@
       "redirecting": "Redirection…",
       "thanks": "Merci ! Votre paiement est en cours de confirmation.",
       "cancelled": "Paiement annulé — aucun montant n’a été débité.",
-      "failed": "Impossible de démarrer le paiement. Veuillez réessayer."
+      "failed": "Impossible de démarrer le paiement. Veuillez réessayer.",
+      "confirming": "Confirmation de votre paiement…"
     }
   }
 }

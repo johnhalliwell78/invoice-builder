@@ -120,6 +120,8 @@ public class PaymentService {
      *       so it can be refunded out of band.</li>
      *   <li>Idempotent on {@code externalId} — webhook redelivery is normal,
      *       and a unique index backs this check at the database level.</li>
+     *   <li>Rejects a currency that differs from the invoice's, rather than
+     *       adding foreign-denominated money to the ledger.</li>
      *   <li>Accepts any non-estimate document regardless of status, so a
      *       payment that lands after a manual mark-paid is still recorded
      *       rather than lost.</li>
@@ -129,8 +131,8 @@ public class PaymentService {
      */
     @Transactional
     public Optional<PaymentResponse> recordExternal(UUID invoiceId, BigDecimal amount,
-                                                    PaymentMethod method, String externalId,
-                                                    String note) {
+                                                    String currency, PaymentMethod method,
+                                                    String externalId, String note) {
         if (externalId != null && paymentRepository.existsByExternalId(externalId)) {
             return Optional.empty();
         }
@@ -140,6 +142,12 @@ public class PaymentService {
         if (invoice.getDocType() != DocType.INVOICE) {
             throw new AppException(ErrorCode.INVALID_STATE_TRANSITION,
                     "Payments only apply to invoices");
+        }
+        // Adding a USD amount to a EUR ledger would be silently wrong money.
+        if (currency != null && !currency.equalsIgnoreCase(invoice.getCurrency())) {
+            throw new AppException(ErrorCode.VALIDATION_FAILED,
+                    "Payment currency %s does not match invoice currency %s"
+                            .formatted(currency, invoice.getCurrency()));
         }
 
         Payment payment = new Payment();

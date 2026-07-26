@@ -75,11 +75,13 @@ describe('PublicInvoicePage', () => {
     expect(screen.queryByRole('button', { name: /Pay/i })).not.toBeInTheDocument();
   });
 
-  it('re-reads the invoice after returning from Stripe instead of trusting the redirect', async () => {
+  it('suppresses the pay button after returning from Stripe so a second click cannot double-charge', async () => {
     renderPage('/i/tok123?payment=success');
 
-    // Once on mount, once after the success return — the webhook is the source
-    // of truth, so the page refetches rather than assuming payment landed.
-    await waitFor(() => expect(getPublicInvoice).toHaveBeenCalledTimes(2));
+    // The webhook lands a second or two after the redirect, so the invoice
+    // still reads as unpaid. Re-offering "Pay" here is exactly how a shopper
+    // gets charged twice — the button must stay hidden while we confirm.
+    await screen.findByText(/Confirming your payment/i);
+    expect(screen.queryByRole('button', { name: /Pay/i })).not.toBeInTheDocument();
   });
 });

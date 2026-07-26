@@ -53,6 +53,15 @@ class MoneyUnitsTest {
     }
 
     @Test
+    void representabilityMatchesWhatCanActuallyBeCharged() {
+        assertThat(MoneyUnits.isRepresentable(new BigDecimal("119.00"), "EUR")).isTrue();
+        // NUMERIC(15,2) totals are fine for JPY only when the cents are zero.
+        assertThat(MoneyUnits.isRepresentable(new BigDecimal("5000.00"), "JPY")).isTrue();
+        assertThat(MoneyUnits.isRepresentable(new BigDecimal("49.95"), "JPY")).isFalse();
+        assertThat(MoneyUnits.isRepresentable(new BigDecimal("1.005"), "EUR")).isFalse();
+    }
+
+    @Test
     void unknownCurrenciesDefaultToTwoDecimals() {
         assertThat(MoneyUnits.exponent("ZZZ")).isEqualTo(2);
         assertThat(MoneyUnits.exponent(null)).isEqualTo(2);

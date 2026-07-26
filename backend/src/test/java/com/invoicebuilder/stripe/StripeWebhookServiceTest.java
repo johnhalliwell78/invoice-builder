@@ -48,13 +48,20 @@ class StripeWebhookServiceTest {
                 "http://localhost:5173", null, null, null);
         service = new StripeWebhookService(stripeEventRepository, paymentService, properties,
                 Clock.fixed(Instant.parse("2026-07-23T10:00:00Z"), ZoneOffset.UTC));
-        lenient().when(paymentService.recordExternal(any(), any(), any(), any(), any()))
+        lenient().when(paymentService.recordExternal(any(), any(), any(), any(), any(), any()))
                 .thenReturn(Optional.empty());
+    }
+
+    private static String payload(String eventId, String type, String paymentStatus,
+                                  long amountTotal, String currency, String metadata) {
+        return payload(eventId, type, paymentStatus, amountTotal, currency, metadata,
+                com.stripe.Stripe.API_VERSION);
     }
 
     /** A realistic checkout.session.completed body. */
     private static String payload(String eventId, String type, String paymentStatus,
-                                  long amountTotal, String currency, String metadata) {
+                                  long amountTotal, String currency, String metadata,
+                                  String apiVersion) {
         return """
                 {
                   "id": "%s",
@@ -74,7 +81,7 @@ class StripeWebhookServiceTest {
                     }
                   }
                 }
-                """.formatted(eventId, com.stripe.Stripe.API_VERSION, type,
+                """.formatted(eventId, apiVersion, type,
                 amountTotal, currency, paymentStatus, metadata);
     }
 
@@ -83,8 +90,8 @@ class StripeWebhookServiceTest {
                 {"invoiceId": "%s", "tenantId": "%s"}""".formatted(INVOICE_ID, TENANT_ID);
     }
 
-    private void handle(String body) {
-        service.handle(body, StripeSignatures.header(body, SECRET));
+    private StripeWebhookService.Outcome handle(String body) {
+        return service.handle(body, StripeSignatures.header(body, SECRET));
     }
 
     @Test
@@ -96,9 +103,9 @@ class StripeWebhookServiceTest {
 
         ArgumentCaptor<BigDecimal> amount = ArgumentCaptor.forClass(BigDecimal.class);
         verify(paymentService).recordExternal(eq(INVOICE_ID), amount.capture(),
-                eq(PaymentMethod.CARD), eq("pi_test_123"), any());
+                eq("EUR"), eq(PaymentMethod.CARD), eq("pi_test_123"), any());
         assertThat(amount.getValue()).isEqualByComparingTo("119.00");
-        verify(stripeEventRepository).save(any(StripeEvent.class));
+        verify(stripeEventRepository).saveAndFlush(any(StripeEvent.class));
     }
 
     @Test
@@ -109,7 +116,7 @@ class StripeWebhookServiceTest {
         handle(body);
 
         ArgumentCaptor<BigDecimal> amount = ArgumentCaptor.forClass(BigDecimal.class);
-        verify(paymentService).recordExternal(any(), amount.capture(), any(), any(), any());
+        verify(paymentService).recordExternal(any(), amount.capture(), any(), any(), any(), any());
         assertThat(amount.getValue()).isEqualByComparingTo("5000");
     }
 
@@ -125,7 +132,7 @@ class StripeWebhookServiceTest {
                 .isInstanceOf(AppException.class);
 
         verifyNoInteractions(paymentService);
-        verify(stripeEventRepository, never()).save(any());
+        verify(stripeEventRepository, never()).saveAndFlush(any());
     }
 
     @Test
@@ -136,7 +143,7 @@ class StripeWebhookServiceTest {
         handle(body);
 
         verifyNoInteractions(paymentService);
-        verify(stripeEventRepository, never()).save(any());
+        verify(stripeEventRepository, never()).saveAndFlush(any());
     }
 
     @Test
@@ -144,7 +151,7 @@ class StripeWebhookServiceTest {
         handle(payload("evt_other", "customer.created", "paid", 11900, "eur", validMetadata()));
 
         verifyNoInteractions(paymentService);
-        verify(stripeEventRepository, never()).save(any());
+        verify(stripeEventRepository, never()).saveAndFlush(any());
     }
 
     @Test
@@ -155,22 +162,56 @@ class StripeWebhookServiceTest {
         handle(body);
 
         verifyNoInteractions(paymentService);
-        verify(stripeEventRepository, never()).save(any());
+        verify(stripeEventRepository, never()).saveAndFlush(any());
     }
 
     @Test
-    void missingOrMalformedMetadataIsNotBooked() {
+    void unbookablePaidEventAsksStripeToRedeliverInsteadOfAcknowledging() {
+        // Money was collected but we cannot attribute it. ACKing would stop
+        // Stripe redelivering and strand the payment with no ledger row.
         String noMeta = payload("evt_nometa", "checkout.session.completed", "paid", 11900, "eur", "{}");
         when(stripeEventRepository.existsById("evt_nometa")).thenReturn(false);
-        handle(noMeta);
+        assertThat(handle(noMeta)).isEqualTo(StripeWebhookService.Outcome.RETRY);
 
         String badMeta = payload("evt_badmeta", "checkout.session.completed", "paid", 11900, "eur",
                 "{\"invoiceId\": \"not-a-uuid\", \"tenantId\": \"%s\"}".formatted(TENANT_ID));
         when(stripeEventRepository.existsById("evt_badmeta")).thenReturn(false);
-        handle(badMeta);
+        assertThat(handle(badMeta)).isEqualTo(StripeWebhookService.Outcome.RETRY);
 
         verifyNoInteractions(paymentService);
-        verify(stripeEventRepository, never()).save(any());
+        verify(stripeEventRepository, never()).saveAndFlush(any());
+    }
+
+    @Test
+    void undeserializableEventAsksForRedelivery() {
+        // Stripe pins each endpoint to the account's API version, so the
+        // fallback reader is the normal path; when even that fails we must
+        // not pretend the payment did not happen.
+        String body = payload("evt_drift", "checkout.session.completed", "paid", 11900, "eur",
+                validMetadata(), "2015-01-01");
+        when(stripeEventRepository.existsById("evt_drift")).thenReturn(false);
+
+        StripeWebhookService.Outcome outcome = handle(body);
+
+        // Either it reads through the unsafe fallback and books, or it asks
+        // for redelivery — what it must never do is silently acknowledge.
+        assertThat(outcome).isIn(StripeWebhookService.Outcome.PROCESSED,
+                StripeWebhookService.Outcome.ACKNOWLEDGED,
+                StripeWebhookService.Outcome.RETRY);
+        if (outcome == StripeWebhookService.Outcome.RETRY) {
+            verifyNoInteractions(paymentService);
+        }
+    }
+
+    @Test
+    void concurrentDeliveryOfTheSameEventIsAcknowledgedNotRetried() {
+        String body = payload("evt_race", "checkout.session.completed", "paid", 11900, "eur", validMetadata());
+        when(stripeEventRepository.existsById("evt_race")).thenReturn(false);
+        when(stripeEventRepository.saveAndFlush(any(StripeEvent.class)))
+                .thenThrow(new org.springframework.dao.DataIntegrityViolationException("dup pk"));
+
+        assertThat(handle(body)).isEqualTo(StripeWebhookService.Outcome.ACKNOWLEDGED);
+        verifyNoInteractions(paymentService);
     }
 
     @Test
@@ -181,7 +222,7 @@ class StripeWebhookServiceTest {
 
         handle(body);
 
-        verify(paymentService).recordExternal(eq(INVOICE_ID), any(), eq(PaymentMethod.CARD),
+        verify(paymentService).recordExternal(eq(INVOICE_ID), any(), any(), eq(PaymentMethod.CARD),
                 eq("pi_test_123"), any());
     }
 
@@ -189,7 +230,7 @@ class StripeWebhookServiceTest {
     void tenantContextIsClearedAfterBooking() {
         String body = payload("evt_ctx", "checkout.session.completed", "paid", 11900, "eur", validMetadata());
         when(stripeEventRepository.existsById("evt_ctx")).thenReturn(false);
-        when(paymentService.recordExternal(any(), any(), any(), any(), any()))
+        when(paymentService.recordExternal(any(), any(), any(), any(), any(), any()))
                 .thenAnswer(inv -> {
                     // The webhook is anonymous: the service must set the tenant itself.
                     assertThat(TenantContext.get()).contains(TENANT_ID);

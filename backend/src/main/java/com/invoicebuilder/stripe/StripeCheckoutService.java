@@ -15,17 +15,28 @@ import com.stripe.model.checkout.Session;
 import com.stripe.param.checkout.SessionCreateParams;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Limit;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.UUID;
 
 /**
  * Creates Stripe Checkout Sessions for invoice recipients. The hosted page
  * means no card data reaches this application.
+ *
+ * <p>Deliberately <strong>not</strong> {@code @Transactional}: the outbound
+ * Stripe call takes hundreds of milliseconds, and holding a pooled database
+ * connection across it would let a handful of anonymous callers exhaust the
+ * pool and stall the whole application — including the webhook that books
+ * money. Each repository call gets its own short transaction instead.</p>
  */
 @Service
 public class StripeCheckoutService {
@@ -40,25 +51,57 @@ public class StripeCheckoutService {
 
     private final InvoiceRepository invoiceRepository;
     private final CustomerRepository customerRepository;
+    private final StripeCheckoutSessionRepository sessionRepository;
     private final AppProperties appProperties;
+    private final StripeClient client;
+    private final Clock clock;
 
     public StripeCheckoutService(InvoiceRepository invoiceRepository,
                                  CustomerRepository customerRepository,
-                                 AppProperties appProperties) {
+                                 StripeCheckoutSessionRepository sessionRepository,
+                                 AppProperties appProperties,
+                                 Clock clock) {
         this.invoiceRepository = invoiceRepository;
         this.customerRepository = customerRepository;
+        this.sessionRepository = sessionRepository;
         this.appProperties = appProperties;
-    }
-
-    public boolean enabled() {
-        return appProperties.stripe() != null && appProperties.stripe().enabled();
+        this.clock = clock;
+        // Built once: the client owns connection state, so per-request
+        // construction would repeat TLS setup on every checkout.
+        this.client = appProperties.stripe() != null && appProperties.stripe().enabled()
+                ? new StripeClient(appProperties.stripe().secretKey())
+                : null;
     }
 
     /**
-     * Creates a Checkout Session for the invoice's remaining balance and
-     * returns the hosted payment URL.
+     * Online payment needs <em>both</em> Stripe keys — see
+     * {@link AppProperties.Stripe#enabled()}.
      */
-    @Transactional(readOnly = true)
+    public boolean enabled() {
+        return client != null;
+    }
+
+    /** Whether this invoice could be paid online right now (drives the UI button). */
+    public boolean payableNow(Invoice invoice) {
+        if (!enabled() || invoice.getDocType() != DocType.INVOICE
+                || !PAYABLE.contains(invoice.getStatus())) {
+            return false;
+        }
+        BigDecimal balance = invoice.getTotal().subtract(invoice.getAmountPaid());
+        // A balance that cannot be expressed in the currency's minor unit (a
+        // fractional JPY amount, say) is unchargeable — hide the button
+        // rather than offering one that fails on every click.
+        return balance.compareTo(BigDecimal.ZERO) > 0
+                && MoneyUnits.isRepresentable(balance, invoice.getCurrency());
+    }
+
+    /**
+     * Returns a hosted payment URL for the invoice's remaining balance.
+     *
+     * <p>Reuses a still-open session when one exists: Stripe will not let a
+     * single session be paid twice, so reuse is what actually stops a second
+     * click from becoming a second charge.</p>
+     */
     public String createCheckoutUrl(String publicToken) {
         if (!enabled()) {
             throw new AppException(ErrorCode.INVOICE_NOT_FOUND, "Online payment is not enabled");
@@ -69,6 +112,44 @@ public class StripeCheckoutService {
 
         String currency = invoice.getCurrency().toLowerCase(Locale.ROOT);
         long amount = MoneyUnits.toMinorUnits(balance, invoice.getCurrency());
+
+        String reused = reusableSessionUrl(invoice.getId(), amount, currency);
+        return reused != null ? reused : createSession(invoice, amount, currency, publicToken);
+    }
+
+    /**
+     * @return the URL of a still-open session for the same amount, or null if
+     *         a fresh session is needed
+     */
+    private String reusableSessionUrl(UUID invoiceId, long amount, String currency) {
+        List<StripeCheckoutSession> candidates =
+                sessionRepository.findByInvoiceIdAndExpiresAtAfterOrderByCreatedAtDesc(
+                        invoiceId, OffsetDateTime.now(clock), Limit.of(3));
+        for (StripeCheckoutSession candidate : candidates) {
+            if (candidate.getAmountMinor() != amount || !candidate.getCurrency().equals(currency)) {
+                continue;
+            }
+            Session live;
+            try {
+                live = client.v1().checkout().sessions().retrieve(candidate.getId());
+            } catch (StripeException e) {
+                log.warn("Could not retrieve Stripe session {}", candidate.getId(), e);
+                continue;
+            }
+            if ("open".equals(live.getStatus())) {
+                return candidate.getUrl();
+            }
+            if ("complete".equals(live.getStatus())) {
+                // Money is collected or in flight; handing out a second
+                // session here is exactly the double charge we prevent.
+                throw new AppException(ErrorCode.INVALID_STATE_TRANSITION,
+                        "A payment for this invoice is already being processed");
+            }
+        }
+        return null;
+    }
+
+    private String createSession(Invoice invoice, long amount, String currency, String publicToken) {
         String baseUrl = trimTrailingSlash(appProperties.publicBaseUrl());
         String returnUrl = baseUrl + "/i/" + publicToken;
 
@@ -96,22 +177,20 @@ public class StripeCheckoutService {
                         .build())
                 .build();
 
+        Session session;
         try {
-            Session session = client().v1().checkout().sessions().create(params);
-            return session.getUrl();
+            session = client.v1().checkout().sessions().create(params);
         } catch (StripeException e) {
             log.error("Stripe checkout session creation failed for invoice {}", invoice.getId(), e);
             throw new AppException(ErrorCode.INTERNAL_ERROR, "Could not start the payment");
         }
-    }
 
-    /** Whether this invoice could be paid online right now (drives the UI button). */
-    public boolean payableNow(Invoice invoice) {
-        if (!enabled() || invoice.getDocType() != DocType.INVOICE
-                || !PAYABLE.contains(invoice.getStatus())) {
-            return false;
-        }
-        return invoice.getTotal().subtract(invoice.getAmountPaid()).compareTo(BigDecimal.ZERO) > 0;
+        OffsetDateTime expiresAt = session.getExpiresAt() != null
+                ? OffsetDateTime.ofInstant(Instant.ofEpochSecond(session.getExpiresAt()), clock.getZone())
+                : OffsetDateTime.now(clock).plusHours(24);
+        sessionRepository.save(new StripeCheckoutSession(session.getId(), invoice.getTenantId(),
+                invoice.getId(), amount, currency, session.getUrl(), expiresAt, OffsetDateTime.now(clock)));
+        return session.getUrl();
     }
 
     /** Validates the invoice is payable and returns what is still owed. */
@@ -134,10 +213,6 @@ public class StripeCheckoutService {
                 .map(Customer::getEmail)
                 .filter(email -> email != null && !email.isBlank())
                 .orElse(null);
-    }
-
-    private StripeClient client() {
-        return new StripeClient(appProperties.stripe().secretKey());
     }
 
     private static String trimTrailingSlash(String url) {

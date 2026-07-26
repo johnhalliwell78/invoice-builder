@@ -57,8 +57,21 @@ Anything else is acknowledged and ignored.
 
 ## How it behaves
 
+- **Both keys are required.** A secret key without a webhook secret would
+  charge cards while every delivery that books them is rejected, so the
+  feature stays off until both are set.
 - **Partial payments:** checkout always charges the *remaining balance*, so a
   recipient can pay after a partial bank transfer was recorded.
+- **Second "Pay" click:** the still-open Checkout Session is reused rather
+  than a new one created, and Stripe will not charge one session twice. After
+  returning from Stripe the button is hidden until the ledger confirms.
+- **Anonymous throttle:** public endpoints are rate limited per client IP
+  (`app.rate-limit.public-requests-per-minute`, default 30). The webhook is
+  exempt — it authenticates by signature and must never be dropped.
+- **Deliveries we cannot book** (unreadable event, missing metadata) answer
+  503 so Stripe retries and the failure is visible in the dashboard, instead
+  of silently acknowledging money we did not record.
+- **Currency is verified** against the invoice before booking.
 - **Retries and duplicates:** Stripe redelivers events. The event id is a
   primary key and the PaymentIntent id is uniquely indexed, so a payment
   cannot be booked twice.

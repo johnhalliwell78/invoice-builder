@@ -156,6 +156,24 @@ class PaymentServiceTest {
     }
 
     @Test
+    void externalPaymentInAnotherCurrencyIsRejected() {
+        // Adding USD to a EUR ledger would be silently wrong money.
+        assertThatThrownBy(() -> service.recordExternal(INVOICE_ID, new BigDecimal("50.00"),
+                "USD", PaymentMethod.CARD, "pi_x", "Stripe"))
+                .isInstanceOf(AppException.class);
+        assertThat(invoice.getAmountPaid()).isEqualByComparingTo("0");
+    }
+
+    @Test
+    void externalPaymentInTheInvoiceCurrencyIsBooked() {
+        service.recordExternal(INVOICE_ID, new BigDecimal("200.00"), "eur",
+                PaymentMethod.CARD, "pi_ok", "Stripe");
+
+        assertThat(invoice.getAmountPaid()).isEqualByComparingTo("200.00");
+        assertThat(invoice.getStatus()).isEqualTo(InvoiceStatus.PAID);
+    }
+
+    @Test
     void markRemainingPaidRecordsTheBalanceAsPayment() {
         invoice.setAmountPaid(new BigDecimal("80.00"));
 

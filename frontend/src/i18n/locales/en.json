@@ -481,7 +481,8 @@
       "redirecting": "Redirecting…",
       "thanks": "Thank you! Your payment is being confirmed.",
       "cancelled": "Payment cancelled — nothing was charged.",
-      "failed": "Could not start the payment. Please try again."
+      "failed": "Could not start the payment. Please try again.",
+      "confirming": "Confirming your payment…"
     }
   }
 }

@@ -32,7 +32,7 @@ class LogoStorageTest {
                 "http://localhost:5173",
                 new AppProperties.Storage(tempDir.resolve("pdfs"), tempDir.resolve("logos")),
                 new AppProperties.Cors(List.of()),
-                new AppProperties.RateLimit(5, Duration.ofMinutes(15), 100));
+                new AppProperties.RateLimit(5, Duration.ofMinutes(15), 100, 30));
         storage = new LogoStorage(properties);
         tenant = new Tenant();
         tenant.setId(UUID.randomUUID());

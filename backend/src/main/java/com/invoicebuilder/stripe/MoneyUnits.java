@@ -38,6 +38,20 @@ public final class MoneyUnits {
     }
 
     /**
+     * Whether {@code amount} can be charged exactly in {@code currency} — i.e.
+     * it has no precision below the currency's minor unit. A fractional JPY
+     * amount cannot, and offering to charge it would fail every time.
+     */
+    public static boolean isRepresentable(BigDecimal amount, String currency) {
+        try {
+            toMinorUnits(amount, currency);
+            return true;
+        } catch (AppException e) {
+            return false;
+        }
+    }
+
+    /**
      * Converts a decimal amount to Stripe minor units. Refuses to round: a
      * request that would silently charge a different amount than the invoice
      * says is a bug, not something to paper over.

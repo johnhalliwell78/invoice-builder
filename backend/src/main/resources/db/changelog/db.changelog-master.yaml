@@ -37,3 +37,5 @@ databaseChangeLog:
       file: db/changelog/0017-payment.yaml
   - include:
       file: db/changelog/0018-stripe.yaml
+  - include:
+      file: db/changelog/0019-stripe-session.yaml

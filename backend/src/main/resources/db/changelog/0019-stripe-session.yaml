@@ -1,0 +1,65 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0019-stripe-checkout-session
+      author: invoice-builder
+      changes:
+        # Remembers the live Checkout Session per invoice so a second "Pay"
+        # click reuses it instead of minting a new one. Stripe refuses to
+        # charge a single session twice, so reuse is what actually prevents
+        # a double charge.
+        - createTable:
+            tableName: stripe_checkout_session
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(255)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: invoice_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_stripe_session_invoice
+                    referencedTableName: invoice
+                    referencedColumnNames: id
+              - column:
+                  name: amount_minor
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: currency
+                  type: VARCHAR(3)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: url
+                  type: TEXT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: expires_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  defaultValueComputed: now()
+                  constraints:
+                    nullable: false
+        - createIndex:
+            tableName: stripe_checkout_session
+            indexName: idx_stripe_session_invoice
+            columns:
+              - column:
+                  name: invoice_id
+              - column:
+                  name: expires_at

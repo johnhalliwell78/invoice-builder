@@ -119,6 +119,7 @@ app:
     login-attempts: 5
     login-window: PT15M
     api-requests-per-minute: 100
+    public-requests-per-minute: 30
 
 logging:
   level:

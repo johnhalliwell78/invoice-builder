@@ -74,7 +74,7 @@ class UserServiceTest {
                 "http://localhost:5173",
                 new AppProperties.Storage(Path.of("./build/tmp"), Path.of("./build/tmp")),
                 new AppProperties.Cors(List.of()),
-                new AppProperties.RateLimit(5, Duration.ofMinutes(15), 100));
+                new AppProperties.RateLimit(5, Duration.ofMinutes(15), 100, 30));
         service = new UserService(userRepository, tenantRepository, passwordEncoder,
                 emailService, refreshTokenService, messages, properties,
                 Clock.fixed(NOW, ZoneOffset.UTC));

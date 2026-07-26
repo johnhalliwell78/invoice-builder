@@ -34,9 +34,9 @@ class StripePaymentIT extends IntegrationTestBase {
         Invoice invoice = createDocument(tenant, customer, DocType.INVOICE, "200.00", InvoiceStatus.SENT);
 
         TenantContext.set(tenant.getId());
-        Optional<?> first = paymentService.recordExternal(invoice.getId(), new BigDecimal("200.00"),
+        Optional<?> first = paymentService.recordExternal(invoice.getId(), new BigDecimal("200.00"), "EUR",
                 PaymentMethod.CARD, "pi_dup_test", "Stripe cs_test");
-        Optional<?> replay = paymentService.recordExternal(invoice.getId(), new BigDecimal("200.00"),
+        Optional<?> replay = paymentService.recordExternal(invoice.getId(), new BigDecimal("200.00"), "EUR",
                 PaymentMethod.CARD, "pi_dup_test", "Stripe cs_test");
 
         assertThat(first).isPresent();
@@ -61,7 +61,7 @@ class StripePaymentIT extends IntegrationTestBase {
         paymentService.markRemainingPaid(invoice.getId());
         // Stripe then confirms money it really did collect — losing it would
         // make our books disagree with the processor.
-        Optional<?> booked = paymentService.recordExternal(invoice.getId(), new BigDecimal("100.00"),
+        Optional<?> booked = paymentService.recordExternal(invoice.getId(), new BigDecimal("100.00"), "EUR",
                 PaymentMethod.CARD, "pi_late_test", "Stripe cs_late");
 
         assertThat(booked).isPresent();

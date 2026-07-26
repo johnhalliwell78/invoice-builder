@@ -3,6 +3,7 @@ package com.invoicebuilder.stripe;
 import com.invoicebuilder.common.dto.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -48,7 +49,11 @@ public class StripePublicController {
     public ResponseEntity<Void> webhook(@RequestBody String payload,
                                         @RequestHeader(name = "Stripe-Signature", required = false)
                                         String signature) {
-        webhookService.handle(payload, signature);
-        return ResponseEntity.ok().build();
+        StripeWebhookService.Outcome outcome = webhookService.handle(payload, signature);
+        // A 2xx tells Stripe to stop redelivering. Only say that when the
+        // payment is genuinely accounted for.
+        return outcome == StripeWebhookService.Outcome.RETRY
+                ? ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).build()
+                : ResponseEntity.ok().build();
     }
 }

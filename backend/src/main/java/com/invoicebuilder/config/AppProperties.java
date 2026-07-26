@@ -56,8 +56,14 @@ public record AppProperties(
             String webhookSecret
     ) {
 
+        /**
+         * Both keys are required. A secret key alone would charge cards while
+         * every webhook that books them is rejected — money collected and
+         * never recorded.
+         */
         public boolean enabled() {
-            return secretKey != null && !secretKey.isBlank();
+            return secretKey != null && !secretKey.isBlank()
+                    && webhookSecret != null && !webhookSecret.isBlank();
         }
     }
 
@@ -75,7 +81,9 @@ public record AppProperties(
     public record RateLimit(
             int loginAttempts,
             @NotNull Duration loginWindow,
-            int apiRequestsPerMinute
+            int apiRequestsPerMinute,
+            /** Per-IP ceiling for anonymous /api/v1/public/** traffic. */
+            int publicRequestsPerMinute
     ) {
     }
 }

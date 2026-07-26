@@ -19,14 +19,21 @@ import java.io.IOException;
 import java.time.Duration;
 
 /**
- * Per-user API throttle (default 100 requests/minute). Runs after the JWT
- * filter so the authenticated principal is available; anonymous and non-API
- * requests are skipped (login already has its own per-email limiter).
+ * Two throttles. Authenticated traffic is limited per user (default 100/min).
+ * Anonymous traffic under {@code /api/v1/public/**} is limited per client IP,
+ * because those endpoints need no credentials yet can be expensive — starting
+ * a Stripe Checkout session performs an outbound API call and creates a real
+ * Session on the operator's account.
+ *
+ * <p>The Stripe webhook is deliberately exempt: throttling it would drop
+ * deliveries that book money, and it authenticates itself by signature.</p>
  */
 @Component
 public class RateLimitFilter extends OncePerRequestFilter {
 
     private static final Duration WINDOW = Duration.ofMinutes(1);
+    private static final String PUBLIC_PREFIX = "/api/v1/public/";
+    private static final String WEBHOOK_PATH = "/api/v1/public/stripe/webhook";
 
     private final RateLimitService rateLimitService;
     private final AppProperties appProperties;
@@ -41,17 +48,37 @@ public class RateLimitFilter extends OncePerRequestFilter {
                                     @NonNull HttpServletResponse response,
                                     @NonNull FilterChain chain) throws ServletException, IOException {
         UserPrincipal principal = currentPrincipal();
-        if (principal == null) {
+        String key;
+        int limit;
+        if (principal != null) {
+            key = "rl:api:" + principal.userId();
+            limit = appProperties.rateLimit().apiRequestsPerMinute();
+        } else if (isThrottledPublicPath(request)) {
+            key = "rl:public:" + clientIp(request);
+            limit = appProperties.rateLimit().publicRequestsPerMinute();
+        } else {
             chain.doFilter(request, response);
             return;
         }
-        String key = "rl:api:" + principal.userId();
-        int limit = appProperties.rateLimit().apiRequestsPerMinute();
         if (!rateLimitService.tryAcquire(key, limit, WINDOW)) {
             writeTooManyRequests(response, request.getRequestURI());
             return;
         }
         chain.doFilter(request, response);
+    }
+
+    private static boolean isThrottledPublicPath(HttpServletRequest request) {
+        String path = request.getRequestURI();
+        return path != null && path.startsWith(PUBLIC_PREFIX) && !path.equals(WEBHOOK_PATH);
+    }
+
+    /** Honours X-Forwarded-For's first hop when running behind a proxy. */
+    private static String clientIp(HttpServletRequest request) {
+        String forwarded = request.getHeader("X-Forwarded-For");
+        if (forwarded != null && !forwarded.isBlank()) {
+            return forwarded.split(",", 2)[0].trim();
+        }
+        return request.getRemoteAddr();
     }
 
     private static UserPrincipal currentPrincipal() {

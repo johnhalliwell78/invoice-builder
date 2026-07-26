@@ -37,7 +37,7 @@ class EmailServiceTest {
                 "http://localhost:5173",
                 new AppProperties.Storage(Path.of("./build/test-storage"), Path.of("./build/test-storage")),
                 new AppProperties.Cors(List.of("http://localhost:5173")),
-                new AppProperties.RateLimit(5, Duration.ofMinutes(15), 100));
+                new AppProperties.RateLimit(5, Duration.ofMinutes(15), 100, 30));
         service = new EmailService(mailSender, properties);
         mime = new MimeMessage(Session.getInstance(new Properties()));
         when(mailSender.createMimeMessage()).thenReturn(mime);
