@@ -31,7 +31,9 @@ public record PublicInvoiceResponse(
         LocalDate dueDate,
         String notes,
         String terms,
-        List<LineItemResponse> lineItems
+        List<LineItemResponse> lineItems,
+        /** Whether the recipient can pay this document online right now. */
+        boolean paymentEnabled
 ) {
 
     public record Issuer(String name, Address address, String taxId) {
@@ -41,6 +43,11 @@ public record PublicInvoiceResponse(
     }
 
     public static PublicInvoiceResponse of(Invoice invoice, Tenant tenant, Customer customer) {
+        return of(invoice, tenant, customer, false);
+    }
+
+    public static PublicInvoiceResponse of(Invoice invoice, Tenant tenant, Customer customer,
+                                           boolean paymentEnabled) {
         return new PublicInvoiceResponse(
                 new Issuer(tenant.getName(), tenant.getAddress(), tenant.getTaxId()),
                 new Recipient(customer.getName(), customer.getAddress()),
@@ -57,7 +64,8 @@ public record PublicInvoiceResponse(
                 invoice.getDueDate(),
                 invoice.getNotes(),
                 invoice.getTerms(),
-                invoice.getLineItems().stream().map(LineItemResponse::from).toList()
+                invoice.getLineItems().stream().map(LineItemResponse::from).toList(),
+                paymentEnabled
         );
     }
 }

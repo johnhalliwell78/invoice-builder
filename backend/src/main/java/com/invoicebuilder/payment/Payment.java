@@ -50,6 +50,10 @@ public class Payment {
     @Column(length = 500)
     private String note;
 
+    /** Stripe PaymentIntent id for card payments; null for manual entries. */
+    @Column(name = "external_id", length = 255)
+    private String externalId;
+
     @Column(name = "created_by")
     private UUID createdBy;
 
@@ -107,6 +111,14 @@ public class Payment {
 
     public void setNote(String note) {
         this.note = note;
+    }
+
+    public String getExternalId() {
+        return externalId;
+    }
+
+    public void setExternalId(String externalId) {
+        this.externalId = externalId;
     }
 
     public UUID getCreatedBy() {

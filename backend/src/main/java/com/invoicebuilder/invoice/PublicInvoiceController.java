@@ -8,6 +8,7 @@ import com.invoicebuilder.customer.CustomerRepository;
 import com.invoicebuilder.invoice.dto.PublicInvoiceResponse;
 import com.invoicebuilder.notification.NotificationEvent;
 import com.invoicebuilder.notification.NotificationType;
+import com.invoicebuilder.stripe.StripeCheckoutService;
 import com.invoicebuilder.tenant.Tenant;
 import com.invoicebuilder.tenant.TenantRepository;
 import io.swagger.v3.oas.annotations.Operation;
@@ -38,13 +39,16 @@ public class PublicInvoiceController {
     private final TenantRepository tenantRepository;
     private final CustomerRepository customerRepository;
     private final ApplicationEventPublisher eventPublisher;
+    private final StripeCheckoutService checkoutService;
     private final Clock clock;
 
     public PublicInvoiceController(InvoiceRepository invoiceRepository,
                                    TenantRepository tenantRepository,
                                    CustomerRepository customerRepository,
                                    ApplicationEventPublisher eventPublisher,
+                                   StripeCheckoutService checkoutService,
                                    Clock clock) {
+        this.checkoutService = checkoutService;
         this.invoiceRepository = invoiceRepository;
         this.tenantRepository = tenantRepository;
         this.customerRepository = customerRepository;
@@ -73,6 +77,7 @@ public class PublicInvoiceController {
         Customer customer = customerRepository.findById(invoice.getCustomerId())
                 .orElseThrow(() -> new AppException(ErrorCode.CUSTOMER_NOT_FOUND, "Customer not found"));
 
-        return ApiResponse.of(PublicInvoiceResponse.of(invoice, tenant, customer));
+        return ApiResponse.of(PublicInvoiceResponse.of(invoice, tenant, customer,
+                checkoutService.payableNow(invoice)));
     }
 }

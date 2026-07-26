@@ -70,6 +70,8 @@ class UserServiceTest {
                 new AppProperties.Jwt("0123456789abcdef0123456789abcdef", Duration.ofMinutes(15), Duration.ofDays(7), "test"),
                 new AppProperties.OAuth2("http://localhost:5173/auth/oauth2/callback", "http://localhost:5173/login"),
                 new AppProperties.Sendgrid("", "noreply@test.local", "Test"),
+                null,
+                "http://localhost:5173",
                 new AppProperties.Storage(Path.of("./build/tmp"), Path.of("./build/tmp")),
                 new AppProperties.Cors(List.of()),
                 new AppProperties.RateLimit(5, Duration.ofMinutes(15), 100));

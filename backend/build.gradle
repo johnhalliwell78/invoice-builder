@@ -53,6 +53,9 @@ dependencies {
     // Email
     implementation libs.sendgrid.java
 
+    // Payments
+    implementation libs.stripe.java
+
     // Rate limiting
     implementation libs.bucket4j.core
     implementation libs.bucket4j.redis

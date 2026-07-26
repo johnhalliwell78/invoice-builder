@@ -19,6 +19,9 @@ bucket4j = "8.10.1"
 # QR code generation
 zxing = "3.5.3"
 
+# Payments
+stripe = "33.1.1"
+
 # Test
 testcontainers = "1.20.4"
 restAssured = "5.5.0"
@@ -55,6 +58,9 @@ itext-bouncy-castle = { module = "com.itextpdf:bouncy-castle-adapter", version.r
 
 # --- Email ---
 sendgrid-java = { module = "com.sendgrid:sendgrid-java", version.ref = "sendgrid" }
+
+# --- Payments ---
+stripe-java = { module = "com.stripe:stripe-java", version.ref = "stripe" }
 
 # --- Rate limiting ---
 bucket4j-core = { module = "com.bucket4j:bucket4j-core", version.ref = "bucket4j" }

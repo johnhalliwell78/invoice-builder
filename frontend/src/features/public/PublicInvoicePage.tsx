@@ -1,8 +1,11 @@
-import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useCallback, useEffect, useState } from 'react';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
+import { CreditCard } from 'lucide-react';
 
-import { getPublicInvoice, type PublicInvoiceView } from '@/api/invoices';
+import { getPublicInvoice, startPublicCheckout, type PublicInvoiceView } from '@/api/invoices';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { StatusBadge } from '@/features/invoices/StatusBadge';
 import { formatCurrency, formatDate } from '@/lib/format';
@@ -12,13 +15,44 @@ export default function PublicInvoicePage() {
   const { token } = useParams<{ token: string }>();
   const [invoice, setInvoice] = useState<PublicInvoiceView | null>(null);
   const [error, setError] = useState(false);
+  const [redirecting, setRedirecting] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  useEffect(() => {
+  const load = useCallback(() => {
     if (!token) return;
     getPublicInvoice(token)
       .then(setInvoice)
       .catch(() => setError(true));
   }, [token]);
+
+  useEffect(load, [load]);
+
+  // Returning from Stripe. The redirect only tells us the shopper came back —
+  // the webhook is what actually books the payment, so re-read the invoice
+  // instead of assuming it is paid.
+  const paymentResult = searchParams.get('payment');
+  useEffect(() => {
+    if (!paymentResult) return;
+    if (paymentResult === 'success') {
+      toast.success(t('payments.public.thanks'));
+      load();
+    } else if (paymentResult === 'cancelled') {
+      toast.info(t('payments.public.cancelled'));
+    }
+    searchParams.delete('payment');
+    setSearchParams(searchParams, { replace: true });
+  }, [paymentResult, load, t, searchParams, setSearchParams]);
+
+  async function pay() {
+    if (!token) return;
+    setRedirecting(true);
+    try {
+      window.location.href = await startPublicCheckout(token);
+    } catch {
+      setRedirecting(false);
+      toast.error(t('payments.public.failed'));
+    }
+  }
 
   if (error) {
     return (
@@ -48,6 +82,20 @@ export default function PublicInvoicePage() {
           </h1>
           <p className="text-sm text-muted-foreground">{invoice.issuer.name}</p>
         </div>
+        {invoice.paymentEnabled && (
+          <Button size="lg" disabled={redirecting} onClick={() => void pay()}>
+            <CreditCard className="mr-2 h-4 w-4" />
+            {redirecting
+              ? t('payments.public.redirecting')
+              : t('payments.public.pay', {
+                  amount: formatCurrency(
+                    (Number(invoice.total) - Number(invoice.amountPaid)).toFixed(2),
+                    invoice.currency,
+                    i18n.language,
+                  ),
+                })}
+          </Button>
+        )}
         <StatusBadge status={invoice.status} />
       </div>
 

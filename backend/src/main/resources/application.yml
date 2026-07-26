@@ -102,6 +102,10 @@ app:
   oauth2:
     success-redirect-uri: ${OAUTH2_SUCCESS_REDIRECT:http://localhost:5173/auth/oauth2/callback}
     failure-redirect-uri: ${OAUTH2_FAILURE_REDIRECT:http://localhost:5173/login?error=oauth2}
+  public-base-url: ${PUBLIC_BASE_URL:http://localhost:5173}
+  stripe:
+    secret-key: ${STRIPE_SECRET_KEY:}
+    webhook-secret: ${STRIPE_WEBHOOK_SECRET:}
   sendgrid:
     api-key: ${SENDGRID_API_KEY:}
     from-email: ${SENDGRID_FROM_EMAIL:noreply@invoicebuilder.local}

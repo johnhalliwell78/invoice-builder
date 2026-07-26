@@ -10,4 +10,6 @@ import java.util.UUID;
 public interface PaymentRepository extends JpaRepository<Payment, UUID> {
 
     List<Payment> findByInvoiceIdAndTenantIdOrderByPaidOnDescCreatedAtDesc(UUID invoiceId, UUID tenantId);
+
+    boolean existsByExternalId(String externalId);
 }

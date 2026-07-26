@@ -9,6 +9,7 @@ A multi-tenant SaaS invoicing platform for small and medium businesses.
 - **Auth:** JWT (access + refresh) + OAuth2 (Google, GitHub)
 - **PDF:** iText 7 Community
 - **Email:** SendGrid (prod) / Mailhog (dev)
+- **Payments:** Stripe Checkout (optional — see [docs/stripe-setup.md](docs/stripe-setup.md))
 - **Real-time:** WebSocket (Spring STOMP + SockJS)
 - **Infra:** Docker Compose / GitHub Actions / GHCR
 

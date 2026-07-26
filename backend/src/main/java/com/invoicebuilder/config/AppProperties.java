@@ -18,6 +18,8 @@ public record AppProperties(
         @NotNull Jwt jwt,
         OAuth2 oauth2,
         Sendgrid sendgrid,
+        Stripe stripe,
+        String publicBaseUrl,
         @NotNull Storage storage,
         @NotNull Cors cors,
         @NotNull RateLimit rateLimit
@@ -42,6 +44,21 @@ public record AppProperties(
             String fromEmail,
             String fromName
     ) {
+    }
+
+    /**
+     * Stripe Checkout. With no {@code secretKey} the whole payment feature is
+     * off: endpoints 404 and the UI hides the pay button, so dev/CI need no
+     * Stripe account.
+     */
+    public record Stripe(
+            String secretKey,
+            String webhookSecret
+    ) {
+
+        public boolean enabled() {
+            return secretKey != null && !secretKey.isBlank();
+        }
     }
 
     public record Storage(

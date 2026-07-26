@@ -33,6 +33,8 @@ class EmailServiceTest {
                 new AppProperties.Jwt("0123456789abcdef0123456789abcdef", Duration.ofMinutes(15), Duration.ofDays(7), "test"),
                 null,
                 new AppProperties.Sendgrid("", "noreply@test.local", "Invoice Builder Test"),
+                null,
+                "http://localhost:5173",
                 new AppProperties.Storage(Path.of("./build/test-storage"), Path.of("./build/test-storage")),
                 new AppProperties.Cors(List.of("http://localhost:5173")),
                 new AppProperties.RateLimit(5, Duration.ofMinutes(15), 100));

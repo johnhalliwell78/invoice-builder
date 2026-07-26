@@ -475,6 +475,13 @@
       "title": "Record payment for {{number}}",
       "description": "Outstanding balance: {{balance}}. Payments are final and cannot be deleted.",
       "confirm": "Record payment"
+    },
+    "public": {
+      "pay": "Pay {{amount}}",
+      "redirecting": "Redirecting…",
+      "thanks": "Thank you! Your payment is being confirmed.",
+      "cancelled": "Payment cancelled — nothing was charged.",
+      "failed": "Could not start the payment. Please try again."
     }
   }
 }

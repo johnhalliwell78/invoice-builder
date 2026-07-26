@@ -33,6 +33,7 @@ export interface PublicInvoiceView {
   dueDate: string;
   notes: string | null;
   terms: string | null;
+  paymentEnabled: boolean;
   lineItems: Array<{
     id: string;
     description: string;
@@ -205,6 +206,18 @@ export async function recordPayment(id: string, payload: PaymentPayload): Promis
 export async function listPayments(id: string): Promise<Payment[]> {
   const res = await api.get<ApiEnvelope<Payment[]>>(`/api/v1/invoices/${id}/payments`);
   return res.data.data;
+}
+
+/**
+ * Starts a Stripe Checkout session for a recipient. Anonymous like
+ * {@link getPublicInvoice} — the recipient is not logged in.
+ */
+export async function startPublicCheckout(token: string): Promise<string> {
+  const base = import.meta.env.VITE_API_URL ?? 'http://localhost:8080';
+  const res = await axios.post<ApiEnvelope<{ url: string }>>(
+    `${base}/api/v1/public/invoices/${token}/checkout`,
+  );
+  return res.data.data.url;
 }
 
 export async function markPaid(id: string): Promise<Invoice> {

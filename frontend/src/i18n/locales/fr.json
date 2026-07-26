@@ -475,6 +475,13 @@
       "title": "Enregistrer un paiement pour {{number}}",
       "description": "Solde restant : {{balance}}. Les paiements sont définitifs et ne peuvent pas être supprimés.",
       "confirm": "Enregistrer le paiement"
+    },
+    "public": {
+      "pay": "Payer {{amount}}",
+      "redirecting": "Redirection…",
+      "thanks": "Merci ! Votre paiement est en cours de confirmation.",
+      "cancelled": "Paiement annulé — aucun montant n’a été débité.",
+      "failed": "Impossible de démarrer le paiement. Veuillez réessayer."
     }
   }
 }

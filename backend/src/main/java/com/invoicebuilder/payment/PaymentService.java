@@ -27,6 +27,7 @@ import java.time.OffsetDateTime;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -106,6 +107,69 @@ public class PaymentService {
         } else {
             transitionToPaid(invoice);
         }
+    }
+
+    /**
+     * Books a payment that an external processor has already collected
+     * (Stripe Checkout). Deliberately different from {@link #record}:
+     *
+     * <ul>
+     *   <li>No over-payment guard — that guard protects against typos in
+     *       hand-entered amounts. Here the money is a fact; refusing it would
+     *       make our books disagree with the processor. An excess is audited
+     *       so it can be refunded out of band.</li>
+     *   <li>Idempotent on {@code externalId} — webhook redelivery is normal,
+     *       and a unique index backs this check at the database level.</li>
+     *   <li>Accepts any non-estimate document regardless of status, so a
+     *       payment that lands after a manual mark-paid is still recorded
+     *       rather than lost.</li>
+     * </ul>
+     *
+     * @return the booked payment, or empty when {@code externalId} was already recorded
+     */
+    @Transactional
+    public Optional<PaymentResponse> recordExternal(UUID invoiceId, BigDecimal amount,
+                                                    PaymentMethod method, String externalId,
+                                                    String note) {
+        if (externalId != null && paymentRepository.existsByExternalId(externalId)) {
+            return Optional.empty();
+        }
+        UUID tenantId = TenantContext.require();
+        Invoice invoice = invoiceRepository.findByIdAndTenantIdForUpdate(invoiceId, tenantId)
+                .orElseThrow(() -> new AppException(ErrorCode.INVOICE_NOT_FOUND, "Invoice not found"));
+        if (invoice.getDocType() != DocType.INVOICE) {
+            throw new AppException(ErrorCode.INVALID_STATE_TRANSITION,
+                    "Payments only apply to invoices");
+        }
+
+        Payment payment = new Payment();
+        payment.setTenantId(invoice.getTenantId());
+        payment.setInvoiceId(invoice.getId());
+        payment.setAmount(amount);
+        payment.setMethod(method);
+        payment.setPaidOn(LocalDate.now(clock));
+        payment.setNote(note);
+        payment.setExternalId(externalId);
+        Payment saved = paymentRepository.save(payment);
+
+        BigDecimal updatedPaid = invoice.getAmountPaid().add(amount);
+        invoice.setAmountPaid(updatedPaid);
+        if (updatedPaid.compareTo(invoice.getTotal()) > 0) {
+            auditService.record(invoice.getTenantId(), "Invoice", invoice.getId(),
+                    AuditAction.UPDATE, Map.<String, Object>of(
+                            "overpaid", updatedPaid.subtract(invoice.getTotal()).toPlainString(),
+                            "externalId", String.valueOf(externalId)));
+        }
+        if (updatedPaid.compareTo(invoice.getTotal()) >= 0
+                && invoice.getStatus().canTransitionTo(invoice.getDocType(), InvoiceStatus.PAID)) {
+            transitionToPaid(invoice);
+        } else {
+            auditService.record(invoice.getTenantId(), "Invoice", invoice.getId(),
+                    AuditAction.UPDATE, Map.<String, Object>of(
+                            "paymentAmount", amount.toPlainString(),
+                            "amountPaid", updatedPaid.toPlainString()));
+        }
+        return Optional.of(PaymentResponse.from(saved));
     }
 
     private void transitionToPaid(Invoice invoice) {

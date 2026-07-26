@@ -1,0 +1,46 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0018-stripe-event
+      author: invoice-builder
+      changes:
+        # Processed-webhook ledger: the primary key IS the idempotency
+        # mechanism — Stripe retries deliveries, and a duplicate insert
+        # tells us we already booked this event.
+        - createTable:
+            tableName: stripe_event
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(255)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: type
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: invoice_id
+                  type: UUID
+              - column:
+                  name: received_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  defaultValueComputed: now()
+                  constraints:
+                    nullable: false
+        # Second idempotency layer: one PaymentIntent can never be booked
+        # twice, even if it arrives via two different event types.
+        - addColumn:
+            tableName: payment
+            columns:
+              - column:
+                  name: external_id
+                  type: VARCHAR(255)
+        - createIndex:
+            tableName: payment
+            indexName: uq_payment_external_id
+            unique: true
+            columns:
+              - column:
+                  name: external_id
