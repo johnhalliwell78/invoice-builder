@@ -12,10 +12,10 @@ import com.invoicebuilder.invoice.InvoiceStatus;
 import com.stripe.StripeClient;
 import com.stripe.exception.StripeException;
 import com.stripe.model.checkout.Session;
+import com.stripe.net.RequestOptions;
 import com.stripe.param.checkout.SessionCreateParams;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.domain.Limit;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -73,6 +73,21 @@ public class StripeCheckoutService {
                 : null;
     }
 
+    /** Test seam: lets the double-charge guards be exercised without a live account. */
+    StripeCheckoutService(InvoiceRepository invoiceRepository,
+                          CustomerRepository customerRepository,
+                          StripeCheckoutSessionRepository sessionRepository,
+                          AppProperties appProperties,
+                          Clock clock,
+                          StripeClient client) {
+        this.invoiceRepository = invoiceRepository;
+        this.customerRepository = customerRepository;
+        this.sessionRepository = sessionRepository;
+        this.appProperties = appProperties;
+        this.clock = clock;
+        this.client = client;
+    }
+
     /**
      * Online payment needs <em>both</em> Stripe keys — see
      * {@link AppProperties.Stripe#enabled()}.
@@ -118,35 +133,46 @@ public class StripeCheckoutService {
     }
 
     /**
-     * @return the URL of a still-open session for the same amount, or null if
-     *         a fresh session is needed
+     * Decides whether an existing session can serve this request.
+     *
+     * <p>Two rules, in this order. First, if <em>any</em> live session for the
+     * invoice is already {@code complete}, money is collected or in flight and
+     * we must not offer another — checked before amount matching, because a
+     * partial payment recorded meanwhile changes the balance and would
+     * otherwise hide the completed session. Second, an {@code open} session
+     * for the same amount is reused, since Stripe will not charge one session
+     * twice.</p>
+     *
+     * <p>Fails <strong>closed</strong>: if Stripe cannot tell us a session's
+     * status we refuse rather than mint a second payable session, because the
+     * failure mode of guessing wrong is charging someone twice.</p>
      */
     private String reusableSessionUrl(UUID invoiceId, long amount, String currency) {
         List<StripeCheckoutSession> candidates =
                 sessionRepository.findByInvoiceIdAndExpiresAtAfterOrderByCreatedAtDesc(
-                        invoiceId, OffsetDateTime.now(clock), Limit.of(3));
+                        invoiceId, OffsetDateTime.now(clock));
+        String openMatch = null;
         for (StripeCheckoutSession candidate : candidates) {
-            if (candidate.getAmountMinor() != amount || !candidate.getCurrency().equals(currency)) {
-                continue;
-            }
             Session live;
             try {
                 live = client.v1().checkout().sessions().retrieve(candidate.getId());
             } catch (StripeException e) {
-                log.warn("Could not retrieve Stripe session {}", candidate.getId(), e);
-                continue;
-            }
-            if ("open".equals(live.getStatus())) {
-                return candidate.getUrl();
+                log.error("Could not read Stripe session {} — refusing to start another payment",
+                        candidate.getId(), e);
+                throw new AppException(ErrorCode.INTERNAL_ERROR,
+                        "Could not verify the payment status. Please try again shortly.");
             }
             if ("complete".equals(live.getStatus())) {
-                // Money is collected or in flight; handing out a second
-                // session here is exactly the double charge we prevent.
                 throw new AppException(ErrorCode.INVALID_STATE_TRANSITION,
                         "A payment for this invoice is already being processed");
             }
+            if (openMatch == null && "open".equals(live.getStatus())
+                    && candidate.getAmountMinor() == amount
+                    && candidate.getCurrency().equals(currency)) {
+                openMatch = candidate.getUrl();
+            }
         }
-        return null;
+        return openMatch;
     }
 
     private String createSession(Invoice invoice, long amount, String currency, String publicToken) {
@@ -177,9 +203,15 @@ public class StripeCheckoutService {
                         .build())
                 .build();
 
+        // Deterministic idempotency key: two clicks racing each other resolve
+        // to the SAME session inside Stripe, so no local lock is needed to
+        // stop a double charge. Valid for 24h, matching session lifetime.
+        RequestOptions options = RequestOptions.builder()
+                .setIdempotencyKey("checkout:%s:%d:%s".formatted(invoice.getId(), amount, currency))
+                .build();
         Session session;
         try {
-            session = client.v1().checkout().sessions().create(params);
+            session = client.v1().checkout().sessions().create(params, options);
         } catch (StripeException e) {
             log.error("Stripe checkout session creation failed for invoice {}", invoice.getId(), e);
             throw new AppException(ErrorCode.INTERNAL_ERROR, "Could not start the payment");

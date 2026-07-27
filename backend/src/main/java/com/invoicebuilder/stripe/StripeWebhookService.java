@@ -13,7 +13,6 @@ import com.stripe.model.checkout.Session;
 import com.stripe.net.Webhook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -150,15 +149,14 @@ public class StripeWebhookService {
                 ? session.getPaymentIntent()
                 : session.getId();
 
-        try {
-            stripeEventRepository.saveAndFlush(new StripeEvent(
-                    event.getId(), event.getType(), invoiceId, OffsetDateTime.now(clock)));
-        } catch (DataIntegrityViolationException e) {
-            // Concurrent delivery of the same event won the race; the payment
-            // it booked is authoritative.
-            log.debug("Stripe event {} was processed concurrently", event.getId());
-            return Outcome.ACKNOWLEDGED;
-        }
+        // A concurrent delivery of the same event collides on this primary key.
+        // We deliberately do NOT swallow that: catching it would leave the
+        // transaction rollback-only and commit would fail anyway. Letting it
+        // propagate returns 5xx, Stripe redelivers, and the retry sees the
+        // event already recorded. The real double-booking guard is the unique
+        // index on payment.external_id, checked inside recordExternal.
+        stripeEventRepository.saveAndFlush(new StripeEvent(
+                event.getId(), event.getType(), invoiceId, OffsetDateTime.now(clock)));
 
         // Webhooks are anonymous: no JWT, so no tenant on the thread. Resolve
         // it from the session metadata the way the sweepers do.

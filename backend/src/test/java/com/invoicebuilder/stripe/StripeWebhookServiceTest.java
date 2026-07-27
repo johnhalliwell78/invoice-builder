@@ -204,13 +204,17 @@ class StripeWebhookServiceTest {
     }
 
     @Test
-    void concurrentDeliveryOfTheSameEventIsAcknowledgedNotRetried() {
+    void concurrentDeliveryOfTheSameEventFailsLoudlySoStripeRetries() {
         String body = payload("evt_race", "checkout.session.completed", "paid", 11900, "eur", validMetadata());
         when(stripeEventRepository.existsById("evt_race")).thenReturn(false);
         when(stripeEventRepository.saveAndFlush(any(StripeEvent.class)))
                 .thenThrow(new org.springframework.dao.DataIntegrityViolationException("dup pk"));
 
-        assertThat(handle(body)).isEqualTo(StripeWebhookService.Outcome.ACKNOWLEDGED);
+        // Swallowing this would leave the transaction rollback-only and the
+        // commit would fail anyway. Letting it out gives Stripe a 5xx; the
+        // redelivery then sees the event recorded and acknowledges.
+        assertThatThrownBy(() -> handle(body))
+                .isInstanceOf(org.springframework.dao.DataIntegrityViolationException.class);
         verifyNoInteractions(paymentService);
     }
 

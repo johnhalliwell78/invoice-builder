@@ -62,9 +62,15 @@ Anything else is acknowledged and ignored.
   feature stays off until both are set.
 - **Partial payments:** checkout always charges the *remaining balance*, so a
   recipient can pay after a partial bank transfer was recorded.
-- **Second "Pay" click:** the still-open Checkout Session is reused rather
-  than a new one created, and Stripe will not charge one session twice. After
-  returning from Stripe the button is hidden until the ledger confirms.
+- **Second "Pay" click:** session creation carries a deterministic
+  idempotency key, so two racing clicks resolve to one session inside Stripe.
+  A still-open session is reused, and if any live session is already
+  `complete` the request is refused outright. If Stripe cannot be reached to
+  check, we refuse rather than risk minting a second payable session.
+- **Returning from Stripe:** the Pay button stays hidden until the ledger
+  shows more paid than before the redirect. That marker lives in
+  `sessionStorage`, so a reload mid-confirmation resumes waiting instead of
+  re-offering payment.
 - **Anonymous throttle:** public endpoints are rate limited per client IP
   (`app.rate-limit.public-requests-per-minute`, default 30). The webhook is
   exempt — it authenticates by signature and must never be dropped.

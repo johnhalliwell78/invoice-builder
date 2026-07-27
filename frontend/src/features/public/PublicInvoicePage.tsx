@@ -4,11 +4,19 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { CreditCard } from 'lucide-react';
 
+import { isAxiosError } from 'axios';
+
 import { getPublicInvoice, startPublicCheckout, type PublicInvoiceView } from '@/api/invoices';
+import type { ProblemDetail } from '@/types/api';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { StatusBadge } from '@/features/invoices/StatusBadge';
 import { formatCurrency, formatDate } from '@/lib/format';
+
+/** sessionStorage marker: "a Stripe payment for this invoice is in flight". */
+function pendingKey(token: string) {
+  return `ib_pay_pending_${token}`;
+}
 
 export default function PublicInvoicePage() {
   const { t, i18n } = useTranslation();
@@ -49,38 +57,69 @@ export default function PublicInvoicePage() {
     if (!paymentResult) return;
     if (paymentResult === 'success') {
       toast.success(t('payments.public.thanks'));
-      setConfirming(true);
-      // Poll briefly for the webhook to land; give up quietly and leave the
-      // button suppressed rather than risk a second charge.
-      let attempts = 0;
-      const tick = async () => {
-        attempts += 1;
-        const fresh = await load();
-        const settled = fresh != null && Number(fresh.amountPaid) > 0;
-        if (settled || attempts >= 6) {
-          if (settled) setConfirming(false);
-          return;
-        }
-        window.setTimeout(() => void tick(), 2000);
-      };
-      window.setTimeout(() => void tick(), 1500);
     } else if (paymentResult === 'cancelled') {
       toast.info(t('payments.public.cancelled'));
+      if (token) window.sessionStorage.removeItem(pendingKey(token));
     }
     searchParams.delete('payment');
     setSearchParams(searchParams, { replace: true });
-    // Runs once per return from Stripe; load/t/searchParams are stable enough here.
+    // Runs once per return from Stripe.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [paymentResult]);
 
-  async function pay() {
+  // Poll until the ledger shows MORE paid than before we left. Driven by
+  // sessionStorage, so a reload mid-confirmation resumes instead of
+  // re-offering the Pay button and inviting a second charge.
+  useEffect(() => {
     if (!token) return;
+    const raw = window.sessionStorage.getItem(pendingKey(token));
+    if (!raw) return;
+    const before = Number((JSON.parse(raw) as { amountPaidBefore: string }).amountPaidBefore);
+
+    let cancelled = false;
+    let timer = 0;
+    setConfirming(true);
+
+    const tick = async (attempt: number) => {
+      const fresh = await load();
+      if (cancelled) return;
+      if (fresh != null && Number(fresh.amountPaid) > before) {
+        window.sessionStorage.removeItem(pendingKey(token));
+        setConfirming(false);
+        return;
+      }
+      if (attempt >= 8) {
+        // Webhook still not visible. Leave Pay suppressed and the marker in
+        // place: a stuck webhook must never become a second charge.
+        return;
+      }
+      timer = window.setTimeout(() => void tick(attempt + 1), 2000);
+    };
+    timer = window.setTimeout(() => void tick(1), 1200);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [token, load, paymentResult]);
+
+  async function pay() {
+    if (!token || !invoice) return;
     setRedirecting(true);
     try {
-      window.location.href = await startPublicCheckout(token);
-    } catch {
+      const url = await startPublicCheckout(token);
+      // Remember what the ledger said BEFORE leaving, so on return we can tell
+      // "this payment landed" from "some earlier partial payment exists".
+      // sessionStorage (not component state) so a reload cannot re-arm Pay.
+      window.sessionStorage.setItem(
+        pendingKey(token),
+        JSON.stringify({ amountPaidBefore: invoice.amountPaid }),
+      );
+      window.location.href = url;
+    } catch (err) {
       setRedirecting(false);
-      toast.error(t('payments.public.failed'));
+      const detail = isAxiosError<ProblemDetail>(err) ? err.response?.data?.detail : undefined;
+      toast.error(detail ?? t('payments.public.failed'));
     }
   }
 

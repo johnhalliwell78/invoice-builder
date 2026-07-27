@@ -45,6 +45,7 @@ function renderPage(initialEntry = '/i/tok123') {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  window.sessionStorage.clear();
   vi.mocked(getPublicInvoice).mockResolvedValue(invoice);
   vi.mocked(startPublicCheckout).mockResolvedValue('https://checkout.stripe.test/session');
 });
@@ -76,6 +77,11 @@ describe('PublicInvoicePage', () => {
   });
 
   it('suppresses the pay button after returning from Stripe so a second click cannot double-charge', async () => {
+    // A payment is in flight for this invoice (recorded when Pay was clicked).
+    window.sessionStorage.setItem(
+      'ib_pay_pending_tok123',
+      JSON.stringify({ amountPaidBefore: '19.00' }),
+    );
     renderPage('/i/tok123?payment=success');
 
     // The webhook lands a second or two after the redirect, so the invoice
@@ -83,5 +89,56 @@ describe('PublicInvoicePage', () => {
     // gets charged twice — the button must stay hidden while we confirm.
     await screen.findByText(/Confirming your payment/i);
     expect(screen.queryByRole('button', { name: /Pay/i })).not.toBeInTheDocument();
+  });
+
+  it('keeps waiting when the invoice already had an earlier partial payment', async () => {
+    // The invoice fixture already carries amountPaid 19.00. A guard that only
+    // asked "is amountPaid > 0" would call this settled on the first poll and
+    // re-arm the button ~1.5s after the shopper got back — a double charge.
+    vi.useFakeTimers();
+    try {
+      window.sessionStorage.setItem(
+        'ib_pay_pending_tok123',
+        JSON.stringify({ amountPaidBefore: '19.00' }),
+      );
+      renderPage('/i/tok123?payment=success');
+      await vi.advanceTimersByTimeAsync(6000);
+
+      expect(screen.queryByRole('button', { name: /Pay/i })).not.toBeInTheDocument();
+      expect(window.sessionStorage.getItem('ib_pay_pending_tok123')).not.toBeNull();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('resumes the confirming state after a page reload instead of re-offering Pay', async () => {
+    // No ?payment= param: this is a fresh load, as after a refresh. The
+    // in-flight marker must still suppress the button.
+    window.sessionStorage.setItem(
+      'ib_pay_pending_tok123',
+      JSON.stringify({ amountPaidBefore: '19.00' }),
+    );
+    renderPage('/i/tok123');
+
+    await screen.findByText(/Confirming your payment/i);
+    expect(screen.queryByRole('button', { name: /Pay/i })).not.toBeInTheDocument();
+  });
+
+  it('clears the in-flight marker and shows Pay again once the ledger confirms', async () => {
+    vi.useFakeTimers();
+    try {
+      window.sessionStorage.setItem(
+        'ib_pay_pending_tok123',
+        JSON.stringify({ amountPaidBefore: '19.00' }),
+      );
+      // The webhook has landed: more is paid than before the redirect.
+      vi.mocked(getPublicInvoice).mockResolvedValue({ ...invoice, amountPaid: '119.00', total: '119.00' });
+      renderPage('/i/tok123');
+      await vi.advanceTimersByTimeAsync(4000);
+
+      expect(window.sessionStorage.getItem('ib_pay_pending_tok123')).toBeNull();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
