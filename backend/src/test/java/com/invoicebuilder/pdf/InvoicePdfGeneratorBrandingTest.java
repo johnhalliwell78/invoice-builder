@@ -51,7 +51,7 @@ class InvoicePdfGeneratorBrandingTest {
                 "http://localhost:5173",
                 new AppProperties.Storage(Path.of("./build/tmp"), Path.of("./build/tmp")),
                 new AppProperties.Cors(List.of()),
-                new AppProperties.RateLimit(5, Duration.ofMinutes(15), 100, 30));
+                new AppProperties.RateLimit(5, Duration.ofMinutes(15), 100, 30, false));
         generator = new InvoicePdfGenerator(new StaticMessageSource(), properties);
 
         tenant = new Tenant();

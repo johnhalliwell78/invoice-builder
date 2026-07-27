@@ -72,11 +72,18 @@ public class RateLimitFilter extends OncePerRequestFilter {
         return path != null && path.startsWith(PUBLIC_PREFIX) && !path.equals(WEBHOOK_PATH);
     }
 
-    /** Honours X-Forwarded-For's first hop when running behind a proxy. */
-    private static String clientIp(HttpServletRequest request) {
-        String forwarded = request.getHeader("X-Forwarded-For");
-        if (forwarded != null && !forwarded.isBlank()) {
-            return forwarded.split(",", 2)[0].trim();
+    /**
+     * Client address for throttling. X-Forwarded-For is honoured only when
+     * {@code app.rate-limit.trust-forwarded-for} is on: the header is caller
+     * controlled, so trusting it by default would let anyone bypass the
+     * limit by varying one string.
+     */
+    private String clientIp(HttpServletRequest request) {
+        if (appProperties.rateLimit().trustForwardedFor()) {
+            String forwarded = request.getHeader("X-Forwarded-For");
+            if (forwarded != null && !forwarded.isBlank()) {
+                return forwarded.split(",", 2)[0].trim();
+            }
         }
         return request.getRemoteAddr();
     }

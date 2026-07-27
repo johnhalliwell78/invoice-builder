@@ -83,7 +83,9 @@ public record AppProperties(
             @NotNull Duration loginWindow,
             int apiRequestsPerMinute,
             /** Per-IP ceiling for anonymous /api/v1/public/** traffic. */
-            int publicRequestsPerMinute
+            int publicRequestsPerMinute,
+            /** Enable only when a trusted proxy sets X-Forwarded-For. */
+            boolean trustForwardedFor
     ) {
     }
 }

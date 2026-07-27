@@ -133,10 +133,15 @@ public class StripeWebhookService {
         UUID invoiceId = metadataUuid(session, StripeCheckoutService.METADATA_INVOICE_ID);
         UUID tenantId = metadataUuid(session, StripeCheckoutService.METADATA_TENANT_ID);
         Long amountTotal = session.getAmountTotal();
-        if (invoiceId == null || tenantId == null || amountTotal == null || amountTotal <= 0) {
+        // No currency means we cannot pick a minor-unit exponent, and
+        // recordExternal's currency check would be skipped — booking a
+        // guessed amount is worse than asking for redelivery.
+        if (invoiceId == null || tenantId == null || amountTotal == null || amountTotal <= 0
+                || session.getCurrency() == null || session.getCurrency().isBlank()) {
             // Money was collected but we cannot attribute it. Never ACK this.
-            log.error("PAID Stripe session {} is unbookable (invoiceId={}, tenantId={}, amount={}) "
-                            + "— manual reconciliation required", session.getId(), invoiceId, tenantId, amountTotal);
+            log.error("PAID Stripe session {} is unbookable (invoiceId={}, tenantId={}, amount={}, "
+                            + "currency={}) — manual reconciliation required",
+                    session.getId(), invoiceId, tenantId, amountTotal, session.getCurrency());
             return Outcome.RETRY;
         }
 
@@ -171,6 +176,13 @@ public class StripeWebhookService {
             }
             log.info("Stripe payment {} was already booked", externalId);
             return Outcome.ACKNOWLEDGED;
+        } catch (AppException e) {
+            // Collected money we refused to book (currency mismatch, missing
+            // invoice). A 4xx here would quietly end redelivery; surface it
+            // instead so it shows up as a failing endpoint and gets fixed.
+            log.error("Refused to book Stripe payment {} for invoice {}: {}",
+                    externalId, invoiceId, e.getMessage(), e);
+            return Outcome.RETRY;
         } finally {
             TenantContext.clear();
         }

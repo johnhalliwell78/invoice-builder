@@ -73,7 +73,9 @@ Anything else is acknowledged and ignored.
   re-offering payment.
 - **Anonymous throttle:** public endpoints are rate limited per client IP
   (`app.rate-limit.public-requests-per-minute`, default 30). The webhook is
-  exempt — it authenticates by signature and must never be dropped.
+  exempt — it authenticates by signature and must never be dropped. Behind a
+  load balancer, set `TRUST_FORWARDED_FOR=true` so the real client IP is
+  used; leave it off otherwise, or the limit can be bypassed with a header.
 - **Deliveries we cannot book** (unreadable event, missing metadata) answer
   503 so Stripe retries and the failure is visible in the dashboard, instead
   of silently acknowledging money we did not record.

@@ -120,6 +120,7 @@ app:
     login-window: PT15M
     api-requests-per-minute: 100
     public-requests-per-minute: 30
+    trust-forwarded-for: ${TRUST_FORWARDED_FOR:false}
 
 logging:
   level:

@@ -219,6 +219,28 @@ class StripeWebhookServiceTest {
     }
 
     @Test
+    void sessionWithoutACurrencyIsNotBookedAtAGuessedExponent() {
+        String body = payload("evt_nocur", "checkout.session.completed", "paid", 11900, "", validMetadata());
+        when(stripeEventRepository.existsById("evt_nocur")).thenReturn(false);
+
+        assertThat(handle(body)).isEqualTo(StripeWebhookService.Outcome.RETRY);
+        verifyNoInteractions(paymentService);
+    }
+
+    @Test
+    void refusedBookingAsksForRedeliveryInsteadOfQuietlyEndingIt() {
+        // recordExternal rejects e.g. a currency mismatch. A 4xx would stop
+        // Stripe redelivering and hide collected-but-unbooked money.
+        String body = payload("evt_reject", "checkout.session.completed", "paid", 11900, "eur", validMetadata());
+        when(stripeEventRepository.existsById("evt_reject")).thenReturn(false);
+        when(paymentService.recordExternal(any(), any(), any(), any(), any(), any()))
+                .thenThrow(new AppException(
+                        com.invoicebuilder.common.exception.ErrorCode.VALIDATION_FAILED, "currency mismatch"));
+
+        assertThat(handle(body)).isEqualTo(StripeWebhookService.Outcome.RETRY);
+    }
+
+    @Test
     void asyncPaymentSucceededIsAlsoBooked() {
         String body = payload("evt_async", "checkout.session.async_payment_succeeded", "paid",
                 5000, "eur", validMetadata());
