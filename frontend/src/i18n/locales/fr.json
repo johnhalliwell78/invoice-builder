@@ -483,6 +483,19 @@
       "cancelled": "Paiement annulé — aucun montant n’a été débité.",
       "failed": "Impossible de démarrer le paiement. Veuillez réessayer.",
       "confirming": "Confirmation de votre paiement…"
+    },
+    "reversal": {
+      "action": "Rembourser",
+      "title": "Enregistrer un remboursement",
+      "confirm": "Enregistrer",
+      "recorded": "Remboursement enregistré.",
+      "reason": "Motif",
+      "description": "Jusqu'à {{amount}} de ce paiement peuvent encore être remboursés. Les annulations sont ajoutées, jamais supprimées.",
+      "reasons": {
+        "REFUND": "Remboursement",
+        "DISPUTE": "Rétrofacturation",
+        "ADJUSTMENT": "Correction"
+      }
     }
   }
 }

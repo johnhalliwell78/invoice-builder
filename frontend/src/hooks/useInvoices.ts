@@ -12,14 +12,17 @@ import {
   listInvoices,
   listPayments,
   listReminders,
+  listReversals,
   markPaid,
   recordPayment,
   resendInvoice,
+  reversePayment,
   sendInvoice,
   updateInvoice,
   type InvoiceListParams,
   type InvoicePayload,
   type PaymentPayload,
+  type ReversalPayload,
   type SendInvoicePayload,
 } from '@/api/invoices';
 
@@ -143,6 +146,23 @@ export function useRecordPayment(id: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (payload: PaymentPayload) => recordPayment(id, payload),
+    onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
+  });
+}
+
+export function useReversals(id: string | undefined) {
+  return useQuery({
+    queryKey: [...KEY, 'reversals', id],
+    queryFn: () => listReversals(id as string),
+    enabled: !!id,
+  });
+}
+
+export function useReversePayment() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (args: { paymentId: string; payload: ReversalPayload }) =>
+      reversePayment(args.paymentId, args.payload),
     onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
   });
 }

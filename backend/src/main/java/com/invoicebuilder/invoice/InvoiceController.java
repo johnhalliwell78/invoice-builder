@@ -4,6 +4,8 @@ import com.invoicebuilder.common.dto.ApiResponse;
 import com.invoicebuilder.payment.PaymentService;
 import com.invoicebuilder.payment.dto.PaymentRequest;
 import com.invoicebuilder.payment.dto.PaymentResponse;
+import com.invoicebuilder.payment.dto.ReversalRequest;
+import com.invoicebuilder.payment.dto.ReversalResponse;
 import com.invoicebuilder.recurring.RecurringInvoiceService;
 import com.invoicebuilder.recurring.dto.MakeRecurringRequest;
 import com.invoicebuilder.recurring.dto.RecurringInvoiceResponse;
@@ -116,6 +118,20 @@ public class InvoiceController {
     @Operation(summary = "List payments received for an invoice")
     public ApiResponse<List<PaymentResponse>> listPayments(@PathVariable UUID id) {
         return ApiResponse.of(paymentService.list(id));
+    }
+
+    @PostMapping("/payments/{paymentId}/reverse")
+    @Operation(summary = "Record a refund or correction against a payment (append-only)")
+    public ResponseEntity<ApiResponse<ReversalResponse>> reversePayment(
+            @PathVariable UUID paymentId, @Valid @RequestBody ReversalRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.of(paymentService.recordReversal(paymentId, request)));
+    }
+
+    @GetMapping("/{id}/reversals")
+    @Operation(summary = "List refunds and chargebacks recorded against an invoice")
+    public ApiResponse<List<ReversalResponse>> listReversals(@PathVariable UUID id) {
+        return ApiResponse.of(paymentService.listReversals(id));
     }
 
     @PostMapping("/{id}/make-recurring")

@@ -38,6 +38,7 @@ class StripeWebhookServiceTest {
 
     @Mock private StripeEventRepository stripeEventRepository;
     @Mock private PaymentService paymentService;
+    @Mock private com.invoicebuilder.payment.PaymentRepository paymentRepository;
 
     private StripeWebhookService service;
 
@@ -46,7 +47,8 @@ class StripeWebhookServiceTest {
         AppProperties properties = new AppProperties(null, null, null,
                 new AppProperties.Stripe("sk_test_x", SECRET),
                 "http://localhost:5173", null, null, null);
-        service = new StripeWebhookService(stripeEventRepository, paymentService, properties,
+        service = new StripeWebhookService(stripeEventRepository, paymentService, paymentRepository,
+                properties,
                 Clock.fixed(Instant.parse("2026-07-23T10:00:00Z"), ZoneOffset.UTC));
         lenient().when(paymentService.recordExternal(any(), any(), any(), any(), any(), any()))
                 .thenReturn(Optional.empty());

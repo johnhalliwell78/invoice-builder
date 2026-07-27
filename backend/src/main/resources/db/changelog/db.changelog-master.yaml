@@ -39,3 +39,5 @@ databaseChangeLog:
       file: db/changelog/0018-stripe.yaml
   - include:
       file: db/changelog/0019-stripe-session.yaml
+  - include:
+      file: db/changelog/0020-payment-reversal.yaml

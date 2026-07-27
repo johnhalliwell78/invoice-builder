@@ -483,6 +483,19 @@
       "cancelled": "Zahlung abgebrochen — es wurde nichts belastet.",
       "failed": "Zahlung konnte nicht gestartet werden. Bitte erneut versuchen.",
       "confirming": "Zahlung wird bestätigt…"
+    },
+    "reversal": {
+      "action": "Erstatten",
+      "title": "Erstattung erfassen",
+      "confirm": "Erstattung erfassen",
+      "recorded": "Erstattung erfasst.",
+      "reason": "Grund",
+      "description": "Bis zu {{amount}} dieser Zahlung können noch zurückerstattet werden. Stornierungen werden nur ergänzt.",
+      "reasons": {
+        "REFUND": "Erstattung",
+        "DISPUTE": "Rückbuchung",
+        "ADJUSTMENT": "Korrektur"
+      }
     }
   }
 }

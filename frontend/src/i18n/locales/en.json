@@ -483,6 +483,19 @@
       "cancelled": "Payment cancelled — nothing was charged.",
       "failed": "Could not start the payment. Please try again.",
       "confirming": "Confirming your payment…"
+    },
+    "reversal": {
+      "action": "Refund",
+      "title": "Record a refund",
+      "confirm": "Record refund",
+      "recorded": "Refund recorded.",
+      "reason": "Reason",
+      "description": "Up to {{amount}} of this payment can still be returned. Reversals are append-only.",
+      "reasons": {
+        "REFUND": "Refund",
+        "DISPUTE": "Chargeback",
+        "ADJUSTMENT": "Correction"
+      }
     }
   }
 }

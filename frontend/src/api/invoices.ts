@@ -203,6 +203,36 @@ export async function recordPayment(id: string, payload: PaymentPayload): Promis
   return res.data.data;
 }
 
+export type ReversalReason = 'REFUND' | 'DISPUTE' | 'ADJUSTMENT';
+
+export interface Reversal {
+  id: string;
+  paymentId: string;
+  amount: string;
+  reason: ReversalReason;
+  note: string | null;
+  createdAt: string;
+}
+
+export interface ReversalPayload {
+  amount: string;
+  reason: ReversalReason;
+  note?: string;
+}
+
+export async function listReversals(id: string): Promise<Reversal[]> {
+  const res = await api.get<ApiEnvelope<Reversal[]>>(`/api/v1/invoices/${id}/reversals`);
+  return res.data.data;
+}
+
+export async function reversePayment(paymentId: string, payload: ReversalPayload): Promise<Reversal> {
+  const res = await api.post<ApiEnvelope<Reversal>>(
+    `/api/v1/invoices/payments/${paymentId}/reverse`,
+    payload,
+  );
+  return res.data.data;
+}
+
 export async function listPayments(id: string): Promise<Payment[]> {
   const res = await api.get<ApiEnvelope<Payment[]>>(`/api/v1/invoices/${id}/payments`);
   return res.data.data;

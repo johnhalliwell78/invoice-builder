@@ -1,0 +1,85 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0020-create-payment-reversal
+      author: invoice-builder
+      changes:
+        - createTable:
+            tableName: payment_reversal
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  defaultValueComputed: gen_random_uuid()
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_reversal_tenant
+                    referencedTableName: tenant
+                    referencedColumnNames: id
+              - column:
+                  name: payment_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_reversal_payment
+                    referencedTableName: payment
+                    referencedColumnNames: id
+              - column:
+                  name: invoice_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_reversal_invoice
+                    referencedTableName: invoice
+                    referencedColumnNames: id
+              - column:
+                  name: amount
+                  type: NUMERIC(15,2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: reason
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: external_id
+                  type: VARCHAR(255)
+              - column:
+                  name: note
+                  type: VARCHAR(500)
+              - column:
+                  name: created_by
+                  type: UUID
+              - column:
+                  name: created_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  defaultValueComputed: now()
+                  constraints:
+                    nullable: false
+        # Same idempotency guarantee payments have: a redelivered refund
+        # event can never reverse the same money twice.
+        - createIndex:
+            tableName: payment_reversal
+            indexName: uq_reversal_external_id
+            unique: true
+            columns:
+              - column:
+                  name: external_id
+        - createIndex:
+            tableName: payment_reversal
+            indexName: idx_reversal_payment
+            columns:
+              - column:
+                  name: payment_id
+        - createIndex:
+            tableName: payment_reversal
+            indexName: idx_reversal_invoice
+            columns:
+              - column:
+                  name: invoice_id

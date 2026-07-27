@@ -13,6 +13,8 @@ import com.invoicebuilder.notification.NotificationEvent;
 import com.invoicebuilder.notification.NotificationType;
 import com.invoicebuilder.payment.dto.PaymentRequest;
 import com.invoicebuilder.payment.dto.PaymentResponse;
+import com.invoicebuilder.payment.dto.ReversalRequest;
+import com.invoicebuilder.payment.dto.ReversalResponse;
 import com.invoicebuilder.tenant.TenantContext;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.core.Authentication;
@@ -38,17 +40,20 @@ public class PaymentService {
             EnumSet.of(InvoiceStatus.SENT, InvoiceStatus.VIEWED, InvoiceStatus.OVERDUE);
 
     private final PaymentRepository paymentRepository;
+    private final PaymentReversalRepository reversalRepository;
     private final InvoiceRepository invoiceRepository;
     private final AuditService auditService;
     private final ApplicationEventPublisher eventPublisher;
     private final Clock clock;
 
     public PaymentService(PaymentRepository paymentRepository,
+                          PaymentReversalRepository reversalRepository,
                           InvoiceRepository invoiceRepository,
                           AuditService auditService,
                           ApplicationEventPublisher eventPublisher,
                           Clock clock) {
         this.paymentRepository = paymentRepository;
+        this.reversalRepository = reversalRepository;
         this.invoiceRepository = invoiceRepository;
         this.auditService = auditService;
         this.eventPublisher = eventPublisher;
@@ -178,6 +183,109 @@ public class PaymentService {
                             "amountPaid", updatedPaid.toPlainString()));
         }
         return Optional.of(PaymentResponse.from(saved));
+    }
+
+    /**
+     * Records money going back out against a specific payment: an operator
+     * refund, or a bookkeeping correction.
+     */
+    @Transactional
+    public ReversalResponse recordReversal(UUID paymentId, ReversalRequest request) {
+        UUID tenantId = TenantContext.require();
+        Payment payment = paymentRepository.findByIdAndTenantId(paymentId, tenantId)
+                .orElseThrow(() -> new AppException(ErrorCode.INVOICE_NOT_FOUND, "Payment not found"));
+        return applyReversal(payment, request.amount(), request.reason(), null, request.note())
+                .orElseThrow(() -> new AppException(ErrorCode.VALIDATION_FAILED,
+                        "Nothing left to reverse on this payment"));
+    }
+
+    /**
+     * Books a reversal reported by the payment processor.
+     *
+     * <p>{@code cumulativeAmount} is what the processor says has been returned
+     * <em>in total</em> for the payment — Stripe's {@code amount_refunded} is a
+     * running total, so booking it verbatim after a first partial refund would
+     * reverse the same money twice. Only the delta is recorded.</p>
+     *
+     * @return empty when the event was already applied or adds nothing
+     */
+    @Transactional
+    public Optional<ReversalResponse> recordExternalReversal(String paymentExternalId,
+                                                             BigDecimal cumulativeAmount,
+                                                             String currency,
+                                                             ReversalReason reason,
+                                                             String externalId,
+                                                             String note) {
+        if (externalId != null && reversalRepository.existsByExternalId(externalId)) {
+            return Optional.empty();
+        }
+        UUID tenantId = TenantContext.require();
+        Payment payment = paymentRepository.findByExternalIdAndTenantId(paymentExternalId, tenantId)
+                .orElseThrow(() -> new AppException(ErrorCode.INVOICE_NOT_FOUND,
+                        "No payment recorded for " + paymentExternalId));
+        BigDecimal alreadyReversed = reversalRepository.sumByPaymentId(payment.getId());
+        BigDecimal delta = cumulativeAmount.subtract(alreadyReversed);
+        if (delta.compareTo(BigDecimal.ZERO) <= 0) {
+            return Optional.empty();
+        }
+        return applyReversal(payment, delta, reason, externalId, note);
+    }
+
+    private Optional<ReversalResponse> applyReversal(Payment payment, BigDecimal amount,
+                                                     ReversalReason reason, String externalId,
+                                                     String note) {
+        UUID tenantId = TenantContext.require();
+        Invoice invoice = invoiceRepository.findByIdAndTenantIdForUpdate(payment.getInvoiceId(), tenantId)
+                .orElseThrow(() -> new AppException(ErrorCode.INVOICE_NOT_FOUND, "Invoice not found"));
+
+        BigDecimal remaining = payment.getAmount().subtract(reversalRepository.sumByPaymentId(payment.getId()));
+        if (amount.compareTo(remaining) > 0) {
+            throw new AppException(ErrorCode.VALIDATION_FAILED,
+                    "Cannot reverse %s: only %s of this payment remains".formatted(amount, remaining));
+        }
+
+        PaymentReversal reversal = new PaymentReversal();
+        reversal.setTenantId(tenantId);
+        reversal.setPaymentId(payment.getId());
+        reversal.setInvoiceId(invoice.getId());
+        reversal.setAmount(amount);
+        reversal.setReason(reason);
+        reversal.setExternalId(externalId);
+        reversal.setNote(note);
+        reversal.setCreatedBy(currentUserId());
+        PaymentReversal saved = reversalRepository.save(reversal);
+
+        BigDecimal updatedPaid = invoice.getAmountPaid().subtract(amount).max(BigDecimal.ZERO);
+        invoice.setAmountPaid(updatedPaid);
+        if (invoice.getStatus() == InvoiceStatus.PAID
+                && updatedPaid.compareTo(invoice.getTotal()) < 0) {
+            // No longer covered, so it owes money again. Set the status
+            // directly rather than opening PAID in the transition table —
+            // that would also let send() reset a paid invoice.
+            invoice.setPaidAt(null);
+            invoice.setStatus(reopenedStatus(invoice));
+        }
+        auditService.record(tenantId, "Invoice", invoice.getId(), AuditAction.UPDATE,
+                Map.<String, Object>of(
+                        "reversed", amount.toPlainString(),
+                        "reason", reason.name(),
+                        "amountPaid", updatedPaid.toPlainString()));
+        return Optional.of(ReversalResponse.from(saved));
+    }
+
+    /** Where an invoice lands when a reversal re-opens it. */
+    private InvoiceStatus reopenedStatus(Invoice invoice) {
+        if (invoice.getDueDate() != null && invoice.getDueDate().isBefore(LocalDate.now(clock))) {
+            return InvoiceStatus.OVERDUE;
+        }
+        return invoice.getViewedAt() != null ? InvoiceStatus.VIEWED : InvoiceStatus.SENT;
+    }
+
+    @Transactional(readOnly = true)
+    public List<ReversalResponse> listReversals(UUID invoiceId) {
+        UUID tenantId = TenantContext.require();
+        return reversalRepository.findByInvoiceIdAndTenantIdOrderByCreatedAtDesc(invoiceId, tenantId)
+                .stream().map(ReversalResponse::from).toList();
     }
 
     private void transitionToPaid(Invoice invoice) {

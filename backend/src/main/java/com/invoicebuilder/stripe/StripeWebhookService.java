@@ -3,10 +3,15 @@ package com.invoicebuilder.stripe;
 import com.invoicebuilder.common.exception.AppException;
 import com.invoicebuilder.common.exception.ErrorCode;
 import com.invoicebuilder.config.AppProperties;
+import com.invoicebuilder.payment.Payment;
 import com.invoicebuilder.payment.PaymentMethod;
+import com.invoicebuilder.payment.PaymentRepository;
 import com.invoicebuilder.payment.PaymentService;
+import com.invoicebuilder.payment.ReversalReason;
 import com.invoicebuilder.tenant.TenantContext;
 import com.stripe.exception.SignatureVerificationException;
+import com.stripe.model.Charge;
+import com.stripe.model.Dispute;
 import com.stripe.model.Event;
 import com.stripe.model.StripeObject;
 import com.stripe.model.checkout.Session;
@@ -45,7 +50,9 @@ public class StripeWebhookService {
      */
     private static final Set<String> HANDLED = Set.of(
             "checkout.session.completed",
-            "checkout.session.async_payment_succeeded");
+            "checkout.session.async_payment_succeeded",
+            "charge.refunded",
+            "charge.dispute.created");
 
     /**
      * What the caller should tell Stripe. {@link #RETRY} must map to a 5xx:
@@ -63,15 +70,18 @@ public class StripeWebhookService {
 
     private final StripeEventRepository stripeEventRepository;
     private final PaymentService paymentService;
+    private final PaymentRepository paymentRepository;
     private final AppProperties appProperties;
     private final Clock clock;
 
     public StripeWebhookService(StripeEventRepository stripeEventRepository,
                                 PaymentService paymentService,
+                                PaymentRepository paymentRepository,
                                 AppProperties appProperties,
                                 Clock clock) {
         this.stripeEventRepository = stripeEventRepository;
         this.paymentService = paymentService;
+        this.paymentRepository = paymentRepository;
         this.appProperties = appProperties;
         this.clock = clock;
     }
@@ -113,6 +123,13 @@ public class StripeWebhookService {
         if (stripeEventRepository.existsById(event.getId())) {
             log.debug("Stripe event {} already processed", event.getId());
             return Outcome.ACKNOWLEDGED;
+        }
+
+        if ("charge.refunded".equals(event.getType())) {
+            return handleRefund(event);
+        }
+        if ("charge.dispute.created".equals(event.getType())) {
+            return handleDispute(event);
         }
 
         Session session = extractSession(event);
@@ -186,6 +203,88 @@ public class StripeWebhookService {
         } finally {
             TenantContext.clear();
         }
+    }
+
+    /**
+     * A refund reduces what we recorded as collected. Stripe reports
+     * {@code amount_refunded} as a running total, which
+     * {@code recordExternalReversal} accounts for.
+     */
+    private Outcome handleRefund(Event event) {
+        Charge charge = extract(event, Charge.class);
+        if (charge == null || charge.getPaymentIntent() == null
+                || charge.getAmountRefunded() == null || charge.getCurrency() == null) {
+            log.error("Stripe refund event {} is unusable — asking for redelivery", event.getId());
+            return Outcome.RETRY;
+        }
+        return applyReversal(event, charge.getPaymentIntent(),
+                MoneyUnits.fromMinorUnits(charge.getAmountRefunded(),
+                        charge.getCurrency().toUpperCase(Locale.ROOT)),
+                charge.getCurrency().toUpperCase(Locale.ROOT),
+                ReversalReason.REFUND, "refund:" + charge.getId(),
+                "Stripe refund " + charge.getId());
+    }
+
+    /** A chargeback: the processor has taken the funds back. */
+    private Outcome handleDispute(Event event) {
+        Dispute dispute = extract(event, Dispute.class);
+        if (dispute == null || dispute.getPaymentIntent() == null
+                || dispute.getAmount() == null || dispute.getCurrency() == null) {
+            log.error("Stripe dispute event {} is unusable — asking for redelivery", event.getId());
+            return Outcome.RETRY;
+        }
+        return applyReversal(event, dispute.getPaymentIntent(),
+                MoneyUnits.fromMinorUnits(dispute.getAmount(),
+                        dispute.getCurrency().toUpperCase(Locale.ROOT)),
+                dispute.getCurrency().toUpperCase(Locale.ROOT),
+                ReversalReason.DISPUTE, "dispute:" + dispute.getId(),
+                "Stripe dispute " + dispute.getId());
+    }
+
+    private Outcome applyReversal(Event event, String paymentIntentId, BigDecimal cumulativeAmount,
+                                  String currency, ReversalReason reason, String externalId,
+                                  String note) {
+        // No tenant on an anonymous webhook, and a Charge may not carry our
+        // metadata — our own payment row tells us whose money this is.
+        Payment payment = paymentRepository.findByExternalId(paymentIntentId).orElse(null);
+        if (payment == null) {
+            log.error("Stripe {} references unknown payment {} — manual reconciliation required",
+                    event.getType(), paymentIntentId);
+            return Outcome.RETRY;
+        }
+
+        stripeEventRepository.saveAndFlush(new StripeEvent(
+                event.getId(), event.getType(), payment.getInvoiceId(), OffsetDateTime.now(clock)));
+
+        TenantContext.set(payment.getTenantId());
+        try {
+            Optional<?> booked = paymentService.recordExternalReversal(
+                    paymentIntentId, cumulativeAmount, currency, reason, externalId, note);
+            if (booked.isPresent()) {
+                log.info("Booked Stripe {} of {} against payment {}", reason, cumulativeAmount, paymentIntentId);
+                return Outcome.PROCESSED;
+            }
+            return Outcome.ACKNOWLEDGED;
+        } catch (AppException e) {
+            log.error("Refused to book Stripe {} for payment {}: {}",
+                    reason, paymentIntentId, e.getMessage(), e);
+            return Outcome.RETRY;
+        } finally {
+            TenantContext.clear();
+        }
+    }
+
+    /** Reads the event payload as {@code type}, tolerating API-version drift. */
+    private static <T extends StripeObject> T extract(Event event, Class<T> type) {
+        StripeObject object = event.getDataObjectDeserializer().getObject().orElseGet(() -> {
+            try {
+                return event.getDataObjectDeserializer().deserializeUnsafe();
+            } catch (RuntimeException | com.stripe.exception.EventDataObjectDeserializationException e) {
+                log.error("Could not deserialize Stripe event {}", event.getId(), e);
+                return null;
+            }
+        });
+        return type.isInstance(object) ? type.cast(object) : null;
     }
 
     private static Session extractSession(Event event) {

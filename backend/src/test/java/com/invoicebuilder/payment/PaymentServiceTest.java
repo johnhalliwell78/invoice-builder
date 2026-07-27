@@ -42,6 +42,7 @@ class PaymentServiceTest {
     private static final Instant NOW = Instant.parse("2026-07-22T10:00:00Z");
 
     @Mock private PaymentRepository paymentRepository;
+    @Mock private PaymentReversalRepository reversalRepository;
     @Mock private InvoiceRepository invoiceRepository;
     @Mock private AuditService auditService;
     @Mock private ApplicationEventPublisher eventPublisher;
@@ -51,8 +52,8 @@ class PaymentServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new PaymentService(paymentRepository, invoiceRepository, auditService,
-                eventPublisher, Clock.fixed(NOW, ZoneOffset.UTC));
+        service = new PaymentService(paymentRepository, reversalRepository, invoiceRepository,
+                auditService, eventPublisher, Clock.fixed(NOW, ZoneOffset.UTC));
         TenantContext.set(TENANT_ID);
 
         invoice = new Invoice();

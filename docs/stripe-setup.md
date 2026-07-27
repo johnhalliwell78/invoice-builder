@@ -88,5 +88,11 @@ Anything else is acknowledged and ignored.
   visibly over-paid and the excess is audited for an out-of-band refund.
 - **Zero-decimal currencies** (JPY, KRW, …) are converted correctly; there is
   no blanket ×100.
-- **Refunds** are not implemented — issue them from the Stripe dashboard.
-  Reflecting them in the ledger arrives with credit notes.
+- **Refunds and chargebacks are reflected automatically.** Subscribe to
+  `charge.refunded` and `charge.dispute.created` alongside the checkout
+  events. A refund reduces `amountPaid` and re-opens the invoice when it is
+  no longer covered; Stripe reports refunds as a running total, so only the
+  delta is booked. Refunds issued outside Stripe can be recorded by hand from
+  the invoice's payment history.
+- **Credit notes** (reducing what is *owed*, rather than returning money
+  already collected) are a separate concept and not yet implemented.

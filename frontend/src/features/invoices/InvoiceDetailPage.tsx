@@ -16,6 +16,7 @@ import {
   useMarkPaid,
   usePayments,
   useReminders,
+  useReversals,
 } from '@/hooks/useInvoices';
 import { useCustomer } from '@/hooks/useCustomers';
 import { useEntityAudit } from '@/hooks/useAudit';
@@ -27,7 +28,9 @@ import { InvoicePreviewDialog } from './InvoicePreviewDialog';
 import { SendInvoiceDialog } from './SendInvoiceDialog';
 import { MakeRecurringDialog } from './MakeRecurringDialog';
 import { RecordPaymentDialog } from './RecordPaymentDialog';
+import { RefundPaymentDialog } from './RefundPaymentDialog';
 import { formatCurrency, formatDate } from '@/lib/format';
+import type { Payment } from '@/api/invoices';
 import type { ProblemDetail } from '@/types/api';
 
 export default function InvoiceDetailPage() {
@@ -38,6 +41,7 @@ export default function InvoiceDetailPage() {
   const customer = useCustomer(invoice?.customerId);
   const reminders = useReminders(id);
   const payments = usePayments(id);
+  const reversals = useReversals(id);
   const activity = useEntityAudit('Invoice', id);
 
   const markPaid = useMarkPaid();
@@ -51,6 +55,7 @@ export default function InvoiceDetailPage() {
   const [sendOpen, setSendOpen] = useState(false);
   const [recurringOpen, setRecurringOpen] = useState(false);
   const [paymentOpen, setPaymentOpen] = useState(false);
+  const [refundTarget, setRefundTarget] = useState<Payment | null>(null);
   const [sendMode, setSendMode] = useState<'send' | 'resend'>('send');
 
   if (isPending) {
@@ -337,13 +342,42 @@ export default function InvoiceDetailPage() {
                 <CardTitle>{t('payments.title')}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2 text-sm">
-                {payments.data.map((payment) => (
-                  <div key={payment.id} className="flex items-center justify-between gap-2">
+                {payments.data.map((payment) => {
+                  const reversedForPayment = (reversals.data ?? [])
+                    .filter((r) => r.paymentId === payment.id)
+                    .reduce((sum, r) => sum + Number(r.amount), 0);
+                  const reversible = (Number(payment.amount) - reversedForPayment).toFixed(2);
+                  return (
+                    <div key={payment.id} className="flex items-center justify-between gap-2">
+                      <span className="text-muted-foreground">
+                        {t(`payments.method.${payment.method}`)} · {formatDate(payment.paidOn, i18n.language)}
+                      </span>
+                      <span className="flex items-center gap-2">
+                        <span className="tabular-nums">
+                          {formatCurrency(payment.amount, cur, i18n.language)}
+                        </span>
+                        {Number(reversible) > 0 && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 px-2 text-xs"
+                            onClick={() => setRefundTarget(payment)}
+                          >
+                            {t('payments.reversal.action')}
+                          </Button>
+                        )}
+                      </span>
+                    </div>
+                  );
+                })}
+                {(reversals.data ?? []).map((reversal) => (
+                  <div key={reversal.id} className="flex items-center justify-between gap-2">
                     <span className="text-muted-foreground">
-                      {t(`payments.method.${payment.method}`)} · {formatDate(payment.paidOn, i18n.language)}
+                      {t(`payments.reversal.reasons.${reversal.reason}`)} ·{' '}
+                      {formatDate(reversal.createdAt, i18n.language)}
                     </span>
-                    <span className="tabular-nums">
-                      {formatCurrency(payment.amount, cur, i18n.language)}
+                    <span className="tabular-nums text-destructive">
+                      −{formatCurrency(reversal.amount, cur, i18n.language)}
                     </span>
                   </div>
                 ))}
@@ -383,6 +417,21 @@ export default function InvoiceDetailPage() {
         invoiceId={invoice.id}
         invoiceNumber={invoice.invoiceNumber}
         initialTemplate={invoice.template}
+      />
+      <RefundPaymentDialog
+        open={refundTarget != null}
+        onClose={() => setRefundTarget(null)}
+        payment={refundTarget}
+        reversible={
+          refundTarget
+            ? (
+                Number(refundTarget.amount) -
+                (reversals.data ?? [])
+                  .filter((r) => r.paymentId === refundTarget.id)
+                  .reduce((sum, r) => sum + Number(r.amount), 0)
+              ).toFixed(2)
+            : '0.00'
+        }
       />
       <RecordPaymentDialog
         open={paymentOpen}
