@@ -11,7 +11,8 @@
     "logout": "Se déconnecter",
     "products": "Produits",
     "estimates": "Devis",
-    "recurring": "Récurrentes"
+    "recurring": "Récurrentes",
+    "reports": "Rapports"
   },
   "auth": {
     "login": {
@@ -496,6 +497,23 @@
         "DISPUTE": "Rétrofacturation",
         "ADJUSTMENT": "Correction"
       }
+    }
+  },
+  "reports": {
+    "title": "Rapports",
+    "subtitle": "Exports par période et totaux de TVA pour votre comptable.",
+    "from": "Du",
+    "to": "Au",
+    "taxSummary": "Récapitulatif de TVA",
+    "exportInvoices": "Exporter les factures",
+    "exportPayments": "Exporter les paiements",
+    "empty": "Rien n’a été émis sur cette période.",
+    "columns": {
+      "currency": "Devise",
+      "rate": "Taux",
+      "net": "HT",
+      "tax": "TVA",
+      "gross": "TTC"
     }
   }
 }

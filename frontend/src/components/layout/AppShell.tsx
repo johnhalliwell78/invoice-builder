@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { LogOut, LayoutDashboard, FileText, FileClock, Package, Repeat, Users, Settings } from 'lucide-react';
+import { LogOut, LayoutDashboard, FileText, FileClock, Package, Repeat, Users, BarChart3, Settings } from 'lucide-react';
 
 import { logout as logoutApi } from '@/api/auth';
 import { useAuthStore } from '@/store/authStore';
@@ -36,6 +36,7 @@ export function AppShell() {
     { to: '/recurring', label: t('nav.recurring'), icon: Repeat },
     { to: '/customers', label: t('nav.customers'), icon: Users },
     { to: '/products', label: t('nav.products'), icon: Package },
+    { to: '/reports', label: t('nav.reports'), icon: BarChart3 },
     { to: '/settings', label: t('nav.settings'), icon: Settings },
   ];
 

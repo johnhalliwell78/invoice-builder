@@ -18,6 +18,7 @@ const InvoiceFormPage = lazy(() => import('@/features/invoices/InvoiceFormPage')
 const InvoiceDetailPage = lazy(() => import('@/features/invoices/InvoiceDetailPage'));
 const PublicInvoicePage = lazy(() => import('@/features/public/PublicInvoicePage'));
 const RecurringPage = lazy(() => import('@/features/recurring/RecurringPage'));
+const ReportsPage = lazy(() => import('@/features/reports/ReportsPage'));
 const SettingsPage = lazy(() => import('@/features/settings/SettingsPage'));
 const InviteAcceptPage = lazy(() => import('@/features/auth/InviteAcceptPage'));
 
@@ -202,6 +203,14 @@ export const router = createBrowserRouter([
             element: (
               <Suspense fallback={<Fallback />}>
                 <RecurringPage />
+              </Suspense>
+            ),
+          },
+          {
+            path: 'reports',
+            element: (
+              <Suspense fallback={<Fallback />}>
+                <ReportsPage />
               </Suspense>
             ),
           },

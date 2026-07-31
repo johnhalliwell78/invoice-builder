@@ -13,6 +13,9 @@ public interface PaymentRepository extends JpaRepository<Payment, UUID> {
 
     boolean existsByExternalId(String externalId);
 
+    org.springframework.data.domain.Page<Payment> findByTenantId(
+            UUID tenantId, org.springframework.data.domain.Pageable pageable);
+
     java.util.Optional<Payment> findByIdAndTenantId(UUID id, UUID tenantId);
 
     /** Resolves a Stripe PaymentIntent back to the receipt we booked for it. */

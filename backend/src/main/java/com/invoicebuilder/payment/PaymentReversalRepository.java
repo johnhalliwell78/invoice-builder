@@ -16,6 +16,9 @@ public interface PaymentReversalRepository extends JpaRepository<PaymentReversal
 
     List<PaymentReversal> findByInvoiceIdAndTenantIdOrderByCreatedAtDesc(UUID invoiceId, UUID tenantId);
 
+    /** Batch form for exports — avoids a per-payment query while streaming. */
+    List<PaymentReversal> findByTenantIdAndPaymentIdIn(UUID tenantId, java.util.Collection<UUID> paymentIds);
+
     /** How much of one payment has already been given back. Never null. */
     @Query("select coalesce(sum(r.amount), 0) from PaymentReversal r where r.paymentId = :paymentId")
     BigDecimal sumByPaymentId(@Param("paymentId") UUID paymentId);

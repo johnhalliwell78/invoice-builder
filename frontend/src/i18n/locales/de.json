@@ -11,7 +11,8 @@
     "logout": "Abmelden",
     "products": "Produkte",
     "estimates": "Angebote",
-    "recurring": "Wiederkehrend"
+    "recurring": "Wiederkehrend",
+    "reports": "Berichte"
   },
   "auth": {
     "login": {
@@ -496,6 +497,23 @@
         "DISPUTE": "Rückbuchung",
         "ADJUSTMENT": "Korrektur"
       }
+    }
+  },
+  "reports": {
+    "title": "Berichte",
+    "subtitle": "Zeitraum-Exporte und Steuersummen für Ihre Buchhaltung.",
+    "from": "Von",
+    "to": "Bis",
+    "taxSummary": "Steuerübersicht",
+    "exportInvoices": "Rechnungen exportieren",
+    "exportPayments": "Zahlungen exportieren",
+    "empty": "In diesem Zeitraum wurde nichts ausgestellt.",
+    "columns": {
+      "currency": "Währung",
+      "rate": "Satz",
+      "net": "Netto",
+      "tax": "Steuer",
+      "gross": "Brutto"
     }
   }
 }

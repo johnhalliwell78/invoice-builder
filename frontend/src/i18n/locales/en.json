@@ -11,7 +11,8 @@
     "logout": "Sign out",
     "products": "Products",
     "estimates": "Estimates",
-    "recurring": "Recurring"
+    "recurring": "Recurring",
+    "reports": "Reports"
   },
   "auth": {
     "login": {
@@ -496,6 +497,23 @@
         "DISPUTE": "Chargeback",
         "ADJUSTMENT": "Correction"
       }
+    }
+  },
+  "reports": {
+    "title": "Reports",
+    "subtitle": "Period exports and tax totals for your accountant.",
+    "from": "From",
+    "to": "To",
+    "taxSummary": "Tax summary",
+    "exportInvoices": "Export invoices",
+    "exportPayments": "Export payments",
+    "empty": "Nothing issued in this period.",
+    "columns": {
+      "currency": "Currency",
+      "rate": "Rate",
+      "net": "Net",
+      "tax": "Tax",
+      "gross": "Gross"
     }
   }
 }
