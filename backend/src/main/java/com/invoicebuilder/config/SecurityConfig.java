@@ -102,8 +102,11 @@ public class SecurityConfig {
                         .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
                         .anyRequest().authenticated()
                 )
-                .addFilterBefore(apiKeyFilter, JwtAuthenticationFilter.class)
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+                // Registered relative to the JWT filter, so it must come after
+                // that line: Spring Security only knows a custom filter's
+                // order once the filter has been added.
+                .addFilterBefore(apiKeyFilter, JwtAuthenticationFilter.class)
                 .addFilterAfter(rateLimitFilter, JwtAuthenticationFilter.class);
 
         // Only enable OAuth2 login when at least one client registration is configured.

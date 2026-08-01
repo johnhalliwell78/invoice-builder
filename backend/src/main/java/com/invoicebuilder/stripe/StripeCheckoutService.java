@@ -16,6 +16,7 @@ import com.stripe.net.RequestOptions;
 import com.stripe.param.checkout.SessionCreateParams;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -56,6 +57,9 @@ public class StripeCheckoutService {
     private final StripeClient client;
     private final Clock clock;
 
+    // Explicit: a second (test-only) constructor exists, and Spring cannot
+    // pick between them without being told which one to inject through.
+    @Autowired
     public StripeCheckoutService(InvoiceRepository invoiceRepository,
                                  CustomerRepository customerRepository,
                                  StripeCheckoutSessionRepository sessionRepository,
