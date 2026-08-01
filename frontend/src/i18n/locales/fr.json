@@ -12,7 +12,8 @@
     "products": "Produits",
     "estimates": "Devis",
     "recurring": "Récurrentes",
-    "reports": "Rapports"
+    "reports": "Rapports",
+    "creditNotes": "Avoirs"
   },
   "auth": {
     "login": {
@@ -514,6 +515,18 @@
       "net": "HT",
       "tax": "TVA",
       "gross": "TTC"
+    }
+  },
+  "creditNotes": {
+    "title": "Avoirs",
+    "subtitle": "Documents réduisant ce qu’un client doit.",
+    "empty": "Aucun avoir — créez-en un depuis une facture.",
+    "credited": "Avoir",
+    "created": "Avoir créé en brouillon.",
+    "issued": "Avoir émis — le solde de la facture est réduit.",
+    "actions": {
+      "create": "Avoir",
+      "issue": "Émettre l’avoir"
     }
   }
 }

@@ -3,11 +3,13 @@ import {
   approveInvoice,
   cancelInvoice,
   convertEstimate,
+  createCreditNote,
   declineInvoice,
   createInvoice,
   deleteInvoice,
   duplicateInvoice,
   getEmailPreview,
+  issueCreditNote,
   getInvoice,
   listInvoices,
   listPayments,
@@ -163,6 +165,22 @@ export function useReversePayment() {
   return useMutation({
     mutationFn: (args: { paymentId: string; payload: ReversalPayload }) =>
       reversePayment(args.paymentId, args.payload),
+    onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
+  });
+}
+
+export function useCreateCreditNote() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => createCreditNote(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
+  });
+}
+
+export function useIssueCreditNote() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => issueCreditNote(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
   });
 }

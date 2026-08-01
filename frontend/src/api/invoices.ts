@@ -165,6 +165,16 @@ export async function getPublicInvoice(token: string): Promise<PublicInvoiceView
   return res.data.data;
 }
 
+export async function createCreditNote(id: string): Promise<Invoice> {
+  const res = await api.post<ApiEnvelope<Invoice>>(`/api/v1/invoices/${id}/credit-note`);
+  return res.data.data;
+}
+
+export async function issueCreditNote(id: string): Promise<Invoice> {
+  const res = await api.post<ApiEnvelope<Invoice>>(`/api/v1/invoices/${id}/issue-credit-note`);
+  return res.data.data;
+}
+
 export async function approveInvoice(id: string): Promise<Invoice> {
   const res = await api.post<ApiEnvelope<Invoice>>(`/api/v1/invoices/${id}/approve`);
   return res.data.data;

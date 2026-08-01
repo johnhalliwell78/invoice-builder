@@ -54,6 +54,14 @@ public class Invoice {
     @Column(name = "converted_invoice_id")
     private UUID convertedInvoiceId;
 
+    /** For credit notes: the invoice whose balance this document reduces. */
+    @Column(name = "credited_invoice_id")
+    private UUID creditedInvoiceId;
+
+    /** On an invoice: total of the credit notes issued against it. */
+    @Column(name = "credited_amount", nullable = false, precision = 15, scale = 2)
+    private BigDecimal creditedAmount = BigDecimal.ZERO;
+
     @Column(nullable = false, length = 3)
     private String currency;
 
@@ -170,6 +178,22 @@ public class Invoice {
 
     public void setDocType(DocType docType) {
         this.docType = docType;
+    }
+
+    public UUID getCreditedInvoiceId() {
+        return creditedInvoiceId;
+    }
+
+    public void setCreditedInvoiceId(UUID creditedInvoiceId) {
+        this.creditedInvoiceId = creditedInvoiceId;
+    }
+
+    public BigDecimal getCreditedAmount() {
+        return creditedAmount;
+    }
+
+    public void setCreditedAmount(BigDecimal creditedAmount) {
+        this.creditedAmount = creditedAmount;
     }
 
     public UUID getConvertedInvoiceId() {

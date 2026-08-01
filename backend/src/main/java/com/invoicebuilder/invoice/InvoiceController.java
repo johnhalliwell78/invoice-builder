@@ -142,6 +142,19 @@ public class InvoiceController {
                 .body(ApiResponse.of(recurringService.makeRecurring(id, request)));
     }
 
+    @PostMapping("/{id}/credit-note")
+    @Operation(summary = "Draft a credit note against an invoice")
+    public ResponseEntity<ApiResponse<InvoiceResponse>> createCreditNote(@PathVariable UUID id) {
+        Invoice note = invoiceService.createCreditNote(id);
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.of(InvoiceResponse.from(note)));
+    }
+
+    @PostMapping("/{id}/issue-credit-note")
+    @Operation(summary = "Issue a draft credit note, reducing the invoice's balance")
+    public ApiResponse<InvoiceResponse> issueCreditNote(@PathVariable UUID id) {
+        return ApiResponse.of(InvoiceResponse.from(invoiceService.issueCreditNote(id)));
+    }
+
     @PostMapping("/{id}/approve")
     @Operation(summary = "Approve an open estimate")
     public ApiResponse<InvoiceResponse> approve(@PathVariable UUID id) {

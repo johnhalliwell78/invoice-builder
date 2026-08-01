@@ -1,0 +1,32 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0021-credit-note
+      author: invoice-builder
+      changes:
+        - addColumn:
+            tableName: invoice
+            columns:
+              # Which invoice this credit note reduces.
+              - column:
+                  name: credited_invoice_id
+                  type: UUID
+                  constraints:
+                    foreignKeyName: fk_invoice_credited_invoice
+                    referencedTableName: invoice
+                    referencedColumnNames: id
+              # On an invoice: total credited against it so far.
+              - column:
+                  name: credited_amount
+                  type: NUMERIC(15,2)
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+        - addColumn:
+            tableName: tenant
+            columns:
+              - column:
+                  name: next_credit_note_number
+                  type: INT
+                  defaultValueNumeric: 1
+                  constraints:
+                    nullable: false

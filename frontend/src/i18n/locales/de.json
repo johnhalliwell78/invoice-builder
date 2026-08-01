@@ -12,7 +12,8 @@
     "products": "Produkte",
     "estimates": "Angebote",
     "recurring": "Wiederkehrend",
-    "reports": "Berichte"
+    "reports": "Berichte",
+    "creditNotes": "Gutschriften"
   },
   "auth": {
     "login": {
@@ -514,6 +515,18 @@
       "net": "Netto",
       "tax": "Steuer",
       "gross": "Brutto"
+    }
+  },
+  "creditNotes": {
+    "title": "Gutschriften",
+    "subtitle": "Belege, die die Forderung an einen Kunden reduzieren.",
+    "empty": "Noch keine Gutschriften — erstellen Sie eine aus einer Rechnung.",
+    "credited": "Gutgeschrieben",
+    "created": "Gutschrift als Entwurf erstellt.",
+    "issued": "Gutschrift ausgestellt — der Rechnungsbetrag wurde reduziert.",
+    "actions": {
+      "create": "Gutschrift",
+      "issue": "Gutschrift ausstellen"
     }
   }
 }

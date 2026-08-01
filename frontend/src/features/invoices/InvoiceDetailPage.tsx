@@ -3,10 +3,12 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { isAxiosError } from 'axios';
 import { toast } from 'sonner';
-import { ArrowLeft, ArrowRightLeft, Ban, Banknote, CheckCircle2, Copy, Eye, Pencil, Repeat, Send, Trash2, XCircle } from 'lucide-react';
+import { ArrowLeft, ArrowRightLeft, Ban, Banknote, CheckCircle2, Copy, Eye, FileMinus, Pencil, Repeat, Send, Trash2, XCircle } from 'lucide-react';
 
 import {
   useApproveEstimate,
+  useCreateCreditNote,
+  useIssueCreditNote,
   useCancelInvoice,
   useConvertEstimate,
   useDeclineEstimate,
@@ -51,6 +53,8 @@ export default function InvoiceDetailPage() {
   const approve = useApproveEstimate();
   const decline = useDeclineEstimate();
   const convert = useConvertEstimate();
+  const createCredit = useCreateCreditNote();
+  const issueCredit = useIssueCreditNote();
   const [previewOpen, setPreviewOpen] = useState(false);
   const [sendOpen, setSendOpen] = useState(false);
   const [recurringOpen, setRecurringOpen] = useState(false);
@@ -76,6 +80,7 @@ export default function InvoiceDetailPage() {
   }
 
   const isEstimate = invoice.docType === 'ESTIMATE';
+  const isCreditNote = invoice.docType === 'CREDIT_NOTE';
   const base = isEstimate ? '/estimates' : '/invoices';
   const isDraft = invoice.status === 'DRAFT';
   const openStatuses = isEstimate ? ['SENT', 'VIEWED'] : ['SENT', 'VIEWED', 'OVERDUE'];
@@ -146,7 +151,33 @@ export default function InvoiceDetailPage() {
                 </Button>
               </>
             )}
-            {!isEstimate && (
+            {isCreditNote && isDraft && (
+              <Button
+                disabled={issueCredit.isPending}
+                onClick={() => void action(issueCredit.mutateAsync(invoice.id), 'creditNotes.issued')}
+              >
+                <CheckCircle2 className="mr-2 h-4 w-4" />
+                {t('creditNotes.actions.issue')}
+              </Button>
+            )}
+            {!isEstimate && !isCreditNote && !isDraft && (
+              <Button
+                variant="outline"
+                disabled={createCredit.isPending}
+                onClick={() =>
+                  void action(
+                    createCredit
+                      .mutateAsync(invoice.id)
+                      .then((note) => navigate(`/credit-notes/${note.id}`)),
+                    'creditNotes.created',
+                  )
+                }
+              >
+                <FileMinus className="mr-2 h-4 w-4" />
+                {t('creditNotes.actions.create')}
+              </Button>
+            )}
+            {!isEstimate && !isCreditNote && (
               <Button variant="outline" onClick={() => setRecurringOpen(true)}>
                 <Repeat className="mr-2 h-4 w-4" />
                 {t('recurring.actions.makeRecurring')}
@@ -266,6 +297,12 @@ export default function InvoiceDetailPage() {
               />
               <div className="my-2 border-t" />
               <Row label={t('invoices.totals.total')} value={formatCurrency(invoice.total, cur, i18n.language)} bold />
+              {Number(invoice.creditedAmount) > 0 && (
+                <Row
+                  label={t('creditNotes.credited')}
+                  value={formatCurrency(invoice.creditedAmount, cur, i18n.language)}
+                />
+              )}
               {invoice.amountPaid && Number(invoice.amountPaid) > 0 && (
                 <Row
                   label={t('invoices.totals.amountPaid')}

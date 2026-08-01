@@ -12,7 +12,8 @@
     "products": "Products",
     "estimates": "Estimates",
     "recurring": "Recurring",
-    "reports": "Reports"
+    "reports": "Reports",
+    "creditNotes": "Credit notes"
   },
   "auth": {
     "login": {
@@ -514,6 +515,18 @@
       "net": "Net",
       "tax": "Tax",
       "gross": "Gross"
+    }
+  },
+  "creditNotes": {
+    "title": "Credit notes",
+    "subtitle": "Documents reducing what a customer owes.",
+    "empty": "No credit notes yet — raise one from an invoice.",
+    "credited": "Credited",
+    "created": "Credit note drafted.",
+    "issued": "Credit note issued — the invoice balance is reduced.",
+    "actions": {
+      "create": "Credit note",
+      "issue": "Issue credit note"
     }
   }
 }

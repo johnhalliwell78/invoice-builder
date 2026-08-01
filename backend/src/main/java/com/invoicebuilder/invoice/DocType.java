@@ -7,5 +7,7 @@ package com.invoicebuilder.invoice;
  */
 public enum DocType {
     INVOICE,
-    ESTIMATE
+    ESTIMATE,
+    /** Reduces what an invoice's recipient owes, without money moving. */
+    CREDIT_NOTE
 }

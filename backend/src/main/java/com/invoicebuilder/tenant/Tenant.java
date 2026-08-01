@@ -67,6 +67,9 @@ public class Tenant {
     @Column(name = "next_estimate_number", nullable = false)
     private int nextEstimateNumber = 1;
 
+    @Column(name = "next_credit_note_number", nullable = false)
+    private int nextCreditNoteNumber = 1;
+
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
@@ -185,6 +188,14 @@ public class Tenant {
 
     public void setNextInvoiceNumber(int nextInvoiceNumber) {
         this.nextInvoiceNumber = nextInvoiceNumber;
+    }
+
+    public int getNextCreditNoteNumber() {
+        return nextCreditNoteNumber;
+    }
+
+    public void setNextCreditNoteNumber(int nextCreditNoteNumber) {
+        this.nextCreditNoteNumber = nextCreditNoteNumber;
     }
 
     public int getNextEstimateNumber() {

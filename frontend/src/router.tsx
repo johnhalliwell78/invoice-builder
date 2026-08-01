@@ -207,6 +207,22 @@ export const router = createBrowserRouter([
             ),
           },
           {
+            path: 'credit-notes',
+            element: (
+              <Suspense fallback={<Fallback />}>
+                <InvoiceListPage docType="CREDIT_NOTE" />
+              </Suspense>
+            ),
+          },
+          {
+            path: 'credit-notes/:id',
+            element: (
+              <Suspense fallback={<Fallback />}>
+                <InvoiceDetailPage />
+              </Suspense>
+            ),
+          },
+          {
             path: 'reports',
             element: (
               <Suspense fallback={<Fallback />}>

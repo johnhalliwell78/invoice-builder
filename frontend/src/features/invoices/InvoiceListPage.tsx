@@ -20,7 +20,8 @@ export default function InvoiceListPage({ docType = 'INVOICE' }: { docType?: Doc
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const isEstimate = docType === 'ESTIMATE';
-  const base = isEstimate ? '/estimates' : '/invoices';
+  const isCreditNote = docType === 'CREDIT_NOTE';
+  const base = isEstimate ? '/estimates' : isCreditNote ? '/credit-notes' : '/invoices';
   const statusOptions = isEstimate ? ESTIMATE_STATUSES : INVOICE_STATUSES;
 
   const [status, setStatus] = useState<InvoiceStatus | ''>('');
@@ -43,13 +44,22 @@ export default function InvoiceListPage({ docType = 'INVOICE' }: { docType?: Doc
   return (
     <div>
       <PageHeader
-        title={isEstimate ? t('estimates.title') : t('invoices.title')}
-        description={isEstimate ? t('estimates.subtitle') : t('invoices.subtitle')}
+        title={isCreditNote ? t('creditNotes.title') : isEstimate ? t('estimates.title') : t('invoices.title')}
+        description={
+          isCreditNote
+            ? t('creditNotes.subtitle')
+            : isEstimate
+              ? t('estimates.subtitle')
+              : t('invoices.subtitle')
+        }
         actions={
-          <Button onClick={() => navigate(`${base}/new`)}>
-            <Plus className="mr-2 h-4 w-4" />
-            {isEstimate ? t('estimates.create') : t('invoices.create')}
-          </Button>
+          // Credit notes are always raised from the invoice they credit.
+          isCreditNote ? undefined : (
+            <Button onClick={() => navigate(`${base}/new`)}>
+              <Plus className="mr-2 h-4 w-4" />
+              {isEstimate ? t('estimates.create') : t('invoices.create')}
+            </Button>
+          )
         }
       />
 
@@ -122,7 +132,11 @@ export default function InvoiceListPage({ docType = 'INVOICE' }: { docType?: Doc
               ) : data && data.totalElements === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-4 py-12 text-center text-muted-foreground">
-                    {isEstimate ? t('estimates.empty') : t('invoices.empty')}
+                    {isCreditNote
+                      ? t('creditNotes.empty')
+                      : isEstimate
+                        ? t('estimates.empty')
+                        : t('invoices.empty')}
                   </td>
                 </tr>
               ) : (

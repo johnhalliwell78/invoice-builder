@@ -68,6 +68,22 @@ public class InvoiceNumberGenerator {
         return formatNumber("EST", reserved.intValue());
     }
 
+    /** Reserves the next {@code CN-YYYY-nnnn} from the tenant's own counter. */
+    @Transactional(propagation = Propagation.REQUIRED)
+    public String reserveNextCreditNote(UUID tenantId) {
+        Number reserved = (Number) em.createNativeQuery(
+                        "UPDATE tenant SET next_credit_note_number = next_credit_note_number + 1 "
+                                + "WHERE id = :id RETURNING next_credit_note_number - 1")
+                .setParameter("id", tenantId)
+                .getSingleResult();
+        em.flush();
+
+        Tenant tenant = tenantRepository.findById(tenantId).orElseThrow();
+        em.refresh(tenant);
+
+        return formatNumber("CN", reserved.intValue());
+    }
+
     static String formatNumber(String prefix, int counter) {
         return "%s-%d-%04d".formatted(prefix == null || prefix.isBlank() ? "INV" : prefix,
                 LocalDate.now().getYear(), counter);

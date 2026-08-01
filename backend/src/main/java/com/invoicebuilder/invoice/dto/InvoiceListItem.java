@@ -21,6 +21,7 @@ public record InvoiceListItem(
         String currency,
         BigDecimal total,
         BigDecimal amountPaid,
+        BigDecimal creditedAmount,
         LocalDate issueDate,
         LocalDate dueDate
 ) {
@@ -36,6 +37,7 @@ public record InvoiceListItem(
                 i.getCurrency(),
                 i.getTotal(),
                 i.getAmountPaid(),
+                i.getCreditedAmount(),
                 i.getIssueDate(),
                 i.getDueDate()
         );

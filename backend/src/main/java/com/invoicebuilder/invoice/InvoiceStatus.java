@@ -41,9 +41,20 @@ public enum InvoiceStatus {
             VIEWED, EnumSet.of(APPROVED, DECLINED, CANCELLED)
     );
 
+    /**
+     * A credit note is drafted, then issued once. Issuing is what applies the
+     * credit, so there is nothing after it.
+     */
+    private static final Map<InvoiceStatus, Set<InvoiceStatus>> CREDIT_NOTE_ALLOWED = Map.of(
+            DRAFT, EnumSet.of(SENT)
+    );
+
     public boolean canTransitionTo(DocType docType, InvoiceStatus target) {
-        Map<InvoiceStatus, Set<InvoiceStatus>> allowed =
-                docType == DocType.ESTIMATE ? ESTIMATE_ALLOWED : INVOICE_ALLOWED;
+        Map<InvoiceStatus, Set<InvoiceStatus>> allowed = switch (docType) {
+            case ESTIMATE -> ESTIMATE_ALLOWED;
+            case CREDIT_NOTE -> CREDIT_NOTE_ALLOWED;
+            case INVOICE -> INVOICE_ALLOWED;
+        };
         return allowed.getOrDefault(this, Set.of()).contains(target);
     }
 

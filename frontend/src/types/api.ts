@@ -87,7 +87,7 @@ export interface LineItem {
   sortOrder?: number;
 }
 
-export type DocType = 'INVOICE' | 'ESTIMATE';
+export type DocType = 'INVOICE' | 'ESTIMATE' | 'CREDIT_NOTE';
 
 export interface InvoiceListItem {
   id: string;
@@ -95,6 +95,7 @@ export interface InvoiceListItem {
   customerName: string | null;
   invoiceNumber: string;
   docType: DocType;
+  creditedAmount: string;
   status: InvoiceStatus;
   currency: string;
   total: string;
@@ -109,6 +110,8 @@ export interface Invoice {
   invoiceNumber: string;
   docType: DocType;
   convertedInvoiceId: string | null;
+  creditedInvoiceId: string | null;
+  creditedAmount: string;
   status: InvoiceStatus;
   currency: string;
   subtotal: string;

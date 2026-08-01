@@ -347,6 +347,102 @@ public class InvoiceService {
         return invoice;
     }
 
+    /**
+     * Drafts a credit note against an invoice, pre-filled from it. A credit
+     * note reduces what is <em>owed</em>; use a payment reversal when money
+     * that was actually collected goes back.
+     *
+     * <p>The draft changes nothing — {@link #issueCreditNote} applies it.</p>
+     */
+    @Transactional
+    public Invoice createCreditNote(UUID invoiceId) {
+        Invoice source = load(invoiceId);
+        if (source.getDocType() != DocType.INVOICE) {
+            throw new AppException(ErrorCode.INVALID_STATE_TRANSITION,
+                    "Credit notes can only be raised against invoices");
+        }
+        LocalDate today = LocalDate.now(clock);
+
+        Invoice note = new Invoice();
+        note.setTenantId(source.getTenantId());
+        note.setCustomerId(source.getCustomerId());
+        note.setDocType(DocType.CREDIT_NOTE);
+        note.setCreditedInvoiceId(source.getId());
+        note.setStatus(InvoiceStatus.DRAFT);
+        note.setInvoiceNumber(numberGenerator.reserveNextCreditNote(source.getTenantId()));
+        note.setCurrency(source.getCurrency());
+        note.setIssueDate(today);
+        note.setDueDate(today);
+        note.setTerms(source.getTerms());
+        note.setTemplate(source.getTemplate());
+        note.setCreatedBy(currentUserId());
+        for (InvoiceLineItem item : source.getLineItems()) {
+            InvoiceLineItem line = new InvoiceLineItem();
+            line.setDescription(item.getDescription());
+            line.setQuantity(item.getQuantity());
+            line.setUnitPrice(item.getUnitPrice());
+            line.setTaxRate(item.getTaxRate());
+            line.setDiscountPercent(item.getDiscountPercent());
+            line.setSortOrder(item.getSortOrder());
+            note.addLineItem(line);
+        }
+        applyTotals(note, BigDecimal.ZERO);
+
+        Invoice saved = invoiceRepository.save(note);
+        auditInvoice(saved, AuditAction.CREATE,
+                Map.<String, Object>of("creditNoteFor", source.getInvoiceNumber()));
+        return saved;
+    }
+
+    /**
+     * Issues a credit note, reducing the linked invoice's balance.
+     *
+     * <p>When nothing is left owed the invoice settles to PAID, so it stops
+     * chasing money nobody expects — but {@code paidAt} is only stamped if
+     * money was actually received. Revenue reporting keys on {@code paidAt},
+     * so an invoice written off by credit must never look like income.</p>
+     */
+    @Transactional
+    public Invoice issueCreditNote(UUID creditNoteId) {
+        Invoice note = load(creditNoteId);
+        if (note.getDocType() != DocType.CREDIT_NOTE) {
+            throw new AppException(ErrorCode.INVALID_STATE_TRANSITION, "Not a credit note");
+        }
+        note.getStatus().requireTransition(DocType.CREDIT_NOTE, InvoiceStatus.SENT);
+
+        Invoice invoice = invoiceRepository
+                .findByIdAndTenantIdForUpdate(note.getCreditedInvoiceId(), note.getTenantId())
+                .orElseThrow(() -> new AppException(ErrorCode.INVOICE_NOT_FOUND,
+                        "Credited invoice not found"));
+
+        BigDecimal outstanding = invoice.getTotal()
+                .subtract(invoice.getAmountPaid())
+                .subtract(invoice.getCreditedAmount());
+        if (note.getTotal().compareTo(outstanding) > 0) {
+            throw new AppException(ErrorCode.VALIDATION_FAILED,
+                    "Credit of %s exceeds the %s still owed".formatted(note.getTotal(), outstanding));
+        }
+
+        note.setStatus(InvoiceStatus.SENT);
+        note.setSentAt(OffsetDateTime.now(clock));
+        invoice.setCreditedAmount(invoice.getCreditedAmount().add(note.getTotal()));
+
+        BigDecimal settled = invoice.getAmountPaid().add(invoice.getCreditedAmount());
+        if (settled.compareTo(invoice.getTotal()) >= 0
+                && invoice.getStatus() != InvoiceStatus.PAID
+                && invoice.getStatus() != InvoiceStatus.CANCELLED) {
+            invoice.setStatus(InvoiceStatus.PAID);
+            if (invoice.getAmountPaid().compareTo(BigDecimal.ZERO) > 0) {
+                invoice.setPaidAt(OffsetDateTime.now(clock));
+            }
+        }
+        auditInvoice(invoice, AuditAction.UPDATE,
+                Map.<String, Object>of("credited", note.getTotal().toPlainString(),
+                        "creditNote", note.getInvoiceNumber()));
+        auditInvoice(note, AuditAction.STATUS_CHANGE, Map.<String, Object>of("status", "SENT"));
+        return note;
+    }
+
     @Transactional
     public void delete(UUID id) {
         Invoice invoice = load(id);
@@ -489,6 +585,13 @@ public class InvoiceService {
     @Transactional
     public Invoice cancel(UUID id) {
         Invoice invoice = load(id);
+        if (invoice.getAmountPaid().compareTo(BigDecimal.ZERO) > 0) {
+            // Cancelling would strand money already received against a
+            // document that no longer exists. Refund or credit it first.
+            throw new AppException(ErrorCode.INVALID_STATE_TRANSITION,
+                    "Refund or credit the %s already received before cancelling"
+                            .formatted(invoice.getAmountPaid()));
+        }
         invoice.getStatus().requireTransition(invoice.getDocType(), InvoiceStatus.CANCELLED);
         invoice.setStatus(InvoiceStatus.CANCELLED);
         auditInvoice(invoice, AuditAction.STATUS_CHANGE, Map.<String, Object>of("status", "CANCELLED"));
