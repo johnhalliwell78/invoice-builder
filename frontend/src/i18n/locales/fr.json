@@ -528,5 +528,29 @@
       "create": "Avoir",
       "issue": "Émettre l’avoir"
     }
+  },
+  "apiKeys": {
+    "title": "Clés API",
+    "description": "Les clés authentifient les accès machine via l’en-tête X-API-Key. Donnez une clé distincte à chaque intégration pour pouvoir en révoquer une sans gêner les autres.",
+    "create": "Créer une clé",
+    "copy": "Copier",
+    "copied": "Clé copiée.",
+    "shownOnce": "Copiez cette clé maintenant — elle est stockée hachée et ne pourra plus être affichée.",
+    "empty": "Aucune clé API.",
+    "never": "Jamais utilisée",
+    "revoke": "Révoquer",
+    "revoked": "Clé révoquée.",
+    "revokedLabel": "Révoquée",
+    "revokeConfirm": "Révoquer « {{name}} » ? Tout ce qui l’utilise cessera de fonctionner immédiatement.",
+    "fields": {
+      "name": "Nom",
+      "namePlaceholder": "ex. pipeline CI",
+      "role": "Rôle"
+    },
+    "columns": {
+      "name": "Nom",
+      "key": "Clé",
+      "lastUsed": "Dernière utilisation"
+    }
   }
 }

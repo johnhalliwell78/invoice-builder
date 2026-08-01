@@ -528,5 +528,29 @@
       "create": "Credit note",
       "issue": "Issue credit note"
     }
+  },
+  "apiKeys": {
+    "title": "API keys",
+    "description": "Keys authenticate machine access with the X-API-Key header. Give each integration its own key so you can revoke one without disturbing the rest.",
+    "create": "Create key",
+    "copy": "Copy",
+    "copied": "Key copied.",
+    "shownOnce": "Copy this key now — it is stored hashed and cannot be shown again.",
+    "empty": "No API keys yet.",
+    "never": "Never used",
+    "revoke": "Revoke",
+    "revoked": "Key revoked.",
+    "revokedLabel": "Revoked",
+    "revokeConfirm": "Revoke \"{{name}}\"? Anything using it stops working immediately.",
+    "fields": {
+      "name": "Name",
+      "namePlaceholder": "e.g. CI pipeline",
+      "role": "Role"
+    },
+    "columns": {
+      "name": "Name",
+      "key": "Key",
+      "lastUsed": "Last used"
+    }
   }
 }

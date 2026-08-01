@@ -1,0 +1,67 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0022-create-api-key
+      author: invoice-builder
+      changes:
+        - createTable:
+            tableName: api_key
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  defaultValueComputed: gen_random_uuid()
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_api_key_tenant
+                    referencedTableName: tenant
+                    referencedColumnNames: id
+              - column:
+                  name: name
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              # Only the SHA-256 hash is stored; the secret is unrecoverable.
+              - column:
+                  name: key_hash
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+                    unique: true
+                    uniqueConstraintName: uq_api_key_hash
+              - column:
+                  name: key_prefix
+                  type: VARCHAR(16)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: role
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_by
+                  type: UUID
+              - column:
+                  name: last_used_at
+                  type: TIMESTAMP WITH TIME ZONE
+              - column:
+                  name: revoked_at
+                  type: TIMESTAMP WITH TIME ZONE
+              - column:
+                  name: created_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  defaultValueComputed: now()
+                  constraints:
+                    nullable: false
+        - createIndex:
+            tableName: api_key
+            indexName: idx_api_key_tenant
+            columns:
+              - column:
+                  name: tenant_id

@@ -17,6 +17,7 @@ import {
 import type { TenantUpdatePayload } from '@/api/tenant';
 import { useAuthStore } from '@/store/authStore';
 import { TeamCard } from './TeamCard';
+import { ApiKeysCard } from './ApiKeysCard';
 import { SUPPORTED_LOCALES } from '@/i18n';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -335,6 +336,7 @@ export default function SettingsPage() {
       </Card>
 
       {canEdit && <TeamCard />}
+      {canEdit && <ApiKeysCard />}
     </div>
   );
 }

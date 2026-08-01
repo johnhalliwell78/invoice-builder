@@ -528,5 +528,29 @@
       "create": "Gutschrift",
       "issue": "Gutschrift ausstellen"
     }
+  },
+  "apiKeys": {
+    "title": "API-Schlüssel",
+    "description": "Schlüssel authentifizieren Maschinenzugriffe über den Header X-API-Key. Geben Sie jeder Integration einen eigenen Schlüssel, damit Sie einzelne widerrufen können.",
+    "create": "Schlüssel erstellen",
+    "copy": "Kopieren",
+    "copied": "Schlüssel kopiert.",
+    "shownOnce": "Kopieren Sie den Schlüssel jetzt — er wird nur als Hash gespeichert und kann nicht erneut angezeigt werden.",
+    "empty": "Noch keine API-Schlüssel.",
+    "never": "Nie verwendet",
+    "revoke": "Widerrufen",
+    "revoked": "Schlüssel widerrufen.",
+    "revokedLabel": "Widerrufen",
+    "revokeConfirm": "\"{{name}}\" widerrufen? Alles, was ihn nutzt, funktioniert sofort nicht mehr.",
+    "fields": {
+      "name": "Name",
+      "namePlaceholder": "z. B. CI-Pipeline",
+      "role": "Rolle"
+    },
+    "columns": {
+      "name": "Name",
+      "key": "Schlüssel",
+      "lastUsed": "Zuletzt verwendet"
+    }
   }
 }
