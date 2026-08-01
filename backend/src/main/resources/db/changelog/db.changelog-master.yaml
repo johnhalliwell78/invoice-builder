@@ -45,3 +45,5 @@ databaseChangeLog:
       file: db/changelog/0021-credit-note.yaml
   - include:
       file: db/changelog/0022-api-key.yaml
+  - include:
+      file: db/changelog/0023-webhook.yaml

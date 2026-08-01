@@ -1,0 +1,127 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0023-create-webhook
+      author: invoice-builder
+      changes:
+        - createTable:
+            tableName: webhook_endpoint
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  defaultValueComputed: gen_random_uuid()
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_webhook_endpoint_tenant
+                    referencedTableName: tenant
+                    referencedColumnNames: id
+              - column:
+                  name: url
+                  type: VARCHAR(2000)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: secret
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: event_types
+                  type: JSONB
+                  constraints:
+                    nullable: false
+              - column:
+                  name: active
+                  type: BOOLEAN
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  defaultValueComputed: now()
+                  constraints:
+                    nullable: false
+        - createTable:
+            tableName: webhook_delivery
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  defaultValueComputed: gen_random_uuid()
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: endpoint_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_webhook_delivery_endpoint
+                    referencedTableName: webhook_endpoint
+                    referencedColumnNames: id
+              - column:
+                  name: event_type
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: payload
+                  type: TEXT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: VARCHAR(20)
+                  defaultValue: PENDING
+                  constraints:
+                    nullable: false
+              - column:
+                  name: attempts
+                  type: INT
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: last_error
+                  type: VARCHAR(500)
+              - column:
+                  name: next_attempt_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  constraints:
+                    nullable: false
+              - column:
+                  name: delivered_at
+                  type: TIMESTAMP WITH TIME ZONE
+              - column:
+                  name: created_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  defaultValueComputed: now()
+                  constraints:
+                    nullable: false
+        # The sender's hot query: due deliveries in order.
+        - createIndex:
+            tableName: webhook_delivery
+            indexName: idx_webhook_delivery_due
+            columns:
+              - column:
+                  name: status
+              - column:
+                  name: next_attempt_at
+        - createIndex:
+            tableName: webhook_delivery
+            indexName: idx_webhook_delivery_tenant
+            columns:
+              - column:
+                  name: tenant_id

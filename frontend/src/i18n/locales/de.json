@@ -552,5 +552,22 @@
       "key": "Schlüssel",
       "lastUsed": "Zuletzt verwendet"
     }
+  },
+  "webhooks": {
+    "title": "Webhooks",
+    "description": "Wir senden bei abonnierten Ereignissen einen signierten JSON-Body per POST an Ihre URL und wiederholen den Versuch mit Verzögerung, falls Sie nicht erreichbar sind. Nur öffentliche http(s)-Adressen sind zulässig.",
+    "create": "Endpunkt hinzufügen",
+    "deleted": "Endpunkt entfernt.",
+    "deleteConfirm": "Webhook für {{url}} entfernen?",
+    "empty": "Noch keine Webhook-Endpunkte.",
+    "secretHint": "Signaturschlüssel — prüfen Sie damit den Header X-InvoiceBuilder-Signature.",
+    "fields": {
+      "url": "Endpunkt-URL",
+      "events": "Ereignisse"
+    },
+    "columns": {
+      "url": "URL",
+      "events": "Ereignisse"
+    }
   }
 }

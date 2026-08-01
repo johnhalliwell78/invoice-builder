@@ -18,6 +18,7 @@ import type { TenantUpdatePayload } from '@/api/tenant';
 import { useAuthStore } from '@/store/authStore';
 import { TeamCard } from './TeamCard';
 import { ApiKeysCard } from './ApiKeysCard';
+import { WebhooksCard } from './WebhooksCard';
 import { SUPPORTED_LOCALES } from '@/i18n';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -337,6 +338,7 @@ export default function SettingsPage() {
 
       {canEdit && <TeamCard />}
       {canEdit && <ApiKeysCard />}
+      {canEdit && <WebhooksCard />}
     </div>
   );
 }

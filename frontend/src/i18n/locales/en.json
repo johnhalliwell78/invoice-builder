@@ -552,5 +552,22 @@
       "key": "Key",
       "lastUsed": "Last used"
     }
+  },
+  "webhooks": {
+    "title": "Webhooks",
+    "description": "We POST a signed JSON body to your URL when a subscribed event happens, retrying with backoff if you are unreachable. Only public http(s) addresses are accepted.",
+    "create": "Add endpoint",
+    "deleted": "Endpoint removed.",
+    "deleteConfirm": "Remove the webhook for {{url}}?",
+    "empty": "No webhook endpoints yet.",
+    "secretHint": "Signing secret — verify the X-InvoiceBuilder-Signature header with it.",
+    "fields": {
+      "url": "Endpoint URL",
+      "events": "Events"
+    },
+    "columns": {
+      "url": "URL",
+      "events": "Events"
+    }
   }
 }

@@ -552,5 +552,22 @@
       "key": "Clé",
       "lastUsed": "Dernière utilisation"
     }
+  },
+  "webhooks": {
+    "title": "Webhooks",
+    "description": "Nous envoyons un corps JSON signé en POST à votre URL lors des événements abonnés, avec réessais espacés si vous êtes injoignable. Seules les adresses http(s) publiques sont acceptées.",
+    "create": "Ajouter un point de terminaison",
+    "deleted": "Point de terminaison supprimé.",
+    "deleteConfirm": "Supprimer le webhook pour {{url}} ?",
+    "empty": "Aucun point de terminaison.",
+    "secretHint": "Clé de signature — vérifiez l’en-tête X-InvoiceBuilder-Signature avec elle.",
+    "fields": {
+      "url": "URL du point de terminaison",
+      "events": "Événements"
+    },
+    "columns": {
+      "url": "URL",
+      "events": "Événements"
+    }
   }
 }
